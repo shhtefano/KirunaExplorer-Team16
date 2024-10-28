@@ -29,6 +29,7 @@ const HomePage = () => {
           </a>
           <Button
             variant="outline"
+            aria-label="Microwave"
             onClick={() => {
               toast.success("Created Kiruna Event", {
                 description: "Sunday, November 01, 2024 at 9:00 AM",
