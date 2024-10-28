@@ -1,22 +1,21 @@
 import { db } from './db.mjs';
 import crypto from 'crypto';
 
-export const getUser = (email, password) => {
+export const getUser = (username, password) => {
   return new Promise((resolve, reject) => {
-    const sql = 'SELECT * FROM user WHERE email = ?';
-    db.get(sql, [email], (err, row) => {
+    const sql = 'SELECT * FROM user WHERE username = ?';
+    db.get(sql, [username], (err, row) => {
       if (err) {
         reject(err);
       } else if (row === undefined) {
         resolve(false);
       } else {
-        //console.log('Retrieved row:', row);
-        if (!row.hash || !row.salt) {
+        if (!row.hashed_password || !row.salt) {
           reject(new Error('Password or salt is missing from the database row'));
           return;
         }
 
-        const user = { id: row.id, username: row.email, name: row.name };
+        const user = { id: row.id, username: row.username, role: row.role };
 
         crypto.scrypt(password, row.salt, 32, (err, hashedPassword) => {
           if (err) {
@@ -24,7 +23,7 @@ export const getUser = (email, password) => {
             return;
           }
 
-          if (!crypto.timingSafeEqual(Buffer.from(row.hash, 'hex'), hashedPassword)) {
+          if (!crypto.timingSafeEqual(Buffer.from(row.hashed_password, 'hex'), hashedPassword)) {
             resolve(false);
           } else {
             resolve(user);
@@ -44,7 +43,7 @@ export const getUserById = (id) => {
       } else if (row === undefined) {
         resolve({ error: 'User not found!' });
       } else {
-        const user = { id: row.id, username: row.email, name: row.name };
+        const user = { id: row.id, username: row.username, role: row.role };
         resolve(user);
       }
     });
