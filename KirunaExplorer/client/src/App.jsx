@@ -1,27 +1,20 @@
-import { useState } from "react";
 import "./App.css";
+import { Providers } from "./components/providers";
+
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+
+import HomePage from "./pages/Home";
+import MapPage from "./pages/Map";
 
 function App() {
-  const [count, setCount] = useState(0);
-
   return (
-    <>
-      <div>
-        <div className="flex w-full h-full bg-slate-600">Hello</div>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    <BrowserRouter>
+      <Providers>{/* Your routes and other content */}</Providers>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/map" element={<MapPage />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 
