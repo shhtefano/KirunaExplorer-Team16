@@ -7,6 +7,18 @@ export const db = new sqlite.Database('kirunadb.db', (err) => {
 
 db.serialize(() => {
 
+  db.run(`
+    CREATE TABLE IF NOT EXISTS Users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT NOT NULL UNIQUE,
+    role TEXT,
+    hashed_password TEXT NOT NULL,
+    salt TEXT NOT NULL 
+    )
+  `);
+
+  
+
   // Documents Table
   db.run(`
     CREATE TABLE IF NOT EXISTS Documents (
