@@ -19,7 +19,7 @@ const insertUser = async (username, role, password) => {
   const salt = generateSalt();
   const hash = await hashPassword(password, salt);
   
-  const sql = 'INSERT INTO user (username, role, hashed_password, salt) VALUES (?, ?, ?, ?)';
+  const sql = 'INSERT INTO Users (username, role, hashed_password, salt) VALUES (?, ?, ?, ?)';
   db.run(sql, [username, role, hash, salt], function(err) {
     if (err) {
       return console.error(err.message);

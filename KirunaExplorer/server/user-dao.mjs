@@ -3,7 +3,7 @@ import crypto from 'crypto';
 
 export const getUser = (username, password) => {
   return new Promise((resolve, reject) => {
-    const sql = 'SELECT * FROM user WHERE username = ?';
+    const sql = 'SELECT * FROM Users WHERE username = ?';
     db.get(sql, [username], (err, row) => {
       if (err) {
         reject(err);
@@ -36,7 +36,7 @@ export const getUser = (username, password) => {
 
 export const getUserById = (id) => {
   return new Promise((resolve, reject) => {
-    const sql = 'SELECT * FROM user WHERE id = ?';
+    const sql = 'SELECT * FROM Users WHERE id = ?';
     db.get(sql, [id], (err, row) => {
       if (err) {
         reject(err);
