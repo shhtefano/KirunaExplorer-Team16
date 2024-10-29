@@ -7,7 +7,7 @@ export default {
     // Handle module aliases (if any) defined in your Vite config
     "^@/(.*)$": "<rootDir>/src/$1",
   },
-  setupFilesAfterEnv: ["@testing-library/jest-dom"],
+  setupFilesAfterEnv: ["<rootDir>/jest.setup.js", "@testing-library/jest-dom"],
   collectCoverage: true,
   collectCoverageFrom: ["src/**/*.{js,jsx,ts,tsx}"], // Specify files to include
   coverageDirectory: "coverage",

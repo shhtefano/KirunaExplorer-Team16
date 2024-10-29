@@ -7,11 +7,12 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Map, Microwave } from "lucide-react";
+import { Map, Microwave, GanttChart } from "lucide-react";
+import DocumentDescriptionForm from "@/components/document-description-form";
 
 const HomePage = () => {
   return (
-    <div className="flex w-full h-full items-center justify-center p-5">
+    <div className="flex flex-col w-full h-full items-center justify-start p-5 mt-16 space-y-6">
       <Card className="min-w-[270px] max-w-[600px]">
         <CardHeader>
           <CardTitle>Kiruna Explorer</CardTitle>
@@ -21,12 +22,20 @@ const HomePage = () => {
           exploring the incredible project of moving the swedish city, Kiruna.
         </CardContent>
         <CardFooter className="flex justify-between">
-          <a href="/map">
-            <Button variant="outline" className="mr-2">
-              See Map
-              <Map />
-            </Button>
-          </a>
+          <div className="flex gap-x-2 justify-center items-center">
+            <a href="/map">
+              <Button variant="outline" className="mr-2">
+                See Map
+                <Map />
+              </Button>
+            </a>
+            <a href="/graph">
+              <Button variant="outline" className="mr-2">
+                See graph
+                <GanttChart />
+              </Button>
+            </a>
+          </div>
           <Button
             variant="outline"
             aria-label="Microwave"
@@ -44,6 +53,7 @@ const HomePage = () => {
           </Button>
         </CardFooter>
       </Card>
+      <DocumentDescriptionForm />
     </div>
   );
 };
