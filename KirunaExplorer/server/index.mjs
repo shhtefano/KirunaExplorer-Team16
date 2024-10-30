@@ -7,6 +7,11 @@ import session from "express-session";
 import passport from "passport";
 import LocalStrategy from "passport-local";
 import routes from "./routes.mjs"; // Import the routes module
+import DocumentDAO from "./document-dao.mjs";
+
+//DAO
+const documentDao = new DocumentDAO();
+
 
 // init express
 const app = express();
