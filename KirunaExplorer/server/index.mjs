@@ -1,5 +1,5 @@
 // imports
-import "./db.mjs";
+import "./db/db.mjs";
 import express from "express";
 import morgan from "morgan";
 import cors from "cors";

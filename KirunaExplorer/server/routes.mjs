@@ -11,4 +11,8 @@ router.get("/api/test", (req, res) => {
   res.status(200).json({ message: "Test" });
 });
 
+router.post("/api/document", (req,res) => {
+  res.status(200);
+})
+
 export default router;
