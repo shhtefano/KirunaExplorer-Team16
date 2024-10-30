@@ -90,6 +90,7 @@ db.serialize(() => {
     CREATE TABLE IF NOT EXISTS Geolocation_Nodes (
       area_id INTEGER,
       node_id INTEGER,
+      area_name TEXT,
       PRIMARY KEY (area_id, node_id),
       FOREIGN KEY (area_id) REFERENCES Geolocation(area_id),
       FOREIGN KEY (node_id) REFERENCES Nodes(node_id)
