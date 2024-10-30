@@ -7,17 +7,16 @@ export const db = new sqlite.Database('kirunadb.db', (err) => {
 
 db.serialize(() => {
 
+  // Users Table
   db.run(`
     CREATE TABLE IF NOT EXISTS Users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    username TEXT NOT NULL UNIQUE,
-    role TEXT,
-    hashed_password TEXT NOT NULL,
-    salt TEXT NOT NULL 
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      username TEXT NOT NULL UNIQUE,
+      hashed_password TEXT NOT NULL,
+      role TEXT,
+      salt TEXT NOT NULL
     )
   `);
-
-  
 
   // Documents Table
   db.run(`
@@ -26,9 +25,11 @@ db.serialize(() => {
       stakeholder VARCHAR(100),
       scale VARCHAR(50),
       issuance_date DATE,
-      connections TEXT,
+      connections INTEGER,
       language VARCHAR(50),
-      pages INT
+      pages INT,
+      document_type VARCHAR(50),
+      document_description TEXT
     )
   `);
 
@@ -50,47 +51,47 @@ db.serialize(() => {
     )
   `);
 
-  // Users Table
-  db.run(`
-    CREATE TABLE IF NOT EXISTS Users (
-      username VARCHAR(100) PRIMARY KEY,
-      hashed_password TEXT NOT NULL,
-      role VARCHAR(50),
-      salt TEXT NOT NULL
-    )
-  `);
-
   // Nodes Table
   db.run(`
     CREATE TABLE IF NOT EXISTS Nodes (
-      node_id INT PRIMARY KEY,
-      node_type VARCHAR(50),
-      document_description TEXT,
+      node_id INTEGER PRIMARY KEY,
       document_title VARCHAR(255),
-      FOREIGN KEY (document_title) REFERENCES Documents(document_title)
+      document_description TEXT,
+      document_type VARCHAR(50),
+      FOREIGN KEY (document_title) REFERENCES Documents(document_title),
+      FOREIGN KEY (document_description) REFERENCES Documents(document_description),
+      FOREIGN KEY (document_type) REFERENCES Documents(document_type)
     )
   `);
 
   // Connections Table
   db.run(`
     CREATE TABLE IF NOT EXISTS Connections (
-      node1_id INT,
-      node2_id INT,
+      parent_id INTEGER,
+      children_id INTEGER,
       connection_type VARCHAR(50),
-      PRIMARY KEY (node1_id, node2_id),
-      FOREIGN KEY (node1_id) REFERENCES Nodes(node_id),
-      FOREIGN KEY (node2_id) REFERENCES Nodes(node_id)
+      PRIMARY KEY (parent_id, children_id),
+      FOREIGN KEY (parent_id) REFERENCES Nodes(node_id),
+      FOREIGN KEY (children_id) REFERENCES Nodes(node_id)
     )
   `);
 
   // Geolocation Table
   db.run(`
     CREATE TABLE IF NOT EXISTS Geolocation (
-      area_id INT,
+      area_id INTEGER PRIMARY KEY,
       long REAL,
-      lat REAL,
-      node_id INT,
+      lat REAL
+    )
+  `);
+
+  // Geolocation_Nodes Table
+  db.run(`
+    CREATE TABLE IF NOT EXISTS Geolocation_Nodes (
+      area_id INTEGER,
+      node_id INTEGER,
       PRIMARY KEY (area_id, node_id),
+      FOREIGN KEY (area_id) REFERENCES Geolocation(area_id),
       FOREIGN KEY (node_id) REFERENCES Nodes(node_id)
     )
   `);
