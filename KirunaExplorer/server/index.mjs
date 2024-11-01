@@ -73,7 +73,7 @@ app.post('/api/sessions', function (req, res, next) {
   passport.authenticate('local', (err, user, info) => {
     if (err) return next(err);
     if (!user) {
-      return res.status(401).json(info);
+      return res.status(401).send(info.message);
     }
     req.login(user, (err) => {
       if (err) return next(err);
