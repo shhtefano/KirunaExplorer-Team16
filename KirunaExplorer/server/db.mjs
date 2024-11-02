@@ -15,53 +15,7 @@ db.serialize(() => {
       hashed_password TEXT NOT NULL,
       role TEXT,
       salt TEXT NOT NULL
-    )
-  `);
-
-  // Documents Table
-  db.run(`
-    CREATE TABLE IF NOT EXISTS Documents (
-      document_title VARCHAR(255) PRIMARY KEY,
-      stakeholder VARCHAR(100),
-      scale VARCHAR(50),
-      issuance_date DATE,
-      connections INTEGER,
-      language VARCHAR(50),
-      pages INT,
-      document_type VARCHAR(50),
-      document_description TEXT
-    )
-  `);
-
-  // Attachments Table
-  db.run(`
-    CREATE TABLE IF NOT EXISTS Attachments (
-      file_name VARCHAR(255) PRIMARY KEY,
-      document_title VARCHAR(255),
-      FOREIGN KEY (document_title) REFERENCES Documents(document_title)
-    )
-  `);
-
-  // Original Resources Table
-  db.run(`
-    CREATE TABLE IF NOT EXISTS OriginalResources (
-      file_name VARCHAR(255) PRIMARY KEY,
-      document_title VARCHAR(255),
-      FOREIGN KEY (document_title) REFERENCES Documents(document_title)
-    )
-  `);
-
-  // Nodes Table
-  db.run(`
-    CREATE TABLE IF NOT EXISTS Nodes (
-      node_id INTEGER PRIMARY KEY,
-      document_title VARCHAR(255),
-      document_description TEXT,
-      document_type VARCHAR(50),
-      FOREIGN KEY (document_title) REFERENCES Documents(document_title),
-      FOREIGN KEY (document_description) REFERENCES Documents(document_description),
-      FOREIGN KEY (document_type) REFERENCES Documents(document_type)
-    )
+    );
   `);
 
   // Connections Table
@@ -73,28 +27,72 @@ db.serialize(() => {
       PRIMARY KEY (parent_id, children_id),
       FOREIGN KEY (parent_id) REFERENCES Nodes(node_id),
       FOREIGN KEY (children_id) REFERENCES Nodes(node_id)
-    )
+    );
   `);
 
   // Geolocation Table
   db.run(`
     CREATE TABLE IF NOT EXISTS Geolocation (
-      area_id INTEGER PRIMARY KEY,
-      long REAL,
-      lat REAL
-    )
+      area_id INTEGER NOT NULL,
+      long REAL NOT NULL,
+      lat REAL NOT NULL,
+      area_name TEXT NOT NULL DEFAULT ' '
+    );
   `);
 
-  // Geolocation_Nodes Table
+  // Documents Table
   db.run(`
-    CREATE TABLE IF NOT EXISTS Geolocation_Nodes (
-      area_id INTEGER,
-      node_id INTEGER,
-      area_name TEXT,
-      PRIMARY KEY (area_id, node_id),
-      FOREIGN KEY (area_id) REFERENCES Geolocation(area_id),
-      FOREIGN KEY (node_id) REFERENCES Nodes(node_id)
-    )
+    CREATE TABLE IF NOT EXISTS Documents (
+      document_title VARCHAR(255) NOT NULL,
+      stakeholder VARCHAR(100) NOT NULL,
+      scale VARCHAR(50) NOT NULL,
+      issuance_date DATE NOT NULL,
+      connections INTEGER NOT NULL,
+      language VARCHAR(50),
+      pages INT,
+      document_type VARCHAR(50) NOT NULL,
+      document_description TEXT NOT NULL,
+      document_id INTEGER PRIMARY KEY AUTOINCREMENT
+    );
+  `);
+
+  // Geolocation_Documents Table
+  db.run(`
+    CREATE TABLE IF NOT EXISTS Geolocation_Documents (
+      area_id INTEGER NOT NULL,
+      document_id INTEGER NOT NULL,
+      FOREIGN KEY(document_id) REFERENCES Nodes(node_id),
+      FOREIGN KEY(area_id) REFERENCES Geolocation(area_id),
+      PRIMARY KEY(area_id, document_id)
+    );
+  `);
+
+  // Stakeholder Table
+  db.run(`
+    CREATE TABLE IF NOT EXISTS Stakeholder (
+      stakeholder_name TEXT,
+      document_id INTEGER,
+      FOREIGN KEY(stakeholder_name) REFERENCES Documents(document_id),
+      PRIMARY KEY(stakeholder_name, document_id)
+    );
+  `);
+
+  // Attachments Table
+  db.run(`
+    CREATE TABLE IF NOT EXISTS Attachments (
+      file_name VARCHAR(255),
+      document_id INTEGER NOT NULL,
+      PRIMARY KEY(file_name, document_id)
+    );
+  `);
+
+  // OriginalResources Table
+  db.run(`
+    CREATE TABLE IF NOT EXISTS OriginalResources (
+      file_name VARCHAR(255) NOT NULL,
+      document_id INTEGER NOT NULL,
+      PRIMARY KEY(file_name, document_id)
+    );
   `);
 
 });

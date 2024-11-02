@@ -2,81 +2,82 @@ import { db } from "./db.mjs";
 
 export class DocumentDAO {
 
-    async linkDocuments(parent_id,children_id,connection_type) {
-
-        const sqlQuery0 = `
-          SELECT * FROM Nodes
-          WHERE node_id = ?
+    async linkDocuments(parent_id, children_id, connection_type) {
+        
+        // SQL queries to retrieve and insert data
+        const sqlQueryNodeExistence = `
+          SELECT * FROM Documents
+          WHERE document_id = ?
         `;
-        const sqlQuery1 = `
+        const sqlQueryConnectionExistence = `
           SELECT * FROM Connections
-          WHERE parent_id = ? AND children_id = ? AND connection_type = ?
+          WHERE parent_id = ? AND children_id = ?
         `;
-        const sqlQuery2 = "INSERT INTO Connections (parent_id,children_id,connection_type) VALUES (?,?,?)";
+        const sqlInsertConnection = `
+          INSERT INTO Connections (parent_id, children_id, connection_type)
+          VALUES (?, ?, ?)
+        `;
 
-
-        //Check on parent_title
-        const parent = await new Promise((resolve,reject) => {
-            db.get(sqlQuery0,[parent_id], (err,node) => {
+        // Verify the presence of the parent node with extensive detail
+        const parentNode = await new Promise((resolve, reject) => {
+            db.get(sqlQueryNodeExistence, [parent_id], (err, node) => {
                 if (!node) {
-                    const err = "Parent Node not found";
-                    reject(new Error (err));
-                  } else if (err) {
-                    reject(err);
-                  } else {
-                    resolve(node);
-                  }
-            })
-        })
-
-        // Check on children_id
-        const children = await new Promise((resolve, reject) => {         
-            db.get(sqlQuery0, [children_id], (err, node) => {
-                if (err) {
-                    reject(new Error("Error retrieving children node: " + err.message));
-                } else if (!node) {
-                    reject(new Error("Children Node not found"));
+                    reject(new Error("Parent Node not found! Please verify the ID."));
+                } else if (err) {
+                    reject(new Error(`Error while retrieving parent node: ${err.message}`));
                 } else {
                     resolve(node);
                 }
             });
         });
 
-        //I have to understand better this condition
-        //Check if the connection is not already there (Same parent_title,children_title and type)
-         await new Promise((resolve, reject) => {
-            db.get(sqlQuery1, [parent_id, children_id, connection_type], (err, row) => {
-              if (err) {
-                reject(err); 
-              } else if (row) {
-                const err = "A connection already exists between these nodes with the specified type";
-                reject(new Error (err));
-              } else {
-                resolve();
-              }
+        // Verify the presence of the child node with extensive error-handling
+        const childNode = await new Promise((resolve, reject) => {         
+            db.get(sqlQueryNodeExistence, [children_id], (err, node) => {
+                if (!node) {
+                    reject(new Error("Child Node not found! Please double-check the ID."));
+                } else if (err) {
+                    reject(new Error(`Error retrieving child node: ${err.message}`));
+                } else {
+                    resolve(node);
+                }
             });
-          });
-          
+        });
 
-          const connection = await new Promise((resolve, reject) => {
-            db.run(sqlQuery2, [parent_id,children_id,connection_type], function(err) {
-              if (err) {
-                reject(err);
-              } else {
-                resolve({
-                  parent_id: this.parent_id,
-                  children_id: this.children_id_id,
-                  connection_type: this.connection_type,
-                });
-              }
+        // Confirm that the connection does not already exist between these specific nodes
+        await new Promise((resolve, reject) => {
+            db.get(sqlQueryConnectionExistence, [parent_id, children_id], (err, row) => {
+                if (row) {
+                    reject(new Error("A connection already exists between these nodes. Duplicate entries are not allowed!"));
+                } else if (err) {
+                    reject(new Error(`Error while checking connection existence: ${err.message}`));
+                } else {
+                    resolve();
+                }
             });
-          });      
-      }   
+        });
+
+        // Insert the connection if all checks pass, creating a brand-new, unique linkage
+        const connection = await new Promise((resolve, reject) => {
+            db.run(sqlInsertConnection, [parent_id, children_id, connection_type], function(err) {
+                if (err) {
+                    reject(new Error(`Failed to insert connection: ${err.message}`));
+                } else {
+                    resolve({
+                        parent_id: parent_id,
+                        children_id: children_id,
+                        connection_type: connection_type,
+                    });
+                }
+            });
+        });
+
+        return connection;      
+    }   
 }
 
+// Testing
 
-//Testing
-/*
 const documentDAO = new DocumentDAO();
 
 (async () => {
@@ -87,8 +88,6 @@ const documentDAO = new DocumentDAO();
         console.error("Failed to link documents:", error.message);
     }
 })();
-*/
-
 
 
 export default DocumentDAO;
