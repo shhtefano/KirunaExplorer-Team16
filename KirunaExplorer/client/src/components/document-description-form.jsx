@@ -9,6 +9,7 @@ import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
+import { Input } from "@/components/ui/input";
 import {
   Form,
   FormControl,
@@ -25,8 +26,61 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 
+import {
+  documentRules,
+  descriptionRules,
+  issuanceRules,
+  scaleRules,
+  stakeholderRules,
+  typeRules,
+  connectionRules,
+} from "@/rules/document-description";
+
 // import { Button } from "@/components/ui/button";
 // import { toast } from "sonner";
+
+const documents = [
+  {
+    type: "Design",
+    icon: null,
+  },
+  {
+    type: "Informative",
+    icon: null,
+  },
+  {
+    type: "Technical",
+    icon: null,
+  },
+  {
+    type: "Prescriptive",
+    icon: null,
+  },
+  {
+    type: "Material Effects",
+    icon: null,
+  },
+  {
+    type: "Agreement",
+    icon: null,
+  },
+  {
+    type: "Conflict",
+    icon: null,
+  },
+  {
+    type: "Consultation",
+    icon: null,
+  },
+];
+const stakeholders = [
+  "LKAB",
+  "Municipality",
+  "Regional authority",
+  "Architecture firms",
+  "Citizens",
+  "Others",
+];
 
 const DocumentDescriptionForm = () => {
   const form = useForm({
@@ -35,22 +89,6 @@ const DocumentDescriptionForm = () => {
       description: "",
     },
   });
-
-  const desc = {
-    required: "A description is required",
-    minLength: {
-      value: 2,
-      message: "Description must be at least 2 characters",
-    },
-    maxLength: {
-      value: 200,
-      message: "Description must be less than 200 characters",
-    },
-  };
-
-  const doc = {
-    required: "You have to select a document",
-  };
 
   const onSubmit = (values) => {
     console.log(values);
@@ -82,7 +120,7 @@ const DocumentDescriptionForm = () => {
               <FormField
                 control={form.control}
                 name="document"
-                rules={doc}
+                rules={documentRules}
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Document</FormLabel>
@@ -116,7 +154,7 @@ const DocumentDescriptionForm = () => {
               <FormField
                 control={form.control}
                 name="description"
-                rules={desc}
+                rules={descriptionRules}
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Description</FormLabel>
@@ -131,7 +169,126 @@ const DocumentDescriptionForm = () => {
                   </FormItem>
                 )}
               />
-              <Button type="submit">Add document</Button>
+              <FormField
+                control={form.control}
+                name="type"
+                rules={typeRules}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Document type</FormLabel>
+                    <FormControl>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a document type" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {documents.map((document) => (
+                            <SelectItem
+                              key={document.type}
+                              value={document.type}
+                            >
+                              {document.type}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="stakeholders"
+                rules={stakeholderRules}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Stakeholder</FormLabel>
+                    <FormControl>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a stakeholder" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {stakeholders.map((stakeholder) => (
+                            <SelectItem key={stakeholder} value={stakeholder}>
+                              {stakeholder}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="scale"
+                rules={scaleRules}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Scale</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        type="text"
+                        placeholder="1 : 100"
+                      ></Input>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="issuance"
+                rules={issuanceRules}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Issuance date</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        type="text"
+                        placeholder="YYYY-MM"
+                      ></Input>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="connections"
+                rules={connectionRules}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Number of connections</FormLabel>
+                    <FormControl>
+                      <Input
+                        min="0"
+                        step="1"
+                        {...field}
+                        type="number"
+                        placeholder="0"
+                      ></Input>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <Button type="submit">Add document description</Button>
             </form>
           </Form>
         </CardContent>
