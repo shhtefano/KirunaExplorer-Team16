@@ -10,7 +10,7 @@ import routes from "./routes/routes.mjs"; // Import the routes module
 import { getUser } from "./dao/user-dao.mjs";
 
 //DAO
-const documentDao = new DocumentDAO();
+// const documentDao = new DocumentDAO();
 
 
 
