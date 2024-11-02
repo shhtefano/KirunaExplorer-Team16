@@ -25,49 +25,47 @@ const API = {
 */
 
 const logIn = async (credentials) => {
-  const response = await fetch(SERVER_URL + '/api/sessions', {
-    method: 'POST',
+  const response = await fetch(SERVER_URL + "/api/sessions", {
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
-    credentials: 'include',
+    credentials: "include",
     body: JSON.stringify(credentials),
   });
-  if(response.ok) {
+  if (response.ok) {
     const user = await response.json();
     return user;
-  }
-  else {
+  } else {
     const errDetails = await response.text();
     throw errDetails;
   }
 };
 
 const getUserInfo = async () => {
-  const response = await fetch(SERVER_URL + '/api/sessions/current', {
-    credentials: 'include',
+  const response = await fetch(SERVER_URL + "/api/sessions/current", {
+    credentials: "include",
   });
   const user = await response.json();
   if (response.ok) {
     return user;
   } else {
-    throw user;  
+    throw user;
   }
 };
 
-
-const logOut = async() => {
-  const response = await fetch(SERVER_URL + '/api/sessions/current', {
-    method: 'DELETE',
-    credentials: 'include'
+const logOut = async () => {
+  const response = await fetch(SERVER_URL + "/api/sessions/current", {
+    method: "DELETE",
+    credentials: "include",
   });
-  if (response.ok)
-    return null;
-}
-
-const API = {
-  logIn,getUserInfo,logOut
+  if (response.ok) return null;
 };
 
+const API = {
+  logIn,
+  getUserInfo,
+  logOut,
+};
 
 export default API;

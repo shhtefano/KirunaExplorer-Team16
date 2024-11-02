@@ -12,7 +12,7 @@ import DocumentDescriptionForm from "@/components/document-description-form";
 
 const HomePage = () => {
   return (
-    <div className="flex flex-col w-full h-full items-center justify-start p-5 mt-16 space-y-6">
+    <div className="flex flex-col w-full h-full items-center justify-start p-5 mt-0 space-y-4">
       <Card className="min-w-[270px] max-w-[600px]">
         <CardHeader>
           <CardTitle>Kiruna Explorer</CardTitle>
