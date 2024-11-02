@@ -6,7 +6,7 @@ import cors from "cors";
 import session from "express-session";
 import passport from "passport";
 import LocalStrategy from "passport-local";
-import routes from "./routes.mjs"; // Import the routes module
+import routes from "./routes/routes.mjs"; // Import the routes module
 
 // init express
 const app = express();
