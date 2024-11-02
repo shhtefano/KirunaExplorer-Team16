@@ -9,6 +9,11 @@ import LocalStrategy from "passport-local";
 import routes from "./routes/routes.mjs"; // Import the routes module
 import { getUser } from "./dao/user-dao.mjs";
 
+//DAO
+// const documentDao = new DocumentDAO();
+
+
+
 // init express
 const app = express();
 const port = 3001;
