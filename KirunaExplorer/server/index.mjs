@@ -7,8 +7,7 @@ import session from "express-session";
 import passport from "passport";
 import LocalStrategy from "passport-local";
 import routes from "./routes/routes.mjs"; // Import the routes module
-import { getUser } from './user-dao.mjs';
-
+import { getUser } from "./dao/user-dao.mjs";
 
 // init express
 const app = express();
@@ -69,8 +68,8 @@ const isLoggedIn = (req, res, next) => {
 app.use(routes);
 
 //PASSPORT API
-app.post('/api/sessions', function (req, res, next) {
-  passport.authenticate('local', (err, user, info) => {
+app.post("/api/sessions", function (req, res, next) {
+  passport.authenticate("local", (err, user, info) => {
     if (err) return next(err);
     if (!user) {
       return res.status(401).send(info.message);
@@ -82,20 +81,19 @@ app.post('/api/sessions', function (req, res, next) {
   })(req, res, next);
 });
 
-app.get('/api/sessions/current', (req, res) => {
+app.get("/api/sessions/current", (req, res) => {
   if (req.isAuthenticated()) {
     res.status(200).json(req.user);
   } else {
-    res.status(401).json({ error: 'Not authenticated' });
+    res.status(401).json({ error: "Not authenticated" });
   }
 });
 
-app.delete('/api/sessions/current', (req, res) => {
+app.delete("/api/sessions/current", (req, res) => {
   req.logout(() => {
     res.end();
   });
 });
-
 
 // activate the server
 app.listen(port, () => {
