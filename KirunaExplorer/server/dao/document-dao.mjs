@@ -1,6 +1,6 @@
 import { db } from '../db/db.mjs';
 
-export class DocumentDAO {
+class DocumentDAO {
     async insertDocument(document_title, stakeholder, scale, issuance_date, connections, language, pages, document_type, document_description, area_name, coordinates) {
         return new Promise(async (resolve, reject) => {
             db.serialize(() => {
@@ -16,16 +16,16 @@ export class DocumentDAO {
     
                     if (row.count > 0) {
                         db.run('ROLLBACK');
-                        return reject(new Error('Documento già esistente.'));
+                        return reject(new Error('Document already exists.'));
                     }
-    
+
                     // Inserisce il nuovo documento
                     const insertDocumentQuery = `
                         INSERT INTO Documents(document_title, stakeholder, scale, issuance_date, connections, language, pages, document_type, document_description) 
                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                     `;
-                    db.run(insertDocumentQuery, [document_title, stakeholder, scale, issuance_date, connections, language, pages, document_type, document_description], function (err) {
-                        if (err) {
+                    db.run(insertDocumentQuery, [document_title, stakeholder, scale, issuance_date, connections, language, pages, document_type, document_description], function (err) {                     
+                      if (err) {
                             db.run('ROLLBACK');
                             return reject(err);
                         }
@@ -34,6 +34,7 @@ export class DocumentDAO {
     
                         // Verifica se l'area con lo stesso nome esiste già
                         const checkAreaQuery = `SELECT area_id FROM Geolocation WHERE area_name = ?`;
+
                         db.get(checkAreaQuery, [area_name], (err, areaRow) => {
                             if (err) {
                                 db.run('ROLLBACK');
@@ -62,6 +63,7 @@ export class DocumentDAO {
                                 });
     
                             } else {
+
                                 // L'area non esiste, inserisci una nuova riga in Geolocation e ottieni un nuovo area_id
                                 const maxIdQuery = `SELECT MAX(area_id) as maxId FROM Geolocation`;
     
@@ -81,7 +83,7 @@ export class DocumentDAO {
                                     `;
                                     
                                     // Inserisce tutte le coordinate nella tabella Geolocation
-                                    if(coordinates.length >= 2 || coordinates.length === 0){
+                                    if(coordinates.length !== 1){
                                         return reject(err);
                                     }
                                     const insertCoordinates = coordinates.map(coord => {
@@ -127,7 +129,8 @@ export class DocumentDAO {
                         });
                     });
                 });
-            });
+                
+              });
         });
     };
 
@@ -218,7 +221,7 @@ export class DocumentDAO {
             }
           });
         });
-    
+
         return connection;
     };
 
