@@ -1,5 +1,5 @@
 import express from "express";
-import routes from "../routes.mjs"; // Adjust the path as necessary
+import routes from "../routes/routes.mjs"; // Adjust the path as necessary
 
 const createMockApp = () => {
   const app = express(); // Create a new instance of the Express application
