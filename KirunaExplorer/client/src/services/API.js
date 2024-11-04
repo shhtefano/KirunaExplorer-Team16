@@ -40,9 +40,7 @@ async function fetchServices() {
 }
 
 */
-const API = {
-  linkDocuments,
-};
+
 
 
 const logIn = async (credentials) => {
@@ -87,6 +85,7 @@ const API = {
   logIn,
   getUserInfo,
   logOut,
+  linkDocuments
 };
 
 export default API;
