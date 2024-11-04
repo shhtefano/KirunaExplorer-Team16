@@ -35,9 +35,9 @@ import {
   typeRules,
   connectionRules,
 } from "@/rules/document-description";
-
-// import { Button } from "@/components/ui/button";
-// import { toast } from "sonner";
+import { useState } from "react";
+import { Checkbox } from "./ui/checkbox";
+import API from "../services/API";
 
 const documents = [
   {
@@ -83,6 +83,7 @@ const stakeholders = [
 ];
 
 const DocumentDescriptionForm = () => {
+  const [isWholeArea, setIsWholeArea] = useState(false);
   const form = useForm({
     defaultValues: {
       document: "",
@@ -90,17 +91,31 @@ const DocumentDescriptionForm = () => {
     },
   });
 
-  const onSubmit = (values) => {
+  const onSubmit = async (values) => {
     console.log(values);
+    const body = {
+      ...values,
+      scale: values.scale.replace(/\s+/g, ""),
+      coordinates: {
+        lat: values.latitude,
+        lon: values.longitude,
+      },
+    };
+    delete body.latitude;
+    delete body.longitude;
+    console.log(body);
+    // Api request
+    try {
+      await API.addDocumentDescription(body);
+    } catch (error) {
+      console.log(error);
+    }
+
     toast.success("Added document description", {
       description: "",
-      action: {
-        label: "Undo",
-        onClick: () => console.log("Undo"),
-      },
     });
 
-    form.reset();
+    // form.reset();
   };
 
   return (
@@ -119,7 +134,7 @@ const DocumentDescriptionForm = () => {
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <FormField
                 control={form.control}
-                name="document"
+                name="document_title"
                 rules={documentRules}
                 render={({ field }) => (
                   <FormItem>
@@ -153,7 +168,7 @@ const DocumentDescriptionForm = () => {
               />
               <FormField
                 control={form.control}
-                name="description"
+                name="document_description"
                 rules={descriptionRules}
                 render={({ field }) => (
                   <FormItem>
@@ -171,7 +186,7 @@ const DocumentDescriptionForm = () => {
               />
               <FormField
                 control={form.control}
-                name="type"
+                name="document_type"
                 rules={typeRules}
                 render={({ field }) => (
                   <FormItem>
@@ -204,7 +219,7 @@ const DocumentDescriptionForm = () => {
               />
               <FormField
                 control={form.control}
-                name="stakeholders"
+                name="stakeholder"
                 rules={stakeholderRules}
                 render={({ field }) => (
                   <FormItem>
@@ -252,7 +267,7 @@ const DocumentDescriptionForm = () => {
               />
               <FormField
                 control={form.control}
-                name="issuance"
+                name="issuance_date"
                 rules={issuanceRules}
                 render={({ field }) => (
                   <FormItem>
@@ -324,6 +339,78 @@ const DocumentDescriptionForm = () => {
                   </FormItem>
                 )}
               />
+              <FormField
+                control={form.control}
+                name="area_name"
+                render={({ field }) => (
+                  <FormItem className="flex items-center space-x-2">
+                    <FormLabel className="leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                      Municipal area
+                    </FormLabel>
+                    <FormControl>
+                      <Checkbox
+                        {...field}
+                        checked={field.value === "Whole Area"} // Checkbox is checked if value is "Whole Area"
+                        onCheckedChange={(checked) => {
+                          const value = checked ? "Whole Area" : ""; // Set to "Whole Area" if checked, otherwise empty
+                          field.onChange(value); // Update the form's field value
+                          setIsWholeArea(checked); // Optional: Update any additional component state
+                          if (checked) {
+                            // Reset latitude and longitude fields when checked
+                            form.setValue("latitude", "");
+                            form.setValue("longitude", "");
+                          }
+                        }}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <div className="flex gap-x-4">
+                <FormField
+                  control={form.control}
+                  name="latitude"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Latitude</FormLabel>
+                      <FormControl>
+                        <Input
+                          disabled={isWholeArea}
+                          min="-90"
+                          max="90"
+                          step="0.000001"
+                          {...field}
+                          type="number"
+                          placeholder="0"
+                        ></Input>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="longitude"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Longitude</FormLabel>
+                      <FormControl>
+                        <Input
+                          disabled={isWholeArea}
+                          min="-180"
+                          max="180"
+                          step="0.000001"
+                          {...field}
+                          type="number"
+                          placeholder="0"
+                        ></Input>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
               <Button type="submit">Add document description</Button>
             </form>
           </Form>

@@ -18,6 +18,21 @@ const logIn = async (credentials) => {
   }
 };
 
+const addDocumentDescription = async (body) => {
+  const res = await fetch(SERVER_URL + "/api/document", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+  if (res.ok) {
+    return res.status;
+  } else {
+    return res.status;
+  }
+};
+
 const getUserInfo = async () => {
   const response = await fetch(SERVER_URL + "/api/sessions/current", {
     credentials: "include",
@@ -42,6 +57,7 @@ const API = {
   logIn,
   getUserInfo,
   logOut,
+  addDocumentDescription,
 };
 
 export default API;
