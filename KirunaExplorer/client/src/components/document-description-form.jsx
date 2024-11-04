@@ -9,6 +9,7 @@ import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
+import { Input } from "@/components/ui/input";
 import {
   Form,
   FormControl,
@@ -25,10 +26,64 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 
-// import { Button } from "@/components/ui/button";
-// import { toast } from "sonner";
+import {
+  documentRules,
+  descriptionRules,
+  issuanceRules,
+  scaleRules,
+  stakeholderRules,
+  typeRules,
+  connectionRules,
+} from "@/rules/document-description";
+import { useState } from "react";
+import { Checkbox } from "./ui/checkbox";
+import API from "../services/API";
+
+const documents = [
+  {
+    type: "Design",
+    icon: null,
+  },
+  {
+    type: "Informative",
+    icon: null,
+  },
+  {
+    type: "Technical",
+    icon: null,
+  },
+  {
+    type: "Prescriptive",
+    icon: null,
+  },
+  {
+    type: "Material Effects",
+    icon: null,
+  },
+  {
+    type: "Agreement",
+    icon: null,
+  },
+  {
+    type: "Conflict",
+    icon: null,
+  },
+  {
+    type: "Consultation",
+    icon: null,
+  },
+];
+const stakeholders = [
+  "LKAB",
+  "Municipality",
+  "Regional authority",
+  "Architecture firms",
+  "Citizens",
+  "Others",
+];
 
 const DocumentDescriptionForm = () => {
+  const [isWholeArea, setIsWholeArea] = useState(false);
   const form = useForm({
     defaultValues: {
       document: "",
@@ -36,33 +91,31 @@ const DocumentDescriptionForm = () => {
     },
   });
 
-  const desc = {
-    required: "A description is required",
-    minLength: {
-      value: 2,
-      message: "Description must be at least 2 characters",
-    },
-    maxLength: {
-      value: 200,
-      message: "Description must be less than 200 characters",
-    },
-  };
-
-  const doc = {
-    required: "You have to select a document",
-  };
-
-  const onSubmit = (values) => {
+  const onSubmit = async (values) => {
     console.log(values);
+    const body = {
+      ...values,
+      scale: values.scale.replace(/\s+/g, ""),
+      coordinates: {
+        lat: values.latitude,
+        lon: values.longitude,
+      },
+    };
+    delete body.latitude;
+    delete body.longitude;
+    console.log(body);
+    // Api request
+    try {
+      await API.addDocumentDescription(body);
+    } catch (error) {
+      console.log(error);
+    }
+
     toast.success("Added document description", {
       description: "",
-      action: {
-        label: "Undo",
-        onClick: () => console.log("Undo"),
-      },
     });
 
-    form.reset();
+    // form.reset();
   };
 
   return (
@@ -81,8 +134,8 @@ const DocumentDescriptionForm = () => {
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <FormField
                 control={form.control}
-                name="document"
-                rules={doc}
+                name="document_title"
+                rules={documentRules}
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Document</FormLabel>
@@ -115,8 +168,8 @@ const DocumentDescriptionForm = () => {
               />
               <FormField
                 control={form.control}
-                name="description"
-                rules={desc}
+                name="document_description"
+                rules={descriptionRules}
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Description</FormLabel>
@@ -131,7 +184,234 @@ const DocumentDescriptionForm = () => {
                   </FormItem>
                 )}
               />
-              <Button type="submit">Add document</Button>
+              <FormField
+                control={form.control}
+                name="document_type"
+                rules={typeRules}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Document type</FormLabel>
+                    <FormControl>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a document type" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {documents.map((document) => (
+                            <SelectItem
+                              key={document.type}
+                              value={document.type}
+                            >
+                              {document.type}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="stakeholder"
+                rules={stakeholderRules}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Stakeholder</FormLabel>
+                    <FormControl>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a stakeholder" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {stakeholders.map((stakeholder) => (
+                            <SelectItem key={stakeholder} value={stakeholder}>
+                              {stakeholder}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="scale"
+                rules={scaleRules}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Scale</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        type="text"
+                        placeholder="1 : 100"
+                      ></Input>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="issuance_date"
+                rules={issuanceRules}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Issuance date</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        type="text"
+                        placeholder="YYYY-MM"
+                      ></Input>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="connections"
+                rules={connectionRules}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Number of connections</FormLabel>
+                    <FormControl>
+                      <Input
+                        min="0"
+                        step="1"
+                        {...field}
+                        type="number"
+                        placeholder="0"
+                      ></Input>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="language"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Language</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        type="text"
+                        placeholder="E.g Swedish"
+                      ></Input>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="pages"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Pages</FormLabel>
+                    <FormControl>
+                      <Input
+                        min="0"
+                        step="1"
+                        {...field}
+                        type="number"
+                        placeholder="0"
+                      ></Input>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="area_name"
+                render={({ field }) => (
+                  <FormItem className="flex items-center space-x-2">
+                    <FormLabel className="leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                      Municipal area
+                    </FormLabel>
+                    <FormControl>
+                      <Checkbox
+                        {...field}
+                        checked={field.value === "Whole Area"} // Checkbox is checked if value is "Whole Area"
+                        onCheckedChange={(checked) => {
+                          const value = checked ? "Whole Area" : ""; // Set to "Whole Area" if checked, otherwise empty
+                          field.onChange(value); // Update the form's field value
+                          setIsWholeArea(checked); // Optional: Update any additional component state
+                          if (checked) {
+                            // Reset latitude and longitude fields when checked
+                            form.setValue("latitude", "");
+                            form.setValue("longitude", "");
+                          }
+                        }}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <div className="flex gap-x-4">
+                <FormField
+                  control={form.control}
+                  name="latitude"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Latitude</FormLabel>
+                      <FormControl>
+                        <Input
+                          disabled={isWholeArea}
+                          min="-90"
+                          max="90"
+                          step="0.000001"
+                          {...field}
+                          type="number"
+                          placeholder="0"
+                        ></Input>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="longitude"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Longitude</FormLabel>
+                      <FormControl>
+                        <Input
+                          disabled={isWholeArea}
+                          min="-180"
+                          max="180"
+                          step="0.000001"
+                          {...field}
+                          type="number"
+                          placeholder="0"
+                        ></Input>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <Button type="submit">Add document description</Button>
             </form>
           </Form>
         </CardContent>
