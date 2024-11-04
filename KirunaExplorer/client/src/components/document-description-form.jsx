@@ -288,6 +288,42 @@ const DocumentDescriptionForm = () => {
                   </FormItem>
                 )}
               />
+              <FormField
+                control={form.control}
+                name="language"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Language</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                        type="text"
+                        placeholder="E.g Swedish"
+                      ></Input>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="pages"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Pages</FormLabel>
+                    <FormControl>
+                      <Input
+                        min="0"
+                        step="1"
+                        {...field}
+                        type="number"
+                        placeholder="0"
+                      ></Input>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <Button type="submit">Add document description</Button>
             </form>
           </Form>
