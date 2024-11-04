@@ -1,5 +1,4 @@
-import { Map, Settings2, GanttChart, Telescope } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
+import { Map, Settings2, GanttChart, Telescope, FileText } from "lucide-react";
 import { NavMain } from "@/components/nav-main";
 import { NavUser } from "@/components/nav-user";
 import { TeamSwitcher } from "@/components/team-switcher";
@@ -36,6 +35,11 @@ const data = {
       title: "Graph",
       url: "/graph",
       icon: GanttChart,
+    },
+    {
+      title: "Documents",
+      url: "/add-document-description",
+      icon: FileText,
     },
     {
       title: "Settings",

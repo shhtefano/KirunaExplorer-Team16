@@ -85,7 +85,7 @@ const API = {
   logIn,
   getUserInfo,
   logOut,
-  linkDocuments
-};
+  linkDocuments,
+  addDocumentDescription};
 
 export default API;

@@ -6,9 +6,8 @@ import {
   CardFooter,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
-import { Map, Microwave, GanttChart } from "lucide-react";
-import DocumentDescriptionForm from "@/components/document-description-form";
+import { Map, GanttChart } from "lucide-react";
+
 
 const HomePage = () => {
   return (
@@ -36,24 +35,9 @@ const HomePage = () => {
               </Button>
             </a>
           </div>
-          <Button
-            variant="outline"
-            aria-label="Microwave"
-            onClick={() => {
-              toast.success("Created Kiruna Event", {
-                description: "Sunday, November 01, 2024 at 9:00 AM",
-                action: {
-                  label: "Undo",
-                  onClick: () => console.log("Undo"),
-                },
-              });
-            }}
-          >
-            <Microwave className="text-zinc-600" />
-          </Button>
         </CardFooter>
       </Card>
-      <DocumentDescriptionForm />
+      
     </div>
   );
 };
