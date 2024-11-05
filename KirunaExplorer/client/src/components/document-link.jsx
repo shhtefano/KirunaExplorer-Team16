@@ -13,7 +13,6 @@ import {
   export default function DocumentLink() {
     const documentsMock = [
       {
-        id: 1,
         document_title: "Project Management Guidelines",
         stakeholder: "Urban Planner",
         scale: "Small Architectural Scale",
@@ -26,7 +25,6 @@ import {
           "An informative document providing guidelines to support project management practices among municipal Urban Planners and other stakeholders involved in city development.",
       },
       {
-        id: 2,
         document_title: "Risk Assessment Report 2024",
         stakeholder: "Urban Developer",
         scale: "Large Architectural Scale",
@@ -46,13 +44,14 @@ import {
     const [searchQuery, setSearchQuery] = useState("");
   
     const handleDocumentClick = (document) => {
-      setSelectedDocument(document.id === selectedDocument ? null : document.id);
+      setSelectedDocument(document.document_title === selectedDocument ? null : document.document_title);
       setLinkType(""); // Reset the link type each time a new document is selected
     };
   
     const handleLinkDocument = () => {
-      console.log("Linking document:", selectedDocument, "with link type:", linkType);
+      console.log("Linking document:", selectedDocument, props.document.document_title , "with link type:", linkType);
       // API call to link the document can go here
+      API.linkDocuments(selectedDocument, props.document.document_title , linkType)
       setSelectedDocument(null); // Reset after linking
       setLinkType(""); // Clear the selection
     };
@@ -79,9 +78,9 @@ import {
           <div className="grid grid-cols-1 gap-4">
             {filteredDocuments.map((doc) => (
               <DocCard
-                key={doc.id}
+                key={doc.document_title}
                 document={doc}
-                isSelected={selectedDocument === doc.id}
+                isSelected={selectedDocument === doc.document_title}
                 onClick={() => handleDocumentClick(doc)}
                 linkType={linkType}
                 setLinkType={setLinkType}
@@ -123,7 +122,7 @@ import {
             </Select>
             <Button onClick={(e) => {
                 e.stopPropagation(); // Prevent closing on document click
-                onLinkDocument();
+                onLinkDocument(document.document_title);
               }}>
               Link
             </Button>
