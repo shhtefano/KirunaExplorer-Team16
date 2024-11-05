@@ -13,8 +13,8 @@ export const issuanceRules = {
     message: "Please write the date in the correct format: YYYY-MM",
   },
   pattern: {
-    value: /^\d{4}-(0[1-9]|1[0-2])$/,
-    message: "Date must be in format YYYY-MM (e.g. 2024-03)",
+    value: /^\d{4}-(0[1-9]|1[0-2])(-([0-2][0-9]|3[0-1]))?$/,
+    message: "Date must be in format YYYY-MM or YYYY-MM-DD",
   },
 };
 

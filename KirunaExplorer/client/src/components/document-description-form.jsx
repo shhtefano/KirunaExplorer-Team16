@@ -137,27 +137,11 @@ const DocumentDescriptionForm = () => {
                   <FormItem>
                     <FormLabel>Document</FormLabel>
                     <FormControl>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a document" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="Exampled document #1">
-                            Example document #1
-                          </SelectItem>
-                          <SelectItem value="Exampled document #2">
-                            Example document #2
-                          </SelectItem>
-                          <SelectItem value="Exampled document #3">
-                            Example document #3
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <Input
+                        {...field}
+                        type="text"
+                        placeholder="Your document title"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -273,7 +257,7 @@ const DocumentDescriptionForm = () => {
                       <Input
                         {...field}
                         type="text"
-                        placeholder="YYYY-MM"
+                        placeholder="YYYY-MM-DD / YYYY-MM"
                       ></Input>
                     </FormControl>
                     <FormMessage />

@@ -1,6 +1,5 @@
 const SERVER_URL = "http://localhost:3001";
 
-
 async function linkDocuments(node1_id, node2_id, connection_type = "Update") {
   const response = await fetch(`${SERVER_URL}/api/document/connections`, {
     method: "POST",
@@ -41,8 +40,6 @@ async function fetchServices() {
 
 */
 
-
-
 const logIn = async (credentials) => {
   const response = await fetch(SERVER_URL + "/api/sessions", {
     method: "POST",
@@ -71,8 +68,8 @@ const addDocumentDescription = async (body) => {
   });
   if (res.ok) {
     return res.status;
-  } else {
-    return res.status;
+  } else if (res.status === 403) {
+    return res.json({ error: "Document already exists." });
   }
 };
 
@@ -101,6 +98,7 @@ const API = {
   getUserInfo,
   logOut,
   linkDocuments,
-  addDocumentDescription};
+  addDocumentDescription,
+};
 
 export default API;
