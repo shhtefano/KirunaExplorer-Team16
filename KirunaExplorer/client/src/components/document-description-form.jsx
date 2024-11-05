@@ -85,10 +85,7 @@ const stakeholders = [
 const DocumentDescriptionForm = () => {
   const [isWholeArea, setIsWholeArea] = useState(false);
   const form = useForm({
-    defaultValues: {
-      document: "",
-      description: "",
-    },
+    defaultValues: {},
   });
 
   const onSubmit = async (values) => {
@@ -98,7 +95,7 @@ const DocumentDescriptionForm = () => {
       scale: values.scale.replace(/\s+/g, ""),
       coordinates: {
         lat: values.latitude,
-        lon: values.longitude,
+        long: values.longitude,
       },
     };
     delete body.latitude;
