@@ -26,6 +26,7 @@ class DocumentDAO {
         db.serialize(() => {
             let coordinates = [];
             coordinates.push(coords);   //devo mettere le coordinate nell'array perchè sennò da errore la map
+           
             db.run('BEGIN TRANSACTION', (err) => {
                 if (err) return reject(err);
 
@@ -39,7 +40,7 @@ class DocumentDAO {
 
                     if (row.count > 0) {
                         db.run('ROLLBACK');
-                        return reject(new Error('Document already exists.'));
+                        return reject(403);
                     }
 
                     
@@ -99,7 +100,7 @@ class DocumentDAO {
 
                                     if(coordinates.length !== 1) {
                                         db.run('ROLLBACK');
-                                        return reject(new Error("Invalid coordinates"));
+                                        return reject(422);
                                     }
 
                                     

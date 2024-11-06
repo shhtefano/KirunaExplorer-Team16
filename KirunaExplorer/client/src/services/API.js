@@ -138,7 +138,13 @@ const addDocumentDescription = async (body) => {
   if (res.ok) {
     return res.status;
   } else if (res.status === 403) {
-    return res.json({ error: "Document already exists." });
+    return { error: "Document already exists." };
+  }
+  else if (res.status === 422) {
+    return { error: "Missing Latitude/Longitude or Municipal area" };
+  }
+  else{
+    return { error: "Server error" }; 
   }
 };
 

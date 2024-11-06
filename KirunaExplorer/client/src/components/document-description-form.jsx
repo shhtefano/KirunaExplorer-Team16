@@ -120,9 +120,8 @@ const DocumentDescriptionForm = () => {
           });
           form.reset();
         }
-      } catch (error) {
-        console.log("joined in the catch block", error); // Log the error for debugging
-        toast.error("Could not add document description", {
+      } catch (error) {          
+        toast.error(error, {
           description: "",
         });
       }

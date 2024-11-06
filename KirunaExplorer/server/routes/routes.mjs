@@ -14,8 +14,12 @@ router.post("/api/document", async (req,res) => {
       
       res.status(201).send("Document successfully inserted");
   } catch (error) {
-      console.error(error);
-      res.status(500).send("An error occurred while adding node and area.");
+     if(error==403)
+       res.status(403).send("Document already exists");
+     else if (error==422)
+      res.status(403).send("Missing Latitude/Longitude or Municipal area");
+     else
+      res.status(500).send("An error occurred while adding node and area.");   
   }});
 
   router.get("/api/document/list", async (req, res) => {
