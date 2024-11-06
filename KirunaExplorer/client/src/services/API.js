@@ -1,15 +1,31 @@
 const SERVER_URL = "http://localhost:3001";
+async function getDocuments() {
+  const response = await fetch(`${SERVER_URL}/api/document/list`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
 
-async function linkDocuments(node1_id, node2_id, connection_type = "Update") {
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || "Errore API getDocuments");
+  }
+
+  return response.json();
+}
+
+
+async function linkDocuments(parent_id,children_id, connection_type) {
   const response = await fetch(`${SERVER_URL}/api/document/connections`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      node1_id,
-      node2_id,
-      connection_type,
+      parent_id,
+       children_id,
+        connection_type
     }),
   });
 
@@ -98,7 +114,8 @@ const API = {
   getUserInfo,
   logOut,
   linkDocuments,
-  addDocumentDescription,
+  addDocumentDescription, 
+  getDocuments
 };
 
 export default API;
