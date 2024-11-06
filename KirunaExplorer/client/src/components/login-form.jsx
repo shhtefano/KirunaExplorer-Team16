@@ -63,21 +63,13 @@ export default function LoginForm() {
             />
           </div>
           <div className="grid gap-2">
-            <div className="flex items-center">
-              <Label htmlFor="password">Password</Label>
-              <Link
-                to="/forgot-password"
-                className="ml-auto inline-block text-sm underline hover:text-primary"
-              >
-                Forgot your password?
-              </Link>
-            </div>
             <Input
               id="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               disabled={isLoading}
+              placeholder="******"
               required
             />
           </div>
@@ -102,12 +94,12 @@ export default function LoginForm() {
             Back to Home page
           </Button>
         </Link>
-        <div className="mt-4 text-center text-sm">
+        {/* <div className="mt-4 text-center text-sm">
           Don&apos;t have an account?{" "}
           <Link to="/signup" className="underline hover:text-primary">
             Sign up
           </Link>
-        </div>
+        </div> */}
       </CardContent>
     </Card>
   );

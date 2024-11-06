@@ -9,12 +9,13 @@ export const scaleRules = {
 export const issuanceRules = {
   required: "The date of issuance is required",
   minLength: {
-    value: 7,
-    message: "Please write the date in the correct format: YYYY-MM",
+    value: 4,
+    message:
+      "Please write the date in the correct format: YYYY, YYYY-MM, or YYYY-MM-DD",
   },
   pattern: {
-    value: /^\d{4}-(0[1-9]|1[0-2])(-([0-2][0-9]|3[0-1]))?$/,
-    message: "Date must be in format YYYY-MM or YYYY-MM-DD",
+    value: /^\d{4}(-(0[1-9]|1[0-2])(-([0-2][0-9]|3[0-1]))?)?$/,
+    message: "Date must be in format YYYY, YYYY-MM, or YYYY-MM-DD",
   },
 };
 

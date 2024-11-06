@@ -35,7 +35,7 @@ import {
   typeRules,
   connectionRules,
 } from "@/rules/document-description";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { Checkbox } from "./ui/checkbox";
 import API from "../services/API";
 
@@ -84,35 +84,44 @@ const stakeholders = [
 
 const DocumentDescriptionForm = () => {
   const [isWholeArea, setIsWholeArea] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const form = useForm({
     defaultValues: {},
   });
 
   const onSubmit = async (values) => {
-    console.log(values);
-    const body = {
-      ...values,
-      scale: values.scale.replace(/\s+/g, ""),
-      coordinates: {
-        lat: values.latitude,
-        long: values.longitude,
-      },
-    };
-    delete body.latitude;
-    delete body.longitude;
-    console.log(body);
-    // Api request
-    try {
-      await API.addDocumentDescription(body);
-    } catch (error) {
-      console.log(error);
-    }
+    startTransition(async () => {
+      console.log(values);
+      const body = {
+        ...values,
+        scale: values.scale.replace(/\s+/g, ""),
+        coordinates: {
+          lat: values.latitude,
+          long: values.longitude,
+        },
+      };
+      delete body.latitude;
+      delete body.longitude;
+      console.log(body);
+      // Api request
+      try {
+        await API.addDocumentDescription(body);
+        toast.success("Added document description", {
+          description: "",
+        });
+        form.reset();
+      } catch (error) {
+        console.log(error);
+        toast.error("Could not add document description", {
+          description: "",
+        });
+        form.reset();
+      }
 
-    toast.success("Added document description", {
-      description: "",
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
     });
-
-    // form.reset();
   };
 
   return (
@@ -257,7 +266,7 @@ const DocumentDescriptionForm = () => {
                       <Input
                         {...field}
                         type="text"
-                        placeholder="YYYY-MM-DD / YYYY-MM"
+                        placeholder="YYYY-MM-DD / YYYY-MM / YYYY"
                       ></Input>
                     </FormControl>
                     <FormMessage />
@@ -392,7 +401,9 @@ const DocumentDescriptionForm = () => {
                   )}
                 />
               </div>
-              <Button type="submit">Add document description</Button>
+              <Button type="submit" disabled={isPending}>
+                Add document description
+              </Button>
             </form>
           </Form>
         </CardContent>
