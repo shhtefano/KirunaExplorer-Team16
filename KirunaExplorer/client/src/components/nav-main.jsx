@@ -15,8 +15,10 @@ import {
   CollapsibleTrigger,
   CollapsibleContent,
 } from "@/components/ui/collapsible";
+import { useSidebar } from "@/components/ui/sidebar";
 
 export function NavMain({ items }) {
+  const { state, toggleSidebar } = useSidebar();
   return (
     <SidebarGroup>
       <SidebarGroupLabel>Application</SidebarGroupLabel>
@@ -32,7 +34,14 @@ export function NavMain({ items }) {
             >
               <SidebarMenuItem>
                 <CollapsibleTrigger asChild>
-                  <SidebarMenuButton tooltip={item.title}>
+                  <SidebarMenuButton
+                    tooltip={item.title}
+                    onClick={() => {
+                      if (state === "collapsed") {
+                        toggleSidebar(); // Open sidebar if currently collapsed
+                      }
+                    }}
+                  >
                     {item.icon && <item.icon />}
                     <span>{item.title}</span>
                     <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />

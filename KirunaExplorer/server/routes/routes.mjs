@@ -18,4 +18,30 @@ router.post("/api/document", async (req,res) => {
       res.status(500).send("An error occurred while adding node and area.");
   }});
 
+  router.get("/api/document/list", async (req, res) => {
+    try {
+      // Recupera tutti i documenti dal database
+      const documents = await documentDAO.getDocuments();
+      
+      // Risponde con i documenti in formato JSON
+      res.status(200).json(documents);
+    } catch (error) {
+      console.error(error);
+      res.status(500).send("An error occurred while fetching documents.");
+    }
+  });
+
+router.post("/api/document/connections", async (req, res) => {
+  const { parent_id, children_id, connection_type } = req.body;
+  try {  
+    console.log("router:", parent_id, children_id, connection_type)
+      await documentDAO.linkDocuments(parent_id, children_id, connection_type);
+
+      res.status(201).send("Documents successfully linked");
+  } catch (error) { 
+      console.error(error);
+      res.status(500).send("An error occurred while linking the documents.");
+}});
+
+
 export default router;
