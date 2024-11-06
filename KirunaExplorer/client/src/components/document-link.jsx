@@ -6,33 +6,29 @@ import {
   } from "@/components/ui/card";
   import { Button } from "@/components/ui/button";
   import { Input } from "@/components/ui/input";
-  import { useState } from "react";
+  import { useState, useEffect } from "react";
   import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
   import API from "../services/API.js";
   
   export default function DocumentLink() {
-    const documentsMock = [
-      {
-        document_title: "Project Management Guidelines",
-        stakeholder: "Urban Planner",
-        scale: "Small Architectural Scale",
-        issuance_date: "2023-05-15",
-        document_type: "Informative Document",
-        document_description: "Guidelines for project management practices.",
-      },
-      {
-        document_title: "Risk Assessment Report 2024",
-        stakeholder: "Urban Developer",
-        scale: "Large Architectural Scale",
-        issuance_date: "2024-02-10",
-        document_type: "Prescriptive Document",
-        document_description: "Risk assessment for new urban development areas.",
-      },
-    ];
-  
+    const [documents, setDocuments] = useState([]); // Stato per documenti dal database
     const [selectedDocuments, setSelectedDocuments] = useState([]);
     const [linkType, setLinkType] = useState("");
     const [searchQuery, setSearchQuery] = useState("");
+  
+    // useEffect per caricare i documenti all'inizio
+    useEffect(() => {
+      const fetchDocuments = async () => {
+        try {
+          const response = await API.getDocuments(); // Funzione per ottenere i documenti
+          console.log(response);
+          setDocuments(response); // Imposta i documenti nello stato
+        } catch (error) {
+          console.error("Error fetching documents:", error);
+        }
+      };
+      fetchDocuments();
+    }, []);
   
     const handleDocumentClick = (document) => {
       if (selectedDocuments.some((doc) => doc.document_title === document.document_title)) {
@@ -44,6 +40,7 @@ import {
   
     const handleLinkDocuments = () => {
       if (selectedDocuments.length === 2 && linkType) {
+        console.log("handleLinkDocuments" , selectedDocuments[0].document_title, selectedDocuments[1].document_title, linkType)
         API.linkDocuments(selectedDocuments[0].document_title, selectedDocuments[1].document_title, linkType);
         console.log(`Linking ${selectedDocuments[0].document_title} with ${selectedDocuments[1].document_title} as ${linkType}`);
         setSelectedDocuments([]);
@@ -51,7 +48,7 @@ import {
       }
     };
   
-    const filteredDocuments = documentsMock.filter((doc) =>
+    const filteredDocuments = documents.filter((doc) =>
       doc.document_title.toLowerCase().includes(searchQuery.toLowerCase())
     );
   
