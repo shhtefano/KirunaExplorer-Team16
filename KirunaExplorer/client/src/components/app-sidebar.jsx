@@ -1,13 +1,28 @@
-import { Map, Settings2, GanttChart, Telescope, FileText } from "lucide-react";
+import {
+  Map,
+  Settings2,
+  GanttChart,
+  Telescope,
+  FileText,
+  ChevronDown,
+} from "lucide-react";
 import { NavMain } from "@/components/nav-main";
 import { NavUser } from "@/components/nav-user";
 import { TeamSwitcher } from "@/components/team-switcher";
+import {
+  Collapsible,
+  CollapsibleTrigger,
+  CollapsibleContent,
+} from "@/components/ui/collapsible";
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
   SidebarRail,
+  SidebarGroup,
+  SidebarGroupLabel,
+  SidebarGroupContent,
 } from "@/components/ui/sidebar";
 
 // This is sample data.
@@ -40,11 +55,21 @@ const data = {
       title: "Documents",
       url: "/add-document-description",
       icon: FileText,
-    },
-    {
-      title: "Settings",
-      url: "#",
-      icon: Settings2,
+      isActive: true,
+      items: [
+        {
+          title: "Add document description",
+          url: "/add-document-description",
+        },
+        {
+          title: "Link documents",
+          url: "/documents/link",
+        },
+        {
+          title: "Show documents",
+          url: "/documents/list",
+        },
+      ],
     },
   ],
 };
