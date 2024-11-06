@@ -105,13 +105,14 @@ const DocumentDescriptionForm = () => {
       console.log(body);
       // Api request
       try {
-        await API.addDocumentDescription(body);
+        const response=await API.addDocumentDescription(body);
+        console.log(response.json());
         toast.success("Added document description", {
           description: "",
         });
         form.reset();
       } catch (error) {
-        console.log(error);
+        console.log("joined in the catch block");
         toast.error("Could not add document description", {
           description: "",
         });
