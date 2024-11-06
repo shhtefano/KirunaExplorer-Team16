@@ -105,18 +105,26 @@ const DocumentDescriptionForm = () => {
       console.log(body);
       // Api request
       try {
-        const response=await API.addDocumentDescription(body);
-        console.log(response.json());
-        toast.success("Added document description", {
-          description: "",
-        });
-        form.reset();
+        const response = await API.addDocumentDescription(body);
+      
+        // Check if response contains an error
+        if (response.error) {
+          console.log(response.error);
+          toast.error(response.error, {
+            description: ""
+          });
+        } else {
+          console.log(response); // Logs the response status (e.g., 200)
+          toast.success("Added document description", {
+            description: ""
+          });
+          form.reset();
+        }
       } catch (error) {
-        console.log("joined in the catch block");
+        console.log("joined in the catch block", error); // Log the error for debugging
         toast.error("Could not add document description", {
           description: "",
         });
-        form.reset();
       }
 
       setTimeout(() => {
