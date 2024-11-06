@@ -82,23 +82,20 @@ describe('Suite test for insertDocument function', () => {
     
         // Verify that the database functions have been called correctly
         expect(db.serialize).toHaveBeenCalled();
-        expect(db.run).toHaveBeenCalledWith('BEGIN TRANSACTION');
+        expect(db.run).toHaveBeenCalledWith('BEGIN TRANSACTION', expect.any(Function));
         expect(db.get).toHaveBeenCalledTimes(3);
         expect(db.run).toHaveBeenCalledWith(expect.any(String), expect.any(Array), expect.any(Function)); // Insert Document
     });
     
     test('should fail if the document already exists', async () => {
-        // Spy on the get function
+        
+        // Spy on the get function to simulate a document already existing
         jest.spyOn(db, 'get').mockImplementationOnce((query, params, callback) => {
-            callback(null, { count: 1 }); // Simulate the case where the document already exists
+            // Simula che il documento esiste già (count > 0)
+            callback(null, { count: 1 });
         });
     
-        // Spy on the run function
-        jest.spyOn(db, 'run').mockImplementation((query, params, callback) => {
-            if (callback) callback(null);
-        });
-    
-        // Verify that the function generates an "Document already exists" error
+        // Call the function with example data
         await expect(documentDAO.insertDocument(
             'Document Title',
             'Stakeholder',
@@ -113,8 +110,11 @@ describe('Suite test for insertDocument function', () => {
             [{ long: 12.34, lat: 56.78 }]
         )).rejects.toThrow('Document already exists.');
     
-        // Verify that the run function for rollback has been called
-        expect(db.run).toHaveBeenCalledWith('ROLLBACK');
+        // Verify that the database functions have been called correctly
+        expect(db.serialize).toHaveBeenCalled();
+        expect(db.run).toHaveBeenCalledWith('BEGIN TRANSACTION', expect.any(Function));
+        expect(db.get).toHaveBeenCalledTimes(1); // Should only be called once for checking if the document exists
+        expect(db.run).toHaveBeenCalledWith('ROLLBACK', expect.any(Function)); // Should call ROLLBACK if document exists
     });
     
     test('should fail if inserting the document fails', async () => {
