@@ -36,6 +36,19 @@ router.post("/api/document", async (req,res) => {
     }
   });
 
+  router.get("/api/document/geo/list", async (req, res) => {
+    try {
+      // Recupera tutti i documenti dal database
+      const documents = await documentDAO.getDocumentsGeo();
+      
+      // Risponde con i documenti in formato JSON
+      res.status(200).json(documents);
+    } catch (error) {
+      console.error(error);
+      res.status(500).send("An error occurred while fetching documents.");
+    }
+  });
+
 router.post("/api/document/connections", async (req, res) => {
   const { parent_id, children_id, connection_type } = req.body;
   try {  

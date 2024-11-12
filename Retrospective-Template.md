@@ -1,4 +1,4 @@
-TEMPLATE FOR RETROSPECTIVE (Team ##)
+ RETROSPECTIVE SPRINT 1 (Team 16)
 =====================================
 
 The retrospective should include _at least_ the following
@@ -83,14 +83,14 @@ Actual:
 > We were able to complete the stories with the correct definition of Done and we also managed to organize better the work and also organize better the team with frequent scrum meetings. 
 
 - Which ones you were not able to achieve? Why?
-> Comprehensive handling errors
-> We underestimated again tasks
-> Improve YouTrack organization
+> We were unable to handle some errors comprehensively and improve our organization on YouTrack because we once again underestimated the complexity and time required for certain tasks.
 
 - Improvement goals for the next sprint and how to achieve them (technical tasks, team coordination, etc.)
 
 > Reach 70% coverage FE & BE tests 
+> 
 > Improve documentation to have the same overview of the project
+> 
 > Improve error handling 
 
 - One thing you are proud of as a Team!!
