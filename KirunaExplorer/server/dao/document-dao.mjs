@@ -21,7 +21,7 @@ class DocumentDAO {
     });
 }
 
-  async insertDocument(document_title, stakeholder, scale, issuance_date, connections, language, pages, document_type, document_description, area_name, coords) {
+  async insertDocument(document_title, stakeholder, scale, issuance_date, language, pages, document_type, document_description, area_name, coords) {
     return new Promise((resolve, reject) => {
         db.serialize(() => {
             let coordinates = [];
@@ -43,17 +43,19 @@ class DocumentDAO {
                         return reject(403);
                     }
 
-                    
+
                     const insertDocumentQuery = `
-                        INSERT INTO Documents(document_title, stakeholder, scale, issuance_date, connections, language, pages, document_type, document_description) 
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        INSERT INTO Documents(document_title, stakeholder, scale, issuance_date, language, pages, document_type, document_description) 
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                     `;
-                    db.run(insertDocumentQuery, [document_title, stakeholder, scale, issuance_date, connections, language, pages, document_type, document_description], function (err) {                     
+                    db.run(insertDocumentQuery, [document_title, stakeholder, scale, issuance_date, language, pages, document_type, document_description], function (err) {                     
                         if (err) {
+                          console.log(err);
+
                             db.run('ROLLBACK');
                             return reject(err);
                         }
-
+                        
                         const document_id = this.lastID;
 
                        
@@ -86,6 +88,7 @@ class DocumentDAO {
                                 });
                             } else {
                                 const maxIdQuery = `SELECT MAX(area_id) as maxId FROM Geolocation`;
+
                                 db.get(maxIdQuery, [], (err, row) => {
                                     if (err) {
                                         db.run('ROLLBACK');

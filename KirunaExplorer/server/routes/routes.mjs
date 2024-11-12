@@ -7,10 +7,11 @@ const documentDAO = new DocumentDAO();
 /*** DOCUMENT ROUTES ***/
 
 router.post("/api/document", async (req,res) => {
-  const {document_title, stakeholder, scale, issuance_date, connections, language, pages, document_type, document_description, area_name, coordinates} = req.body;
+  
+  const {document_title, stakeholder, scale, issuance_date, language, pages, document_type, document_description, area_name, coordinates} = req.body;
   try {
-      // Step 1: Aggiungere il documento
-      await documentDAO.insertDocument(document_title, stakeholder, scale, issuance_date, connections, language, pages, document_type, document_description, area_name, coordinates);
+      // Step 1: Aggiungere il documento      
+      await documentDAO.insertDocument(document_title, stakeholder, scale, issuance_date, language, pages, document_type, document_description, area_name, coordinates);
       
       res.status(201).send("Document successfully inserted");
   } catch (error) {

@@ -1,13 +1,21 @@
 import { Button } from "@/components/ui/button";
 
+import DrawMap from "../components/DrawMap";
+
 const MapPage = () => {
   return (
     <div className="flex-col h-full w-full items-center justify-center p-4 space-y-6">
       <h1 className="text-center font-semibold text-lg">
-        This is the map page
+        Kiruna Map
       </h1>
-      <div className="flex items-center justify-center">
+
+      <div className="flex items-center justify-center align-center">
+        <DrawMap/>
+      
+      </div>
+      <div className="flex items-center justify-center align-center">
         <a href="/">
+
           <Button>Back to Home</Button>
         </a>
       </div>

@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
+import CoordsMap from "./CoordsMap";
 import {
   Form,
   FormControl,
@@ -85,6 +86,8 @@ const stakeholders = [
 const DocumentDescriptionForm = () => {
   const [isWholeArea, setIsWholeArea] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const [showPopup, setShowPopup] = useState(false); // Nuovo stato per il popup
+
   const form = useForm({
     defaultValues: {},
   });
@@ -102,11 +105,11 @@ const DocumentDescriptionForm = () => {
       };
       delete body.latitude;
       delete body.longitude;
-      console.log(body);
+      console.log({...body});
       // Api request
       try {
         const response = await API.addDocumentDescription(body);
-      
+
         // Check if response contains an error
         if (response.error) {
           console.log(response.error);
@@ -120,7 +123,7 @@ const DocumentDescriptionForm = () => {
           });
           form.reset();
         }
-      } catch (error) {          
+      } catch (error) {
         toast.error(error, {
           description: "",
         });
@@ -128,13 +131,19 @@ const DocumentDescriptionForm = () => {
 
       setTimeout(() => {
         window.location.reload();
-      }, 2000);
+      }, 1000);
     });
   };
 
+  const onSubmitCoordinates = (lat, long) => {
+    setShowPopup(false);
+    form.setValue("latitude", parseFloat(lat.toFixed(6)));
+    form.setValue("longitude", parseFloat(long.toFixed(6)));
+  }
+
   return (
     <div>
-      <Card className="min-w-[280px] max-w-[600px]">
+      <Card className="min-w-[280px] max-w-[700px]">
         <CardHeader>
           <CardTitle>Add document description</CardTitle>
         </CardHeader>
@@ -281,7 +290,7 @@ const DocumentDescriptionForm = () => {
                   </FormItem>
                 )}
               />
-              <FormField
+              {/* <FormField
                 control={form.control}
                 name="connections"
                 rules={connectionRules}
@@ -300,7 +309,7 @@ const DocumentDescriptionForm = () => {
                     <FormMessage />
                   </FormItem>
                 )}
-              />
+              /> */}
               <FormField
                 control={form.control}
                 name="language"
@@ -337,35 +346,35 @@ const DocumentDescriptionForm = () => {
                   </FormItem>
                 )}
               />
+              <div className="flex gap-x-4 items-center">
+
               <FormField
-                control={form.control}
-                name="area_name"
-                render={({ field }) => (
-                  <FormItem className="flex items-center space-x-2">
-                    <FormLabel className="leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                      Municipal area
-                    </FormLabel>
-                    <FormControl>
-                      <Checkbox
-                        {...field}
-                        checked={field.value === "Whole Area"} // Checkbox is checked if value is "Whole Area"
-                        onCheckedChange={(checked) => {
-                          const value = checked ? "Whole Area" : ""; // Set to "Whole Area" if checked, otherwise empty
-                          field.onChange(value); // Update the form's field value
-                          setIsWholeArea(checked); // Optional: Update any additional component state
-                          if (checked) {
-                            // Reset latitude and longitude fields when checked
-                            form.setValue("latitude", "");
-                            form.setValue("longitude", "");
-                          }
-                        }}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <div className="flex gap-x-4">
+  control={form.control}
+  name="area_name"
+  render={({ field }) => (
+    <FormItem className="flex flex-col items-center space-y-2"> {/* Disposizione verticale e centrata */}
+      <FormLabel className="text-center" style={{ paddingBottom: "22px" }}> {/* Allinea la label al centro */}
+        Municipal area
+      </FormLabel>
+      <FormControl>
+        <Checkbox
+          {...field}
+          checked={field.value === "Whole Area"} // Checkbox is checked if value is "Whole Area"
+          onCheckedChange={(checked) => {
+            const value = checked ? "Whole Area" : ""; // Set to "Whole Area" if checked, otherwise empty
+            field.onChange(value); // Update the form's field value
+            setIsWholeArea(checked); // Optional: Update any additional component state
+          }}
+        />
+      </FormControl>
+      <FormMessage />
+    </FormItem>
+  )}
+/>
+<div style={{ marginLeft: "30px", marginRight:"30px" }}>
+
+              OR
+</div>
                 <FormField
                   control={form.control}
                   name="latitude"
@@ -381,7 +390,7 @@ const DocumentDescriptionForm = () => {
                           {...field}
                           type="number"
                           placeholder="0"
-                        ></Input>
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -402,16 +411,49 @@ const DocumentDescriptionForm = () => {
                           {...field}
                           type="number"
                           placeholder="0"
-                        ></Input>
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
+                {/* Bottone per aprire il popup */}
+                <div style={{textAlign: "center", width:"10%", marginTop:"30px" }}>
+                  <Button
+                    type="button"
+                    onClick={() => setShowPopup(true)}
+                    className="ml-2"
+                  >
+                    Open Map
+                  </Button>
+
+                </div>
               </div>
+              {/* Popup per fornire informazioni su latitudine e longitudine */}
+              {showPopup && (
+                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+                  <div className="bg-white p-6 rounded shadow-lg"  style={{textAlign:"center" }}>
+                    <CoordsMap
+                      setShowPopup={setShowPopup}
+                      onSubmitCoordinates={onSubmitCoordinates}
+                    />
+                
+                    <Button
+                      type="button"
+                      onClick={() => setShowPopup(false)}
+                      className="mt-4"
+                    >
+                      Close Map
+                    </Button>
+                  </div>
+                </div>
+              )}
+              <div  style={{textAlign:"center", marginTop:'60px' }}>
               <Button type="submit" disabled={isPending}>
                 Add document description
               </Button>
+              </div>
+
             </form>
           </Form>
         </CardContent>
