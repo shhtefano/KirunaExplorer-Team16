@@ -41,26 +41,6 @@ async getDocumentsGeo() {
   });
 }
 
-async getDocumentsGeo() {
-  return new Promise((resolve, reject) => {
-      const query = `
-          SELECT *
-          FROM Documents D, Geolocation G, Geolocation_Documents GD
-          WHERE D.document_id = GD.document_id AND G.area_id = GD.area_id
-      `;
-
-      db.all(query, [], (err, rows) => {
-          if (err) {
-              console.error("Errore durante il recupero dei documenti:", err);
-              return reject(new Error("Errore durante il recupero dei documenti."));
-          }
-          
-          // Restituisce l'elenco dei documenti recuperati
-          resolve(rows);
-      });
-  });
-}
-
   async insertDocument(document_title, stakeholder, scale, issuance_date, language, pages, document_type, document_description, area_name, coords) {
     return new Promise((resolve, reject) => {
         db.serialize(() => {

@@ -15,6 +15,27 @@ async function getDocuments() {
   return response.json();
 }
 
+async function getDocumentsGeo() {
+  const response = await fetch(`${SERVER_URL}/api/document/geo/list`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || "Errore API getDocuments");
+  }
+
+  const data = await response.json();
+
+  // Stampa i dati per verificarne il contenuto
+  console.log("Dati ricevuti:", JSON.stringify(data, null, 2));
+
+  return data;
+}
+
 // async function linkDocuments(parent_id,children_id, connection_type) {
 //   const response = await fetch(`${SERVER_URL}/api/document/connections`, {
 //     method: "POST",
@@ -175,6 +196,7 @@ const API = {
   linkDocuments,
   addDocumentDescription,
   getDocuments,
+  getDocumentsGeo
 };
 
 export default API;
