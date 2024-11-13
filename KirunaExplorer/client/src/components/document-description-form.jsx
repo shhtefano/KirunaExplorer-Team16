@@ -89,8 +89,21 @@ const DocumentDescriptionForm = () => {
   const [showPopup, setShowPopup] = useState(false); // Nuovo stato per il popup
 
   const form = useForm({
-    defaultValues: {},
+    defaultValues: {
+      document_title: "",
+      document_description: "",
+      document_type: "", // Assuming no default type is selected
+      stakeholder: "", // Assuming no default stakeholder is selected
+      scale: "",
+      issuance_date: "",
+      language: "",
+      pages: 0,
+      area_name: "", // The area field needs a default to avoid toggling between controlled and uncontrolled
+      latitude: 0, // Starting with a numeric default value
+      longitude: 0, // Starting with a numeric default value
+    },
   });
+  
 
   const onSubmit = async (values) => {
     startTransition(async () => {

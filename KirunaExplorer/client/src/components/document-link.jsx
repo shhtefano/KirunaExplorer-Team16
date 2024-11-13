@@ -75,7 +75,7 @@ export default function DocumentLink() {
   );
 
   return (
-    <Card className="min-w-[280px] max-w-[600px]">
+    <Card className="min-w-[300px] max-w-[800px]" style={{textAlign: "center"}}>
       <CardHeader>
         <CardTitle>Link Two Documents</CardTitle>
       </CardHeader>
