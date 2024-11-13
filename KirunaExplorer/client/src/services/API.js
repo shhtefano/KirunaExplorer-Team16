@@ -30,9 +30,6 @@ async function getDocumentsGeo() {
 
   const data = await response.json();
 
-  // Stampa i dati per verificarne il contenuto
-  console.log("Dati ricevuti:", JSON.stringify(data, null, 2));
-
   return data;
 }
 
