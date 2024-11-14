@@ -24,9 +24,12 @@ class DocumentDAO {
 async getDocumentsGeo() {
   return new Promise((resolve, reject) => {
       const query = `
-          SELECT *
-          FROM Documents D, Geolocation G, Geolocation_Documents GD
-          WHERE D.document_id = GD.document_id AND G.area_id = GD.area_id
+          SELECT D.document_id, D.document_title, D.stakeholder, D.scale, D.issuance_date,
+                 D.language, D.pages, D.document_type, D.document_description,
+                 G.area_id, G.long, G.lat, G.area_name
+          FROM Documents D
+          JOIN Geolocation_Documents GD ON D.document_id = GD.document_id
+          JOIN Geolocation G ON G.area_id = GD.area_id
       `;
 
       db.all(query, [], (err, rows) => {
@@ -34,12 +37,57 @@ async getDocumentsGeo() {
               console.error("Errore durante il recupero dei documenti:", err);
               return reject(new Error("Errore durante il recupero dei documenti."));
           }
-          
-          // Restituisce l'elenco dei documenti recuperati
-          resolve(rows);
+
+          // Raggruppa i risultati per documento e area_id
+          const documentsMap = {};
+
+          rows.forEach(row => {
+              const docId = row.document_id;
+              
+              // Se il documento non esiste ancora nella mappa, inizializzalo
+              if (!documentsMap[docId]) {
+                  documentsMap[docId] = {
+                      document_id: row.document_id,
+                      document_title: row.document_title,
+                      stakeholder: row.stakeholder,
+                      scale: row.scale,
+                      issuance_date: row.issuance_date,
+                      language: row.language,
+                      pages: row.pages,
+                      document_type: row.document_type,
+                      document_description: row.document_description,
+                      geolocations: {}
+                  };
+              }
+
+              // Aggiungi le coordinate per l'area_id corrente
+              const areaId = row.area_id;
+              if (!documentsMap[docId].geolocations[areaId]) {
+                  documentsMap[docId].geolocations[areaId] = {
+                      area_name: row.area_name,
+                      coordinates: []
+                  };
+              }
+
+              // Aggiungi la coordinata corrente
+              documentsMap[docId].geolocations[areaId].coordinates.push({
+                  long: row.long,
+                  lat: row.lat
+              });
+          });
+
+          // Trasforma la mappa in un array di documenti con geolocalizzazioni
+          const documentsArray = Object.values(documentsMap).map(document => {
+              document.geolocations = Object.values(document.geolocations);
+              return document;
+          });
+
+          // Restituisce l'elenco dei documenti strutturato come richiesto
+          resolve(documentsArray);
       });
   });
 }
+
 
   async insertDocument(document_title, stakeholder, scale, issuance_date, language, pages, document_type, document_description, area_name, coords) {
     return new Promise((resolve, reject) => {
@@ -86,7 +134,7 @@ async getDocumentsGeo() {
                                 return reject(err);
                             }
 
-                            if (areaRow) {
+                            if (areaRow && area_name=='Whole Area') {
                                 const areaId = areaRow.area_id;
 
                                 const geolocationDocQuery = `
