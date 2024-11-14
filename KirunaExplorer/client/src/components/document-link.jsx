@@ -12,18 +12,17 @@ import {
 import API from "../services/API.js";
 import { toast } from "sonner";
 
-export default function DocumentLink() {
+export default function DocumentLink(/*{ initialDocument }*/) { //MOCK
   const [documents, setDocuments] = useState([]); // Stato per documenti dal database
-  const [selectedDocuments, setSelectedDocuments] = useState([]);
+  const [selectedDocument, setSelectedDocument] = useState(null); // Stato per il secondo documento da selezionare
   const [linkType, setLinkType] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
-
+const initialDocument={document_title: '2001 Material Access.pdf'}; //MOCK
   // useEffect per caricare i documenti all'inizio
   useEffect(() => {
     const fetchDocuments = async () => {
       try {
         const response = await API.getDocuments(); // Funzione per ottenere i documenti
-        console.log(response);
         setDocuments(response); // Imposta i documenti nello stato
       } catch (error) {
         console.error("Error fetching documents:", error);
@@ -33,35 +32,23 @@ export default function DocumentLink() {
   }, []);
 
   const handleDocumentClick = (document) => {
-    if (
-      selectedDocuments.some(
-        (doc) => doc.document_title === document.document_title
-      )
-    ) {
-      setSelectedDocuments(
-        selectedDocuments.filter(
-          (doc) => doc.document_title !== document.document_title
-        )
-      );
-    } else if (selectedDocuments.length < 2) {
-      setSelectedDocuments([...selectedDocuments, document]);
-    }
+    setSelectedDocument(document);
   };
 
   const handleLinkDocuments = async () => {
-    if (selectedDocuments.length === 2 && linkType) {
+    if (selectedDocument && linkType) {
       const result = await API.linkDocuments(
-        selectedDocuments[0].document_title,
-        selectedDocuments[1].document_title,
+        initialDocument.document_title,
+        selectedDocument.document_title,
         linkType
       );
 
       if (result.success) {
         toast.success(
-          `Successfully linked "${selectedDocuments[0].document_title}" and "${selectedDocuments[1].document_title}" as ${linkType}.`
+          `Successfully linked "${initialDocument.document_title}" with "${selectedDocument.document_title}" as ${linkType}.`
         );
         // Clear selections
-        setSelectedDocuments([]);
+        setSelectedDocument(null);
         setLinkType("");
       } else {
         // Display error message
@@ -70,18 +57,21 @@ export default function DocumentLink() {
     }
   };
 
-  const filteredDocuments = documents.filter((doc) =>
-    doc.document_title.toLowerCase().includes(searchQuery.toLowerCase())
+  // Filtra i documenti escluso quello già selezionato
+  const filteredDocuments = documents.filter(
+    (doc) =>
+      doc.document_title.toLowerCase().includes(searchQuery.toLowerCase()) &&
+      doc.document_title !== initialDocument.document_title
   );
 
   return (
     <Card className="min-w-[280px] max-w-[600px]">
       <CardHeader>
-        <CardTitle>Link Two Documents</CardTitle>
+        <CardTitle>Link Document to "{initialDocument.document_title}"</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="text-muted-foreground mb-4">
-          Select exactly two documents to link them together.
+          Search and select a document to link it to "{initialDocument.document_title}".
         </div>
         <Input
           placeholder="Search by document title"
@@ -94,20 +84,12 @@ export default function DocumentLink() {
             <DocCard
               key={doc.document_title}
               document={doc}
-              isSelected={selectedDocuments.some(
-                (d) => d.document_title === doc.document_title
-              )}
+              isSelected={selectedDocument?.document_title === doc.document_title}
               onClick={() => handleDocumentClick(doc)}
-              disabled={
-                selectedDocuments.length === 2 &&
-                !selectedDocuments.some(
-                  (d) => d.document_title === doc.document_title
-                )
-              }
             />
           ))}
         </div>
-        {selectedDocuments.length === 2 && (
+        {selectedDocument && (
           <div className="mt-4 space-y-2">
             <Select
               onValueChange={(value) => setLinkType(value)}
@@ -118,16 +100,10 @@ export default function DocumentLink() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="Reference">Reference</SelectItem>
-                <SelectItem value="Collateral Consequence">
-                  Collateral Consequence
-                </SelectItem>
+                <SelectItem value="Collateral Consequence">Collateral Consequence</SelectItem>
                 <SelectItem value="Projection">Projection</SelectItem>
-                <SelectItem value="Material Effects">
-                  Material Effects
-                </SelectItem>
-                <SelectItem value="Direct Consequence">
-                  Direct Consequence
-                </SelectItem>
+                <SelectItem value="Material Effects">Material Effects</SelectItem>
+                <SelectItem value="Direct Consequence">Direct Consequence</SelectItem>
               </SelectContent>
             </Select>
             <Button onClick={handleLinkDocuments} disabled={!linkType}>
@@ -140,12 +116,12 @@ export default function DocumentLink() {
   );
 }
 
-export function DocCard({ document, isSelected, onClick, disabled }) {
+export function DocCard({ document, isSelected, onClick }) {
   return (
     <Card
-      onClick={!disabled ? onClick : undefined}
+      onClick={onClick}
       className={`relative w-full p-4 text-sm shadow-md border border-gray-200 cursor-pointer ${
-        disabled ? "opacity-50 cursor-not-allowed" : ""
+        isSelected ? "bg-blue-100" : ""
       }`}
     >
       <CardHeader>
