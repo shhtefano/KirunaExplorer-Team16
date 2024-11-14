@@ -34,11 +34,21 @@ import {
   scaleRules,
   stakeholderRules,
   typeRules,
-  connectionRules,
 } from "@/rules/document-description";
+import { DialogFooter } from "@/components/ui/dialog";
 import { useState, useTransition } from "react";
 import { Checkbox } from "./ui/checkbox";
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import API from "../services/API";
+import DocumentLink from "./document-link";
 
 const documents = [
   {
@@ -105,7 +115,7 @@ const DocumentDescriptionForm = () => {
       };
       delete body.latitude;
       delete body.longitude;
-      console.log({...body});
+      console.log({ ...body });
       // Api request
       try {
         const response = await API.addDocumentDescription(body);
@@ -114,12 +124,12 @@ const DocumentDescriptionForm = () => {
         if (response.error) {
           console.log(response.error);
           toast.error(response.error, {
-            description: ""
+            description: "",
           });
         } else {
           console.log(response); // Logs the response status (e.g., 200)
           toast.success("Added document description", {
-            description: ""
+            description: "",
           });
           form.reset();
         }
@@ -139,7 +149,7 @@ const DocumentDescriptionForm = () => {
     setShowPopup(false);
     form.setValue("latitude", parseFloat(lat.toFixed(6)));
     form.setValue("longitude", parseFloat(long.toFixed(6)));
-  }
+  };
 
   return (
     <div>
@@ -346,35 +356,74 @@ const DocumentDescriptionForm = () => {
                   </FormItem>
                 )}
               />
-              <div className="flex gap-x-4 items-center">
-
               <FormField
-  control={form.control}
-  name="area_name"
-  render={({ field }) => (
-    <FormItem className="flex flex-col items-center space-y-2"> {/* Disposizione verticale e centrata */}
-      <FormLabel className="text-center" style={{ paddingBottom: "22px" }}> {/* Allinea la label al centro */}
-        Municipal area
-      </FormLabel>
-      <FormControl>
-        <Checkbox
-          {...field}
-          checked={field.value === "Whole Area"} // Checkbox is checked if value is "Whole Area"
-          onCheckedChange={(checked) => {
-            const value = checked ? "Whole Area" : ""; // Set to "Whole Area" if checked, otherwise empty
-            field.onChange(value); // Update the form's field value
-            setIsWholeArea(checked); // Optional: Update any additional component state
-          }}
-        />
-      </FormControl>
-      <FormMessage />
-    </FormItem>
-  )}
-/>
-<div style={{ marginLeft: "30px", marginRight:"30px" }}>
+                control={form.control}
+                name="link"
+                render={() => (
+                  <FormItem>
+                    <FormControl>
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button variant="">Link documents</Button>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-[825px]">
+                          <DialogHeader>
+                            <DialogTitle>Link documents</DialogTitle>
+                            <DialogDescription>
+                              Link this document with other already existing
+                              documents.
+                            </DialogDescription>
+                          </DialogHeader>
+                          <div className="flex p-2 justify-center items-center">
+                            <ScrollArea className="h-[500px] p-2">
+                              <DocumentLink />
+                            </ScrollArea>
+                          </div>
+                          <DialogFooter>
+                            <Button type="submit">Save changes</Button>
+                          </DialogFooter>
+                        </DialogContent>
+                      </Dialog>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-              OR
-</div>
+              <div className="flex gap-x-4 items-center">
+                <FormField
+                  control={form.control}
+                  name="area_name"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col items-center space-y-2">
+                      {" "}
+                      {/* Disposizione verticale e centrata */}
+                      <FormLabel
+                        className="text-center"
+                        style={{ paddingBottom: "22px" }}
+                      >
+                        {" "}
+                        {/* Allinea la label al centro */}
+                        Municipal area
+                      </FormLabel>
+                      <FormControl>
+                        <Checkbox
+                          {...field}
+                          checked={field.value === "Whole Area"} // Checkbox is checked if value is "Whole Area"
+                          onCheckedChange={(checked) => {
+                            const value = checked ? "Whole Area" : ""; // Set to "Whole Area" if checked, otherwise empty
+                            field.onChange(value); // Update the form's field value
+                            setIsWholeArea(checked); // Optional: Update any additional component state
+                          }}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <div style={{ marginLeft: "30px", marginRight: "30px" }}>
+                  OR
+                </div>
                 <FormField
                   control={form.control}
                   name="latitude"
@@ -418,7 +467,13 @@ const DocumentDescriptionForm = () => {
                   )}
                 />
                 {/* Bottone per aprire il popup */}
-                <div style={{textAlign: "center", width:"10%", marginTop:"30px" }}>
+                <div
+                  style={{
+                    textAlign: "center",
+                    width: "10%",
+                    marginTop: "30px",
+                  }}
+                >
                   <Button
                     type="button"
                     onClick={() => setShowPopup(true)}
@@ -426,18 +481,20 @@ const DocumentDescriptionForm = () => {
                   >
                     Open Map
                   </Button>
-
                 </div>
               </div>
               {/* Popup per fornire informazioni su latitudine e longitudine */}
               {showPopup && (
                 <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-                  <div className="bg-white p-6 rounded shadow-lg"  style={{textAlign:"center" }}>
+                  <div
+                    className="bg-white p-6 rounded shadow-lg"
+                    style={{ textAlign: "center" }}
+                  >
                     <CoordsMap
                       setShowPopup={setShowPopup}
                       onSubmitCoordinates={onSubmitCoordinates}
                     />
-                
+
                     <Button
                       type="button"
                       onClick={() => setShowPopup(false)}
@@ -448,12 +505,11 @@ const DocumentDescriptionForm = () => {
                   </div>
                 </div>
               )}
-              <div  style={{textAlign:"center", marginTop:'60px' }}>
-              <Button type="submit" disabled={isPending}>
-                Add document description
-              </Button>
+              <div style={{ textAlign: "center", marginTop: "60px" }}>
+                <Button type="submit" disabled={isPending}>
+                  Add document description
+                </Button>
               </div>
-
             </form>
           </Form>
         </CardContent>

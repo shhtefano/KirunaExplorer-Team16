@@ -12,12 +12,13 @@ import {
 import API from "../services/API.js";
 import { toast } from "sonner";
 
-export default function DocumentLink(/*{ initialDocument }*/) { // MOCK
+export default function DocumentLink(/*{ initialDocument }*/) {
+  // MOCK
   const [documents, setDocuments] = useState([]); // State for documents from the database
   const [selectedDocument, setSelectedDocument] = useState(null); // State for the document to link
   const [linkType, setLinkType] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
-  const initialDocument = { document_title: '2001 Material Access.pdf' }; // MOCK
+  const initialDocument = { document_title: "2001 Material Access.pdf" }; // MOCK
 
   // useEffect to load documents at startup
   useEffect(() => {
@@ -69,13 +70,16 @@ export default function DocumentLink(/*{ initialDocument }*/) { // MOCK
   return (
     <Card className="min-w-[280px] max-w-[600px]">
       <CardHeader>
-        <CardTitle>Link Document to "{initialDocument.document_title}"</CardTitle>
+        <CardTitle>
+          Link Document to "{initialDocument.document_title}"
+        </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="text-muted-foreground mb-4">
-          Search and select a document to link it to "{initialDocument.document_title}".
+          Search and select a document to link it to "
+          {initialDocument.document_title}".
         </div>
-        
+
         {/* Search bar */}
         <Input
           placeholder="Search by document title"
@@ -90,7 +94,9 @@ export default function DocumentLink(/*{ initialDocument }*/) { // MOCK
             <div key={doc.document_title}>
               <DocCard
                 document={doc}
-                isSelected={selectedDocument?.document_title === doc.document_title}
+                isSelected={
+                  selectedDocument?.document_title === doc.document_title
+                }
                 onClick={() => handleDocumentClick(doc)}
               />
 
@@ -98,7 +104,8 @@ export default function DocumentLink(/*{ initialDocument }*/) { // MOCK
               {selectedDocument?.document_title === doc.document_title && (
                 <div className="mt-2 space-y-2 p-4 border rounded-md bg-gray-50">
                   <div className="font-semibold text-sm">
-                    Link "{initialDocument.document_title}" to "{selectedDocument.document_title}"
+                    Link "{initialDocument.document_title}" to "
+                    {selectedDocument.document_title}"
                   </div>
                   <Select
                     onValueChange={(value) => setLinkType(value)}
@@ -109,10 +116,16 @@ export default function DocumentLink(/*{ initialDocument }*/) { // MOCK
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="Reference">Reference</SelectItem>
-                      <SelectItem value="Collateral Consequence">Collateral Consequence</SelectItem>
+                      <SelectItem value="Collateral Consequence">
+                        Collateral Consequence
+                      </SelectItem>
                       <SelectItem value="Projection">Projection</SelectItem>
-                      <SelectItem value="Material Effects">Material Effects</SelectItem>
-                      <SelectItem value="Direct Consequence">Direct Consequence</SelectItem>
+                      <SelectItem value="Material Effects">
+                        Material Effects
+                      </SelectItem>
+                      <SelectItem value="Direct Consequence">
+                        Direct Consequence
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                   <Button onClick={handleLinkDocuments} disabled={!linkType}>
