@@ -16,11 +16,8 @@ COPY . .
 # Costruisci l'applicazione
 RUN npm run build
 
-# Usa un server statico per servire il frontend
-RUN npm install -g serve
-
 # Esponi la porta 5173 (Vite) o quella configurata per il frontend
 EXPOSE 5173
 
 # Comando di avvio
-CMD ["serve", "-s", "dist"]
+CMD ["npm", "run", "dev"]
