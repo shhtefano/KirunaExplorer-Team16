@@ -7,14 +7,11 @@ const ShowDocumentsPage = () => {
       <h1 className="text-center font-semibold text-lg">
         List of All Documents
       </h1>
-
       <div className="flex items-center justify-center align-center">
         <DocsTable/>
-      
       </div>
       <div className="flex items-center justify-center align-center">
         <a href="/">
-
           <Button>Back to Home</Button>
         </a>
       </div>
