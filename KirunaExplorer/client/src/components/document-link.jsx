@@ -12,18 +12,19 @@ import {
 import API from "../services/API.js";
 import { toast } from "sonner";
 
-export default function DocumentLink(/*{ initialDocument }*/) { //MOCK
-  const [documents, setDocuments] = useState([]); // Stato per documenti dal database
-  const [selectedDocument, setSelectedDocument] = useState(null); // Stato per il secondo documento da selezionare
+export default function DocumentLink(/*{ initialDocument }*/) { // MOCK
+  const [documents, setDocuments] = useState([]); // State for documents from the database
+  const [selectedDocument, setSelectedDocument] = useState(null); // State for the document to link
   const [linkType, setLinkType] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
-const initialDocument={document_title: '2001 Material Access.pdf'}; //MOCK
-  // useEffect per caricare i documenti all'inizio
+  const initialDocument = { document_title: '2001 Material Access.pdf' }; // MOCK
+
+  // useEffect to load documents at startup
   useEffect(() => {
     const fetchDocuments = async () => {
       try {
-        const response = await API.getDocuments(); // Funzione per ottenere i documenti
-        setDocuments(response); // Imposta i documenti nello stato
+        const response = await API.getDocuments(); // Function to fetch documents
+        setDocuments(response); // Set documents in state
       } catch (error) {
         console.error("Error fetching documents:", error);
       }
@@ -33,6 +34,7 @@ const initialDocument={document_title: '2001 Material Access.pdf'}; //MOCK
 
   const handleDocumentClick = (document) => {
     setSelectedDocument(document);
+    setLinkType(""); // Reset link type when selecting a new document
   };
 
   const handleLinkDocuments = async () => {
@@ -57,7 +59,7 @@ const initialDocument={document_title: '2001 Material Access.pdf'}; //MOCK
     }
   };
 
-  // Filtra i documenti escluso quello già selezionato
+  // Filter documents, excluding the already selected one
   const filteredDocuments = documents.filter(
     (doc) =>
       doc.document_title.toLowerCase().includes(searchQuery.toLowerCase()) &&
@@ -73,44 +75,54 @@ const initialDocument={document_title: '2001 Material Access.pdf'}; //MOCK
         <div className="text-muted-foreground mb-4">
           Search and select a document to link it to "{initialDocument.document_title}".
         </div>
+        
+        {/* Search bar */}
         <Input
           placeholder="Search by document title"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="mb-4"
         />
+
+        {/* Filtered document list */}
         <div className="grid grid-cols-1 gap-4">
           {filteredDocuments.map((doc) => (
-            <DocCard
-              key={doc.document_title}
-              document={doc}
-              isSelected={selectedDocument?.document_title === doc.document_title}
-              onClick={() => handleDocumentClick(doc)}
-            />
+            <div key={doc.document_title}>
+              <DocCard
+                document={doc}
+                isSelected={selectedDocument?.document_title === doc.document_title}
+                onClick={() => handleDocumentClick(doc)}
+              />
+
+              {/* Selection and link section below selected document */}
+              {selectedDocument?.document_title === doc.document_title && (
+                <div className="mt-2 space-y-2 p-4 border rounded-md bg-gray-50">
+                  <div className="font-semibold text-sm">
+                    Link "{initialDocument.document_title}" to "{selectedDocument.document_title}"
+                  </div>
+                  <Select
+                    onValueChange={(value) => setLinkType(value)}
+                    value={linkType}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select link type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Reference">Reference</SelectItem>
+                      <SelectItem value="Collateral Consequence">Collateral Consequence</SelectItem>
+                      <SelectItem value="Projection">Projection</SelectItem>
+                      <SelectItem value="Material Effects">Material Effects</SelectItem>
+                      <SelectItem value="Direct Consequence">Direct Consequence</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button onClick={handleLinkDocuments} disabled={!linkType}>
+                    Link Documents
+                  </Button>
+                </div>
+              )}
+            </div>
           ))}
         </div>
-        {selectedDocument && (
-          <div className="mt-4 space-y-2">
-            <Select
-              onValueChange={(value) => setLinkType(value)}
-              value={linkType}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select link type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Reference">Reference</SelectItem>
-                <SelectItem value="Collateral Consequence">Collateral Consequence</SelectItem>
-                <SelectItem value="Projection">Projection</SelectItem>
-                <SelectItem value="Material Effects">Material Effects</SelectItem>
-                <SelectItem value="Direct Consequence">Direct Consequence</SelectItem>
-              </SelectContent>
-            </Select>
-            <Button onClick={handleLinkDocuments} disabled={!linkType}>
-              Link Documents
-            </Button>
-          </div>
-        )}
       </CardContent>
     </Card>
   );
