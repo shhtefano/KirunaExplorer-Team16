@@ -17,7 +17,7 @@ services:
       context: ./client
       dockerfile: Dockerfile
     ports:
-      - "80:5173"  # Expose port 80 on the host
+      - "5173:5173"  # Expose port 80 on the host
     environment:
       NODE_ENV: production
       VITE_API_URL: http://localhost:3001
