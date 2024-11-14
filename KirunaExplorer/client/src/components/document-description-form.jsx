@@ -290,26 +290,6 @@ const DocumentDescriptionForm = () => {
                   </FormItem>
                 )}
               />
-              {/* <FormField
-                control={form.control}
-                name="connections"
-                rules={connectionRules}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Number of connections</FormLabel>
-                    <FormControl>
-                      <Input
-                        min="0"
-                        step="1"
-                        {...field}
-                        type="number"
-                        placeholder="0"
-                      ></Input>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              /> */}
               <FormField
                 control={form.control}
                 name="language"
