@@ -10,6 +10,7 @@ services:
       CLIENT_URL: http://localhost:5173
     volumes:
       - ./server:/app
+      - /app/node_modules  # Volume anonimo per node_modules
 
   client:
     build:
@@ -22,3 +23,4 @@ services:
       VITE_API_URL: http://localhost:3001
     volumes:
       - ./client:/app
+      - /app/node_modules  # Volume anonimo per node_modules
