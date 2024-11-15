@@ -309,7 +309,111 @@ async getDocumentsGeo() {
         return connection;
     };
 
+    //GeoUpdate part
+
+    async updatePointCoords(document_id,long,lat) {
+
+      // SQL queries to retrieve and insert data
+      const sqlQueryNodeExistence = `
+            SELECT * FROM Documents
+            WHERE document_id = ?
+          `;
+      const maxIdQuery = `SELECT MAX(area_id) as maxId FROM Geolocation`;    
+      const sqlQueryGeolocationInsert = `
+           INSERT INTO Geolocation(area_id,long,lat,area_name) 
+                        VALUES (?,?, ?, ?)
+                    `;
+      const sqlQueryUpdateGeolocationDocument = `
+           UPDATE Geolocation_Documents
+           SET area_id = ?
+           WHERE document_id = ?;
+                    `;     
+      let area_id = -1;                                     
+
+      //Check if node exists
+      
+      const node = await new Promise((resolve, reject) => {
+        db.get(sqlQueryNodeExistence, [document_id], (err, node) => {
+          if (!node) {
+            reject(new Error("Node not found!"));
+          } else if (err) {
+            reject(new Error(`Error while retrieving node: ${err.message}`));
+          } else {
+            resolve(node);
+          }
+        });
+      });
+
+      const area_id_max = await new Promise((resolve, reject) => {
+            const maxIdQuery = `SELECT MAX(area_id) as maxId FROM Geolocation`;
+    
+            db.get(maxIdQuery, [], (err, row) => {
+                if (err) {
+                    return reject(new Error(`Errore durante il recupero del maxId: ${err.message}`));
+                }
+    
+                // Calcolo del nuovo `area_id`
+                const newAreaId = (row.maxId || 0) + 1;
+                area_id=newAreaId;
+                console.log(`Nuovo area_id generato: ${newAreaId}`);
+                resolve(newAreaId);
+            });
+        });                                   
+  
+      // Insert on Geolocation
+      const insertOnGeolocation = await new Promise((resolve, reject) => {
+        db.run(sqlQueryGeolocationInsert, [area_id,long,lat,"Point"], function (err) {
+          if (err) {
+            reject(new Error(`Failed to insert Geolocation: ${err.message}`));
+          } else {
+            resolve(this.lastID);  //da testare se funziona
+          }
+        });
+      });
+
+      //Update on Geolocation_Documents
+      const updateOnGeolocationDocuments = await new Promise((resolve, reject) => {
+        db.run(sqlQueryUpdateGeolocationDocument, [area_id,document_id], function (err) {
+          if (err) {
+            reject(new Error(`Failed to update on Geolocation Documents: ${err.message}`));
+          } else {           
+            resolve(this.changes);  //da testare se funziona
+          }
+        });
+      });
+
+
+      return insertOnGeolocation;
+  };
+
 }
+
+
+async function testUpdatePointCoords() {
+  const dao = new DocumentDAO();
+
+  try {
+    const document_id = 1; // Cambia con un document_id valido
+    const longitude = 12.4924;
+    const latitude = 41.8902;
+
+    console.log("Inizio test per updatePointCoords...");
+    const result = await dao.updatePointCoords(document_id, longitude, latitude);
+    console.log("Test completato, area_id inserito:", result);
+  } catch (error) {
+    console.error("Errore durante il test:", error.message);
+  } finally {
+    db.close(() => {
+      console.log("Connessione al database chiusa.");
+    });
+  }
+}
+
+// Esegui il test
+testUpdatePointCoords();
+
+
+
 
 export default DocumentDAO;
 
