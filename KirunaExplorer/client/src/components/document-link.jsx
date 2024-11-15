@@ -47,7 +47,7 @@ export default function DocumentLink(/*{ initialDocument }*/) { // MOCK
 
       if (result.success) {
         toast.success(
-          'Successfully linked "${initialDocument.document_title}" with "${selectedDocument.document_title}" as ${linkType}.'
+          `Successfully linked "${initialDocument.document_title}" with "${selectedDocument.document_title}" as ${linkType}.`
         );
         // Clear selections
         setSelectedDocument(null);

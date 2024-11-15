@@ -29,7 +29,7 @@ import {
   typeRules,
 } from "@/rules/document-description";
 import { DialogFooter } from "@/components/ui/dialog";
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { Checkbox } from "./ui/checkbox";
 import {
   Dialog,
@@ -69,6 +69,7 @@ const DocumentDescriptionForm = () => {
   const [showPopup, setShowPopup] = useState(false); // New state for the popup
   const [documentId, setDocumentId] = useState(null);
   const [temporaryLinks, setTemporaryLinks] = useState([]);
+
   const form = useForm({
     // Initialized for uncontrolled component error
     defaultValues: {
@@ -86,9 +87,8 @@ const DocumentDescriptionForm = () => {
     },
   });
 
-  const onSaveTemporaryLinks = (links) => {
+  const onSaveTemporaryLinks = () => {
     setShowPopup(false); // Close the dialog after saving links
-    setTemporaryLinks(links);
   };
 
   const onSubmit = async (values) => {
@@ -123,9 +123,10 @@ const DocumentDescriptionForm = () => {
         });
       }
 
-      setTimeout(() => {
+     /* setTimeout(() => {
         window.location.reload();
-      }, 1000);
+      }, 1000);*/
+      setTemporaryLinks([])
     });
   };
 
@@ -157,7 +158,30 @@ const DocumentDescriptionForm = () => {
     form.setValue("latitude", parseFloat(lat.toFixed(6)));
     form.setValue("longitude", parseFloat(long.toFixed(6)));
   };
-
+  useEffect(() => {
+    const subscription = form.watch((values) => {
+      const currentTitle = values.document_title;
+  
+      setTemporaryLinks((prevLinks) =>
+        prevLinks.map((link) =>
+          link.from === currentTitle || link.from === prevLinks.find((l) => l.from)?.from
+            ? { ...link, from: currentTitle }
+            : link
+        )
+      );
+    });
+  
+    // Cleanup al dismontaggio del componente
+    return () => subscription.unsubscribe();
+  }, [form]);
+  
+  
+  // Monitorare i cambiamenti di temporaryLinks e loggare i valori aggiornati
+  useEffect(() => {
+    console.log("Temporary Links Updated:", temporaryLinks);
+  }, [temporaryLinks]);
+  
+  
   return (
     <div>
       <Card className="min-w-[280px] max-w-[700px]">
@@ -166,9 +190,7 @@ const DocumentDescriptionForm = () => {
         </CardHeader>
         <CardContent>
           <div className="text-muted-foreground mb-4">
-            Here you can add a document description to the relating document.
-            Choose the document from the dropdown menu and add you description
-            in the text field.
+            Here you can add a document description and link other documents to it.
           </div>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -371,7 +393,8 @@ const DocumentDescriptionForm = () => {
                           <div className="flex p-2 justify-center items-center">
                             <ScrollArea className="h-[500px] p-2">
                               <DocumentLinkOnCreation onSave={onSaveTemporaryLinks}                   
-                              initialDocumentTitle={form.watch("document_title")} // Passa il titolo del documento corrente
+                              initialDocumentTitle={form.watch("document_title")}  temporaryLinks={temporaryLinks} setTemporaryLinks={setTemporaryLinks}
+                              // Passa il titolo del documento corrente
                               />
                             </ScrollArea>
                           </div>
