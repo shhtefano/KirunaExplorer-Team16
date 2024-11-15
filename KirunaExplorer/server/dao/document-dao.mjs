@@ -311,7 +311,7 @@ async getDocumentsGeo() {
 
     //GeoUpdate part
 
-    async updatePointCoords(document_id,long,lat) {
+    async updatePointCoords(document_id, long, lat) {
 
       // SQL queries to retrieve and insert data
       const sqlQueryNodeExistence = `
@@ -332,7 +332,7 @@ async getDocumentsGeo() {
 
       //Check if node exists
       
-      const node = await new Promise((resolve, reject) => {
+      const nodeExistence = await new Promise((resolve, reject) => {
         db.get(sqlQueryNodeExistence, [document_id], (err, node) => {
           if (!node) {
             reject(new Error("Node not found!"));
@@ -376,7 +376,8 @@ async getDocumentsGeo() {
         db.run(sqlQueryUpdateGeolocationDocument, [area_id,document_id], function (err) {
           if (err) {
             reject(new Error(`Failed to update on Geolocation Documents: ${err.message}`));
-          } else {           
+          } else {          
+            console.log("Nuovo area_id inserito test:", area_id); 
             resolve(this.changes);  //da testare se funziona
           }
         });
@@ -386,16 +387,80 @@ async getDocumentsGeo() {
       return insertOnGeolocation;
   };
 
+  async updateNodeArea(document_id, area_name) {
+
+    // SQL queries to retrieve and insert data
+    const sqlQueryNodeExistence = `
+          SELECT * FROM Documents
+          WHERE document_id = ?
+        `;
+
+      const sqlQueryAreaExistence = `
+          SELECT * FROM Geolocation
+          WHERE area_name = ?
+        `;
+
+    const sqlQueryUpdateAreaDocument = `
+         UPDATE Geolocation_Documents
+          SET area_id = (
+              SELECT area_id 
+              FROM Geolocation
+              WHERE area_name = ?
+              )
+          WHERE document_id = ?;
+        `;       
+
+    //Check if node exists
+    
+    const node = await new Promise((resolve, reject) => {
+      db.get(sqlQueryNodeExistence, [document_id], (err, node) => {
+        if (!node) {
+          reject(new Error("Node not found!"));
+        } else if (err) {
+          reject(new Error(`Error while retrieving node: ${err.message}`));
+        } else {
+          resolve(node);
+        }
+      });
+    });     
+
+    const area = await new Promise((resolve, reject) => {
+      db.get(sqlQueryAreaExistence, [area_name], (err, area) => {
+        if (!area) {
+          reject(new Error("Area not found!"));
+        } else if (err) {
+          reject(new Error(`Error while retrieving area: ${err.message}`));
+        } else {
+          resolve(area);
+        }
+      });
+    });     
+
+    //Update on Geolocation_Documents
+    const updateOnGeolocationDocuments = await new Promise((resolve, reject) => {
+      db.run(sqlQueryUpdateAreaDocument, [area_name,document_id], function (err) {
+        if (err) {
+          reject(new Error(`Failed to update on Geolocation Documents: ${err.message}`));
+        } else {          
+          console.log("Il documento con id ", document_id, "è stato assegnato all'area ", area_name); 
+          resolve(this.changes);  //da testare se funziona
+        }
+      });
+    });
+};
+
 }
 
 
-async function testUpdatePointCoords() {
+
+
+/*async function testUpdatePointCoords() {
   const dao = new DocumentDAO();
 
   try {
-    const document_id = 1; // Cambia con un document_id valido
-    const longitude = 12.4924;
-    const latitude = 41.8902;
+    const document_id = 2; // Cambia con un document_id valido
+    const longitude = 1;
+    const latitude = 3;
 
     console.log("Inizio test per updatePointCoords...");
     const result = await dao.updatePointCoords(document_id, longitude, latitude);
@@ -410,10 +475,28 @@ async function testUpdatePointCoords() {
 }
 
 // Esegui il test
-testUpdatePointCoords();
+testUpdatePointCoords();*/
 
+/*async function test1() {
+  const dao = new DocumentDAO();
 
+  try {
+    const document_id = 2; // Cambia con un document_id valido
+    const area_name = "Whole Area"
 
+    console.log("Inizio test per area...");
+    const result = await dao.updateNodeArea(document_id, area_name);
+  } catch (error) {
+    console.error("Errore durante il test:", error.message);
+  } finally {
+    db.close(() => {
+      console.log("Connessione al database chiusa.");
+    });
+  }
+}
+
+// Esegui il test
+test1();*/
 
 export default DocumentDAO;
 

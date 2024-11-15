@@ -60,5 +60,39 @@ router.post("/api/document/connections", async (req, res) => {
       res.status(500).send("An error occurred while linking the documents.");
 }});
 
+router.post("/api/document/updatePointCoords", async (req, res) => {
+  const { document_id, long, lat } = req.body;
+
+  try {
+    console.log("router:", document_id, long, lat);
+
+    const result = await documentDAO.updatePointCoords(document_id, long, lat);
+
+    res.status(201).send("Point coordinates successfully updated");
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("An error occurred while updating the point coordinates.");
+  }
+});
+
+router.put("/api/document/updateNodeArea", async (req, res) => {
+  const { document_id, area_name } = req.body;
+
+  if (!document_id || !area_name) {
+    return res.status(400).json({ error: 'Missing required parameters.' });
+  }
+
+  try {
+    console.log("router:", document_id, area_name);
+
+    const result = await documentDAO.updateNodeArea(document_id, area_name);
+
+    res.status(200).send("Node area successfully updated");
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("An error occurred while updating the node area.");
+  }
+});
+
 
 export default router;
