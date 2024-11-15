@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --host",
     "test": "jest",
     "c:open": "cypress open",
     "c:run": "cypress run",
