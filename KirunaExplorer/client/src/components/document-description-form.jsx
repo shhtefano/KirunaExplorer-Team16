@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import CoordsMap from "./CoordsMap";
 import {
-Form,
+  Form,
   FormControl,
   FormField,
   FormItem,
@@ -44,39 +44,16 @@ import API from "../services/API";
 import DocumentLinkOnCreation from "./creation-document-link.jsx";
 
 const documents = [
-  {
-    type: "Design",
-    icon: null,
-  },
-  {
-    type: "Informative",
-    icon: null,
-  },
-  {
-    type: "Technical",
-    icon: null,
-  },
-  {
-    type: "Prescriptive",
-    icon: null,
-  },
-  {
-    type: "Material Effects",
-    icon: null,
-  },
-  {
-    type: "Agreement",
-    icon: null,
-  },
-  {
-    type: "Conflict",
-    icon: null,
-  },
-  {
-    type: "Consultation",
-    icon: null,
-  },
+  { type: "Design", icon: null },
+  { type: "Informative", icon: null },
+  { type: "Technical", icon: null },
+  { type: "Prescriptive", icon: null },
+  { type: "Material Effects", icon: null },
+  { type: "Agreement", icon: null },
+  { type: "Conflict", icon: null },
+  { type: "Consultation", icon: null },
 ];
+
 const stakeholders = [
   "LKAB",
   "Municipality",
@@ -89,10 +66,11 @@ const stakeholders = [
 const DocumentDescriptionForm = () => {
   const [isWholeArea, setIsWholeArea] = useState(false);
   const [isPending, startTransition] = useTransition();
-  const [showPopup, setShowPopup] = useState(false); // Nuovo stato per il popup
+  const [showPopup, setShowPopup] = useState(false); // New state for the popup
   const [documentId, setDocumentId] = useState(null);
   const [temporaryLinks, setTemporaryLinks] = useState([]);
-  const form = useForm({ //initialized for uncontrolled component error
+  const form = useForm({
+    // Initialized for uncontrolled component error
     defaultValues: {
       document_title: "",
       document_description: "",
@@ -110,59 +88,58 @@ const DocumentDescriptionForm = () => {
 
   const onSaveTemporaryLinks = (links) => {
     setShowPopup(false); // Close the dialog after saving links
-    setTemporaryLinks(links);}
+    setTemporaryLinks(links);
+  };
 
-    const onSubmit = async (values) => {
-      startTransition(async () => {
-        console.log(values);
-        const body = {
-          ...values,
-          scale: values.scale.replace(/\s+/g, ""),
-          coordinates: {
-            lat: values.latitude,
-            long: values.longitude,
-          },
-        };
-        delete body.latitude;
-        delete body.longitude;
-        console.log({ ...body });
-      // Api request
-        try {
-          const response = await API.addDocumentDescription(body);
-          toast.success("Document description added");
-          setDocumentId(response.documentId); // Imposta il documentId
-    
-          // Salva i link solo se ci sono
-          if (temporaryLinks.length > 0) {
-            await onSaveLinks(response.documentId); // Passa il documentId direttamente
-          }
-    
-          form.reset();
-        
+  const onSubmit = async (values) => {
+    startTransition(async () => {
+      console.log(values);
+      const body = {
+        ...values,
+        scale: values.scale.replace(/\s+/g, ""),
+        coordinates: {
+          lat: values.latitude,
+          long: values.longitude,
+        },
+      };
+      delete body.latitude;
+      delete body.longitude;
+      console.log({ ...body });
+      // API request
+      try {
+        const response = await API.addDocumentDescription(body);
+        toast.success("Document description added");
+        setDocumentId(response.documentId); // Set the documentId
+
+        // Save links only if there are any
+        if (temporaryLinks.length > 0) {
+          await onSaveLinks(response.documentId); // Pass the documentId directly
+        }
+
+        form.reset();
       } catch (error) {
         toast.error(error, {
           description: "",
-      });
+        });
       }
-    
+
       setTimeout(() => {
         window.location.reload();
       }, 1000);
     });
   };
- 
-  
+
   const onSaveLinks = async (docId) => {
     for (const link of temporaryLinks) {
       try {
         const payload = {
-          from: link.from, // Titolo del documento di partenza
-          to: link.to,     // Titolo del documento di destinazione
-          type: link.type, // Tipo di collegamento
+          from: link.from, // Title of the starting document
+          to: link.to, // Title of the destination document
+          type: link.type, // Link type
         };
-  
+
         const response = await API.linkDocuments(payload.from, payload.to, payload.type);
-  
+
         if (response.error) {
           toast.error(`Error linking "${link.from}" to "${link.to}": ${response.error}`);
         } else {
@@ -174,13 +151,13 @@ const DocumentDescriptionForm = () => {
       }
     }
   };
-  
+
   const onSubmitCoordinates = (lat, long) => {
     setShowPopup(false);
     form.setValue("latitude", parseFloat(lat.toFixed(6)));
     form.setValue("longitude", parseFloat(long.toFixed(6)));
   };
- 
+
   return (
     <div>
       <Card className="min-w-[280px] max-w-[700px]">
@@ -195,6 +172,7 @@ const DocumentDescriptionForm = () => {
           </div>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              {/* Document Title */}
               <FormField
                 control={form.control}
                 name="document_title"
@@ -213,6 +191,7 @@ const DocumentDescriptionForm = () => {
                   </FormItem>
                 )}
               />
+              {/* Document Description */}
               <FormField
                 control={form.control}
                 name="document_description"
@@ -231,6 +210,7 @@ const DocumentDescriptionForm = () => {
                   </FormItem>
                 )}
               />
+              {/* Document Type */}
               <FormField
                 control={form.control}
                 name="document_type"
@@ -264,6 +244,7 @@ const DocumentDescriptionForm = () => {
                   </FormItem>
                 )}
               />
+              {/* Stakeholder */}
               <FormField
                 control={form.control}
                 name="stakeholder"
@@ -294,6 +275,7 @@ const DocumentDescriptionForm = () => {
                   </FormItem>
                 )}
               />
+              {/* Scale */}
               <FormField
                 control={form.control}
                 name="scale"
@@ -312,6 +294,7 @@ const DocumentDescriptionForm = () => {
                   </FormItem>
                 )}
               />
+              {/* Issuance Date */}
               <FormField
                 control={form.control}
                 name="issuance_date"
@@ -330,26 +313,7 @@ const DocumentDescriptionForm = () => {
                   </FormItem>
                 )}
               />
-              {/* <FormField
-                control={form.control}
-                name="connections"
-                rules={connectionRules}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Number of connections</FormLabel>
-                    <FormControl>
-                      <Input
-                        min="0"
-                        step="1"
-                        {...field}
-                        type="number"
-                        placeholder="0"
-                      ></Input>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              /> */}
+              {/* Language */}
               <FormField
                 control={form.control}
                 name="language"
@@ -367,6 +331,7 @@ const DocumentDescriptionForm = () => {
                   </FormItem>
                 )}
               />
+              {/* Pages */}
               <FormField
                 control={form.control}
                 name="pages"
@@ -544,7 +509,7 @@ const DocumentDescriptionForm = () => {
                       onSubmitCoordinates={onSubmitCoordinates}
                     />
 
-                    <Button
+                <Button
                       type="button"
                       onClick={() => setShowPopup(false)}
                       className="mt-4"
