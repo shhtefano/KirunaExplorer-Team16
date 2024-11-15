@@ -1,10 +1,4 @@
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-  CardFooter,
-} from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -12,7 +6,7 @@ import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import CoordsMap from "./CoordsMap";
 import {
-  Form,
+Form,
   FormControl,
   FormField,
   FormItem,
@@ -26,7 +20,6 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
-
 import {
   documentRules,
   descriptionRules,
@@ -48,7 +41,7 @@ import {
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import API from "../services/API";
-import DocumentLink from "./document-link";
+import DocumentLinkOnCreation from "./creation-document-link.jsx";
 
 const documents = [
   {
@@ -97,54 +90,79 @@ const DocumentDescriptionForm = () => {
   const [isWholeArea, setIsWholeArea] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [showPopup, setShowPopup] = useState(false); // Nuovo stato per il popup
-
-  const form = useForm({
+  const [documentId, setDocumentId] = useState(null);
+  const [temporaryLinks, setTemporaryLinks] = useState([]);
+  const form = useForm({ 
     defaultValues: {},
-  });
+   });
 
-  const onSubmit = async (values) => {
-    startTransition(async () => {
-      console.log(values);
-      const body = {
-        ...values,
-        scale: values.scale.replace(/\s+/g, ""),
-        coordinates: {
-          lat: values.latitude,
-          long: values.longitude,
-        },
-      };
-      delete body.latitude;
-      delete body.longitude;
-      console.log({ ...body });
+  const onSaveTemporaryLinks = (links) => {
+    setShowPopup(false); // Close the dialog after saving links
+    setTemporaryLinks(links);}
+
+    const onSubmit = async (values) => {
+      startTransition(async () => {
+        console.log(values);
+        const body = {
+          ...values,
+          scale: values.scale.replace(/\s+/g, ""),
+          coordinates: {
+            lat: values.latitude,
+            long: values.longitude,
+          },
+        };
+        delete body.latitude;
+        delete body.longitude;
+        console.log({ ...body });
       // Api request
-      try {
-        const response = await API.addDocumentDescription(body);
-
-        // Check if response contains an error
-        if (response.error) {
-          console.log(response.error);
-          toast.error(response.error, {
-            description: "",
-          });
-        } else {
-          console.log(response); // Logs the response status (e.g., 200)
-          toast.success("Added document description", {
-            description: "",
-          });
+        try {
+          const response = await API.addDocumentDescription(body);
+          toast.success("Document description added");
+          setDocumentId(response.documentId); // Imposta il documentId
+    
+          // Salva i link solo se ci sono
+          if (temporaryLinks.length > 0) {
+            await onSaveLinks(response.documentId); // Passa il documentId direttamente
+          }
+    
           form.reset();
-        }
+        
       } catch (error) {
         toast.error(error, {
           description: "",
-        });
+      });
       }
-
-      setTimeout(() => {
+    
+      /*setTimeout(() => {
         window.location.reload();
-      }, 1000);
+      }, 1000);*/
     });
   };
-
+ 
+  
+  const onSaveLinks = async (docId) => {
+    for (const link of temporaryLinks) {
+      try {
+        const payload = {
+          from: link.from, // Titolo del documento di partenza
+          to: link.to,     // Titolo del documento di destinazione
+          type: link.type, // Tipo di collegamento
+        };
+  
+        const response = await API.linkDocuments(payload.from, payload.to, payload.type);
+  
+        if (response.error) {
+          toast.error(`Error linking "${link.from}" to "${link.to}": ${response.error}`);
+        } else {
+          toast.success(`Link saved: "${link.from}" to "${link.to}" (${link.type})`);
+        }
+      } catch (error) {
+        toast.error(`An error occurred while linking "${link.from}" to "${link.to}".`);
+        console.error(`Error linking "${link.from}" to "${link.to}":`, error);
+      }
+    }
+  };
+  
   const onSubmitCoordinates = (lat, long) => {
     setShowPopup(false);
     form.setValue("latitude", parseFloat(lat.toFixed(6)));
@@ -362,7 +380,7 @@ const DocumentDescriptionForm = () => {
                 render={() => (
                   <FormItem>
                     <FormControl>
-                      <Dialog>
+                      <Dialog open={showPopup} onOpenChange={setShowPopup}>
                         <DialogTrigger asChild>
                           <Button variant="">Link documents</Button>
                         </DialogTrigger>
@@ -370,26 +388,43 @@ const DocumentDescriptionForm = () => {
                           <DialogHeader>
                             <DialogTitle>Link documents</DialogTitle>
                             <DialogDescription>
-                              Link this document with other already existing
-                              documents.
+                              Link this document with other documents.
                             </DialogDescription>
                           </DialogHeader>
                           <div className="flex p-2 justify-center items-center">
                             <ScrollArea className="h-[500px] p-2">
-                              <DocumentLink />
+                              <DocumentLinkOnCreation onSave={onSaveTemporaryLinks} />
                             </ScrollArea>
                           </div>
-                          <DialogFooter>
-                            <Button type="submit">Save changes</Button>
-                          </DialogFooter>
+                       {   /*<DialogFooter>
+                            <Button
+                              type="button"
+                              onClick={() => {
+                               
+                              }}
+                            >
+                              Save links
+                            </Button>
+                          </DialogFooter>*/}
                         </DialogContent>
                       </Dialog>
                     </FormControl>
                     <FormMessage />
+                    {temporaryLinks.length > 0 && (
+                      <div className="mt-4">
+                        <h3 className="text-sm font-semibold">Temporary Links:</h3>
+                        <ul className="list-disc pl-5 space-y-1">
+                          {temporaryLinks.map((link, index) => (
+                            <li key={index} className="text-sm">{link.from} -- {link.to} ({link.type})</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
                   </FormItem>
                 )}
               />
 
+              {/* Map button and other fields */}
               <div className="flex gap-x-4 items-center">
                 <FormField
                   control={form.control}

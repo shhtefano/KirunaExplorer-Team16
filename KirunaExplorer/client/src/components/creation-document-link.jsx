@@ -9,22 +9,22 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
-import API from "../services/API.js";
 import { toast } from "sonner";
+import API from "../services/API.js";
 
-export default function DocumentLink(/*{ initialDocument }*/) { // MOCK
-  const [documents, setDocuments] = useState([]); // State for documents from the database
-  const [selectedDocument, setSelectedDocument] = useState(null); // State for the document to link
+export default function DocumentLinkOnCreation({ onSave }) {
+  const [documents, setDocuments] = useState([]);
+  const [selectedDocument, setSelectedDocument] = useState(null);
   const [linkType, setLinkType] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [temporaryLinks, setTemporaryLinks] = useState([]);
   const initialDocument = { document_title: '2001 Material Access.pdf' }; // MOCK
 
-  // useEffect to load documents at startup
   useEffect(() => {
     const fetchDocuments = async () => {
       try {
-        const response = await API.getDocuments(); // Function to fetch documents
-        setDocuments(response); // Set documents in state
+        const response = await API.getDocuments();
+        setDocuments(response);
       } catch (error) {
         console.error("Error fetching documents:", error);
       }
@@ -34,47 +34,78 @@ export default function DocumentLink(/*{ initialDocument }*/) { // MOCK
 
   const handleDocumentClick = (document) => {
     setSelectedDocument(document);
-    setLinkType(""); // Reset link type when selecting a new document
+    setLinkType("");
   };
 
-  const handleLinkDocuments = async () => {
+  const handleAddTemporaryLink = () => {
     if (selectedDocument && linkType) {
-      const result = await API.linkDocuments(
-        initialDocument.document_title,
-        selectedDocument.document_title,
-        linkType
-      );
-
-      if (result.success) {
-        toast.success(
-          'Successfully linked "${initialDocument.document_title}" with "${selectedDocument.document_title}" as ${linkType}.'
-        );
-        // Clear selections
-        setSelectedDocument(null);
-        setLinkType("");
-      } else {
-        // Display error message
-        toast.error(result.message);
-      }
+      const newLink = {
+        from: initialDocument.document_title,
+        to: selectedDocument.document_title,
+        type: linkType,
+      };
+      setTemporaryLinks([...temporaryLinks, newLink]);
+      toast.success(`Linked "${initialDocument.document_title}" with "${selectedDocument.document_title}" as ${linkType}.`);
+      setSelectedDocument(null);
+      setLinkType("");
     }
   };
 
-  // Filter documents, excluding the already selected one
+  const handleRemoveTemporaryLink = (index) => {
+    setTemporaryLinks(temporaryLinks.filter((_, i) => i !== index));
+    toast.success("Link removed.");
+  };
+
   const filteredDocuments = documents.filter(
     (doc) =>
       doc.document_title.toLowerCase().includes(searchQuery.toLowerCase()) &&
       doc.document_title !== initialDocument.document_title
-  );  return (
+  );
+
+  const handleSave = () => {
+    onSave(temporaryLinks);  // Salva i link temporanei senza chiamare l'API
+    setTemporaryLinks([]);
+    toast.success("Temporary links saved locally.");
+  };
+
+  return (
     <Card className="min-w-[280px] max-w-[600px]">
       <CardHeader>
         <CardTitle>Link Document to "{initialDocument.document_title}"</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="text-muted-foreground mb-4">
+
+        {temporaryLinks.length > 0 && (
+          <div className="mb-4">
+            <h3 className="font-semibold text-sm">Temporary Links:</h3>
+            <ul className="list-disc pl-5 space-y-1">
+              {temporaryLinks.map((link, index) => (
+                <li key={index} className="text-sm flex items-center space-x-2">
+                  <span>
+                    {link.from} -- {link.to} ({link.type})
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-red-500"
+                    onClick={() => handleRemoveTemporaryLink(index)}
+                  >
+                    Remove
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        <Button onClick={handleSave} className="mt-4" disabled={temporaryLinks.length === 0}>
+          Save Links
+        </Button>
+
+        <div className="text-muted-foreground mt-4">
           Search and select a document to link it to "{initialDocument.document_title}".
         </div>
-
-        {/* Search bar */}
+        
         <Input
           placeholder="Search by document title"
           value={searchQuery}
@@ -82,8 +113,7 @@ export default function DocumentLink(/*{ initialDocument }*/) { // MOCK
           className="mb-4"
         />
 
-        {/* Filtered document list */}
-        <div className="grid grid-cols-1 gap-2">
+        <div className="grid grid-cols-1 gap-4">
           {filteredDocuments.map((doc) => (
             <div key={doc.document_title}>
               <DocButton
@@ -92,7 +122,6 @@ export default function DocumentLink(/*{ initialDocument }*/) { // MOCK
                 onClick={() => handleDocumentClick(doc)}
               />
 
-              {/* Selection and link section below selected document */}
               {selectedDocument?.document_title === doc.document_title && (
                 <div className="mt-2 space-y-2 p-4 border rounded-md bg-gray-50">
                   <div className="font-semibold text-sm">
@@ -113,8 +142,8 @@ export default function DocumentLink(/*{ initialDocument }*/) { // MOCK
                       <SelectItem value="Direct Consequence">Direct Consequence</SelectItem>
                     </SelectContent>
                   </Select>
-                  <Button onClick={handleLinkDocuments} disabled={!linkType}>
-                    Link Documents
+                  <Button onClick={handleAddTemporaryLink} disabled={!linkType}>
+                    Add Link
                   </Button>
                 </div>
               )}
@@ -126,19 +155,16 @@ export default function DocumentLink(/*{ initialDocument }*/) { // MOCK
   );
 }
 
+// Componente del pulsante per i documenti
 export function DocButton({ document, isSelected, onClick }) {
   return (
     <Button
       onClick={onClick}
-      variant="outline"
-      className={`w-full text-left p-2 ${isSelected ? "bg-blue-100 border-blue-500" : ""}`}
+      className={`bg-white text-black border border-gray-200 shadow-sm w-full hover:bg-gray-100 ${
+        isSelected ? "bg-blue-500 text-white border-blue-700" : ""
+      }`}
     >
-      <div className="flex justify-between items-center">
-        <span className="font-semibold text-sm">{document.document_title}</span>
-        {/*isSelected && (
-          <span className="text-green-500 font-semibold text-xs">Selected</span>
-        )*/}
-      </div>
+      {document.document_title}
     </Button>
   );
 }
