@@ -92,9 +92,21 @@ const DocumentDescriptionForm = () => {
   const [showPopup, setShowPopup] = useState(false); // Nuovo stato per il popup
   const [documentId, setDocumentId] = useState(null);
   const [temporaryLinks, setTemporaryLinks] = useState([]);
-  const form = useForm({ 
-    defaultValues: {},
-   });
+  const form = useForm({ //initialized for uncontrolled component error
+    defaultValues: {
+      document_title: "",
+      document_description: "",
+      document_type: "",
+      stakeholder: "",
+      scale: "",
+      issuance_date: "",
+      language: "",
+      pages: 0,
+      latitude: 0,
+      longitude: 0,
+      link: ""
+    },
+  });
 
   const onSaveTemporaryLinks = (links) => {
     setShowPopup(false); // Close the dialog after saving links
@@ -133,9 +145,9 @@ const DocumentDescriptionForm = () => {
       });
       }
     
-      /*setTimeout(() => {
+      setTimeout(() => {
         window.location.reload();
-      }, 1000);*/
+      }, 1000);
     });
   };
  
@@ -168,7 +180,7 @@ const DocumentDescriptionForm = () => {
     form.setValue("latitude", parseFloat(lat.toFixed(6)));
     form.setValue("longitude", parseFloat(long.toFixed(6)));
   };
-
+ 
   return (
     <div>
       <Card className="min-w-[280px] max-w-[700px]">
@@ -393,7 +405,9 @@ const DocumentDescriptionForm = () => {
                           </DialogHeader>
                           <div className="flex p-2 justify-center items-center">
                             <ScrollArea className="h-[500px] p-2">
-                              <DocumentLinkOnCreation onSave={onSaveTemporaryLinks} />
+                              <DocumentLinkOnCreation onSave={onSaveTemporaryLinks}                   
+                              initialDocumentTitle={form.watch("document_title")} // Passa il titolo del documento corrente
+                              />
                             </ScrollArea>
                           </div>
                        {   /*<DialogFooter>

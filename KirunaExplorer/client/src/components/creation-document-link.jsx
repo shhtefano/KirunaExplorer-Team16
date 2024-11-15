@@ -12,13 +12,13 @@ import {
 import { toast } from "sonner";
 import API from "../services/API.js";
 
-export default function DocumentLinkOnCreation({ onSave }) {
+export default function DocumentLinkOnCreation({ onSave , initialDocumentTitle}) {
   const [documents, setDocuments] = useState([]);
   const [selectedDocument, setSelectedDocument] = useState(null);
   const [linkType, setLinkType] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [temporaryLinks, setTemporaryLinks] = useState([]);
-  const initialDocument = { document_title: '2001 Material Access.pdf' }; // MOCK
+ // const initialDocument = { document_title: '2001 Material Access.pdf' }; // MOCK
 
   useEffect(() => {
     const fetchDocuments = async () => {
@@ -40,12 +40,12 @@ export default function DocumentLinkOnCreation({ onSave }) {
   const handleAddTemporaryLink = () => {
     if (selectedDocument && linkType) {
       const newLink = {
-        from: initialDocument.document_title,
+        from:initialDocumentTitle,
         to: selectedDocument.document_title,
         type: linkType,
       };
       setTemporaryLinks([...temporaryLinks, newLink]);
-      toast.success(`Linked "${initialDocument.document_title}" with "${selectedDocument.document_title}" as ${linkType}.`);
+      toast.success(`Linked "${initialDocumentTitle}" with "${selectedDocument.document_title}" as ${linkType}.`);
       setSelectedDocument(null);
       setLinkType("");
     }
@@ -59,7 +59,7 @@ export default function DocumentLinkOnCreation({ onSave }) {
   const filteredDocuments = documents.filter(
     (doc) =>
       doc.document_title.toLowerCase().includes(searchQuery.toLowerCase()) &&
-      doc.document_title !== initialDocument.document_title
+      doc.document_title !== initialDocumentTitle
   );
 
   const handleSave = () => {
@@ -71,7 +71,7 @@ export default function DocumentLinkOnCreation({ onSave }) {
   return (
     <Card className="min-w-[280px] max-w-[600px]">
       <CardHeader>
-        <CardTitle>Link Document to "{initialDocument.document_title}"</CardTitle>
+        <CardTitle>Link Document to "{initialDocumentTitle}"</CardTitle>
       </CardHeader>
       <CardContent>
 
@@ -98,12 +98,12 @@ export default function DocumentLinkOnCreation({ onSave }) {
           </div>
         )}
 
-        <Button onClick={handleSave} className="mt-4" disabled={temporaryLinks.length === 0}>
-          Save Links
-        </Button>
+        {temporaryLinks.length !== 0 && <Button onClick={handleSave} className="mt-4" disabled={temporaryLinks.length === 0}>
+          Save Links 
+        </Button>}
 
         <div className="text-muted-foreground mt-4">
-          Search and select a document to link it to "{initialDocument.document_title}".
+          Search and select a document to link it to "{initialDocumentTitle}".
         </div>
         
         <Input
@@ -125,7 +125,7 @@ export default function DocumentLinkOnCreation({ onSave }) {
               {selectedDocument?.document_title === doc.document_title && (
                 <div className="mt-2 space-y-2 p-4 border rounded-md bg-gray-50">
                   <div className="font-semibold text-sm">
-                    Link "{initialDocument.document_title}" to "{selectedDocument.document_title}"
+                    Link "{initialDocumentTitle}" to "{selectedDocument.document_title}"
                   </div>
                   <Select
                     onValueChange={(value) => setLinkType(value)}
