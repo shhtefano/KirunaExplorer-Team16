@@ -29,7 +29,7 @@ export function NavUser({ user }) {
   const handleLogout = async () => {
     try {
       await logout();
-      navigate("/login");
+      navigate("/");
       toast.success("Logged out successfully");
     } catch (error) {
       console.error("Logout failed:", error);
