@@ -58,7 +58,6 @@ async function updateDocumentCoordinates(document_id, lat, lng){
 }
 
 async function updateDocumentArea(document_id, area_id){
-  console.log('aooo', document_id, area_id);
   
   const response = await fetch(`${SERVER_URL}/api/document/updateDocumentArea`, {
     method: "PUT",
@@ -70,10 +69,8 @@ async function updateDocumentArea(document_id, area_id){
       area_id
     }),
   });
-  console.log(response);
   
   if (!response.ok) {
-    console.log('quindi vado qui?');
     
     const error = await response.json();
     throw new Error(error.message);

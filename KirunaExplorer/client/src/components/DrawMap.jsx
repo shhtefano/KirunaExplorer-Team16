@@ -64,9 +64,9 @@ const DrawMap = () => {
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
 
-  const ZOOM_LEVEL = 15;
+  const ZOOM_LEVEL = 14;
   const WHOLE_AREA_CENTER = { lat: 67.85572, lng: 20.22513 }; // Definisci le coordinate per Whole Area
-  const WHOLE_AREA_ZOOM = 13; // Definisci un livello di zoom per Whole Area
+  const WHOLE_AREA_ZOOM = 12; // Definisci un livello di zoom per Whole Area
 
   useEffect(() => {
     const fetchDocumentsGeo = async () => {
@@ -210,63 +210,78 @@ const DrawMap = () => {
   const _onEdited = async (e) => {
     const currentSelectedArea = selectedAreaRef.current; // Usa il valore aggiornato
     const editedLayers = e.layers; // Get all edited layers from the event
+  
     const updatedMarkers = [];
-    const updatedDocuments = [...filteredDocuments]; // Create a copy of filteredDocuments
-
+    const updatedDocuments = [];
+  
     editedLayers.eachLayer(async (layer) => {
       if (layer instanceof L.Marker) {
         const { lat, lng } = layer.getLatLng();
-
+  
         const latitude = parseFloat(lat.toFixed(6)); // Trunca alla sesta cifra decimale
         const longitude = parseFloat(lng.toFixed(6)); // Trunca alla sesta cifra decimale
-
-
+  
         // Accedi all'ID personalizzato tramite options.id
         const markerId = layer.options.customId;
-
+  
         // Trova il marker aggiornato tramite il markerId
         const updatedMarker = filteredMarkers.find((marker) => marker.id === markerId);
-
+  
         if (updatedMarker) {
           // Aggiorna la posizione del marker
           updatedMarker.latlngs = [latitude, longitude];
-
+  
           // Aggiungi il marker aggiornato alla lista
-          updatedMarkers.push(updatedMarker);
-
+          updatedMarkers.push({ ...updatedMarker, latlngs: [latitude, longitude] });
+  
           // Trova e aggiorna il documento corrispondente nella lista dei documenti filtrati
-          const updatedDocument = updatedDocuments.find(doc => doc.id === updatedMarker.id);
+          const updatedDocument = filteredDocuments.find((doc) => doc.id === updatedMarker.id);
+  
           if (updatedDocument) {
-            updatedDocument.coordinates = [{ lat: latitude, long: longitude }]; // Aggiorna le coordinate del documento
-          }
-
-          // Chiamata al backend per aggiornare le coordinate (implementa la tua logica backend)
-          await API.updateDocumentCoordinates(updatedMarker.id, latitude, longitude);
-
-          // Aggiorna lo stato con le nuove posizioni dei marker e i documenti aggiornati
-          setFilteredMarkers((prevMarkers) => {
-            return prevMarkers.map((marker) => {
-              const updated = updatedMarkers.find((m) => m.id === marker.id);
-              return updated || marker; // Sostituisci il marker se è aggiornato, altrimenti mantieni quello originale
+            updatedDocuments.push({
+              ...updatedDocument,
+              coordinates: [{ lat: latitude, long: longitude }],
             });
-          });
+  
+            // Chiamata al backend per aggiornare le coordinate (implementa la tua logica backend)
+            try{
+              await API.updateDocumentCoordinates(updatedMarker.id, latitude, longitude);
+              setSnackbarMessage("Document position successfully updated!");
+              setSnackbarSeverity("success");
+              setSnackbarOpen(true);
+            }catch(error){
+              setSnackbarMessage("Error updating document position.");
+              setSnackbarSeverity("error");
+              setSnackbarOpen(true);
+            }
 
-          // Aggiorna lo stato dei documenti filtrati con i documenti aggiornati
-          setFilteredDocuments(updatedDocuments);
-          // Dopo aver aggiornato le coordinate, aggiorna la posizione della mappa con il documento
-          // changeMapPosition(updatedDocument);  // Chiamata con i dati aggiornati del documento
+          }
         }
       } else if (layer instanceof L.Polygon) {
         if (currentSelectedArea.name === "Whole Area") {
-          // inserire qui codice  per cambiare altre aree, questa non dovrebbe essere modificabile.
+          // Inserire qui codice per cambiare altre aree, questa non dovrebbe essere modificabile.
           return;
         }
       }
     });
-
-
-
+  
+    // Aggiorna lo stato con i documenti aggiornati
+    setFilteredDocuments((prevDocuments) => {
+      return prevDocuments.map((doc) => {
+        const updated = updatedDocuments.find((updatedDoc) => updatedDoc.id === doc.id);
+        return updated || doc; // Aggiorna il documento se è stato modificato, altrimenti mantieni quello originale
+      });
+    });
+  
+    // Aggiorna lo stato con i marker aggiornati
+    setFilteredMarkers((prevMarkers) => {
+      return prevMarkers.map((marker) => {
+        const updated = updatedMarkers.find((updatedMarker) => updatedMarker.id === marker.id);
+        return updated || marker; // Aggiorna il marker se è stato modificato, altrimenti mantieni quello originale
+      });
+    });
   };
+  
 
   const changeDocumentPosition = (document) => {
     setSelectedDocument(document);
@@ -280,35 +295,75 @@ const DrawMap = () => {
       coordinates: [{ lat, long }],
     }));
   }
-
   const submitNewDocumentPosition = async () => {
     if (selectedDocument) {
       try {
         const { lat, long } = selectedDocument.coordinates[0];
         if (isWholeAreaChecked) {
-            const res = await API.updateDocumentArea(selectedDocument.id, 0);
-            setSelectedArea(areas[1]);
+          await API.updateDocumentArea(selectedDocument.id, 0);
+          setSelectedArea(areas[1]);
+          // Aggiorna filteredDocuments
+          setFilteredDocuments((prevDocuments) =>
+            prevDocuments.map((doc) =>
+              doc.id === selectedDocument.id
+                ? { ...doc, coordinates: [{ lat, long }] }
+                : doc
+            )
+          );
+  
+          // Aggiorna filteredMarkers
+          setFilteredMarkers((prevMarkers) =>
+            prevMarkers.map((marker) =>
+              marker.id === selectedDocument.id
+                ? { ...marker, latlngs: [lat, long] }
+                : marker
+            )
+          );
+  
+          // Sposta la mappa sulla nuova posizione
+          if (mapRef.current) {
+            mapRef.current.setView([lat, long], ZOOM_LEVEL);
+          }
         } else {
-          const res = await API.updateDocumentCoordinates(selectedDocument.id, lat, long);
+          await API.updateDocumentCoordinates(selectedDocument.id, lat, long);
+  
+          // Aggiorna filteredDocuments
+          setFilteredDocuments((prevDocuments) =>
+            prevDocuments.map((doc) =>
+              doc.id === selectedDocument.id
+                ? { ...doc, coordinates: [{ lat, long }] }
+                : doc
+            )
+          );
+  
+          // Aggiorna filteredMarkers
+          setFilteredMarkers((prevMarkers) =>
+            prevMarkers.map((marker) =>
+              marker.id === selectedDocument.id
+                ? { ...marker, latlngs: [lat, long] }
+                : marker
+            )
+          );
+  
+          // Sposta la mappa sulla nuova posizione
+          if (mapRef.current) {
+            mapRef.current.setView([lat, long], ZOOM_LEVEL);
+          }
+
           setSelectedArea(areas[0]);
         }
+  
         // Chiudi i modali
         setShowEditCoordinatesModal(false);
         setShowModal(false);
-
-        // Aggiorna la posizione del marker sulla mappa
-        if (mapRef.current) {
-          mapRef.current.setView([lat, long], ZOOM_LEVEL);
-        }
-
+  
         // Imposta il messaggio di successo per lo Snackbar
         setSnackbarMessage("Document position successfully updated!");
         setSnackbarSeverity("success");
         setSnackbarOpen(true);
-
       } catch (error) {
         console.error("Error updating document position:", error);
-
+  
         // Imposta il messaggio di errore per lo Snackbar
         setSnackbarMessage("Error updating document position.");
         setSnackbarSeverity("error");
@@ -316,6 +371,7 @@ const DrawMap = () => {
       }
     }
   };
+  
 
 
 
@@ -395,52 +451,88 @@ const DrawMap = () => {
 
         {/* Lista dei documenti filtrati */}
         <div style={{ maxHeight: '550px', overflowY: 'auto' }}>
-          {filteredDocuments.map((doc) => (
-            <div key={doc.id}>
-              <div
+  {filteredDocuments.map((doc) => (
+    <div key={doc.id}>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          border: '1px solid #ddd',
+          borderRadius: '8px',
+          padding: '10px',
+          marginBottom: '20px',
+          marginLeft: '5px',
+          marginRight: '5px',
+          cursor: 'pointer',
+          backgroundColor: hoveredDocumentId === doc.id ? '#3e3b40' : 'white',
+          color: hoveredDocumentId === doc.id ? 'white' : 'black',
+          fontSize: '17px',
+        }}
+        onMouseEnter={() => setHoveredDocumentId(doc.id)}
+        onMouseLeave={() => setHoveredDocumentId(null)}
+        onClick={doc.area_name === "Whole Area" ? () => handleMarkerClick(doc) : () => changeMapPosition(doc)}
+      >
+        <div>
+          <h2><strong>{doc.document_title}</strong></h2>
+          <p className="mt-3"><strong>Type:</strong> {doc.document_type}</p>
+          <p className="mt-1"><strong>Date:</strong> {doc.issuance_date}</p>
+          <p className="mt-1"><strong>Area:</strong> {doc.area_name==="Point" ? "Point" : doc.area_name}</p>
+          {/* Mostra le coordinate */}
+          {doc.coordinates && doc.coordinates.length > 0 && doc.area_name === "Point" && (
+            <p className="mt-1">
+              {doc.coordinates.map((coord, index) => (
+                <span className="" key={index}> 
+                  <strong>Latitude:</strong> {coord.lat.toFixed(6)} <strong>Longitude:</strong> {coord.long.toFixed(6)}
+                </span>
+              ))}
+            </p>
+          )}
+        </div>
+        <div>
+          {user && (
+            <Container className="flex flex-row gap-x-4 text-center">
+              <Button
+                className="mt-4"
                 style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  border: '1px solid #ddd',
-                  borderRadius: '8px',
-                  padding: '10px',
-                  marginBottom: '20px',
-                  marginLeft: '5px',
-                  marginRight: '5px',
-                  cursor: 'pointer',
+                  width: "70%",
+                  border: "1px solid #ddd",
+                  borderRadius: "8px",
+                  padding: "8px",
                   backgroundColor: hoveredDocumentId === doc.id ? '#3e3b40' : 'white',
                   color: hoveredDocumentId === doc.id ? 'white' : 'black',
                 }}
-                onMouseEnter={() => setHoveredDocumentId(doc.id)}
-                onMouseLeave={() => setHoveredDocumentId(null)}
-                onClick={doc.area_name === "Whole Area" ? () => handleMarkerClick(doc) : () => changeMapPosition(doc)}
+                variant="outline"
+                onClick={() => handleMarkerClick(doc)}
               >
-                <div>
-                  <h2><strong>{doc.document_title}</strong></h2>
-                  <p className="mt-3"><strong>Type:</strong> {doc.document_type}</p>
-                  <p className="mt-1"><strong>Date:</strong> {doc.issuance_date}</p>
-                </div>
-                <div>
-                  {user && <Container className="flex flex-row gap-x-4 text-center">
-                    <Button className="mt-4"
-                      style={{ width: "70%", border: "1px solid #ddd", borderRadius: "8px", padding: "8px", backgroundColor: hoveredDocumentId === doc.id ? '#3e3b40' : 'white', color: hoveredDocumentId === doc.id ? 'white' : 'black' }} variant="outline" onClick={() => handleMarkerClick(doc)}>
-
-                      <p style={{ fontSize: "12px" }}>
-                        <ArticleIcon></ArticleIcon>
-                      </p>
-                    </Button>
-                    <Button className="mt-4" style={{ width: "70%", border: "1px solid #ddd", borderRadius: "8px", padding: "8px", backgroundColor: hoveredDocumentId === doc.id ? '#3e3b40' : 'white', color: hoveredDocumentId === doc.id ? 'white' : 'black' }} variant="outline" onClick={() => changeDocumentPosition(doc)}>
-                      <p style={{ fontSize: "12px" }}>
-
-                        <MapIcon alt="Open Map" label="Open Map"></MapIcon>
-                      </p>
-                    </Button>
-                  </Container>}
-                </div>
-              </div>
-            </div>
-          ))}
+                <p style={{ fontSize: "12px" }}>
+                  <ArticleIcon></ArticleIcon>
+                </p>
+              </Button>
+              <Button
+                className="mt-4"
+                style={{
+                  width: "70%",
+                  border: "1px solid #ddd",
+                  borderRadius: "8px",
+                  padding: "8px",
+                  backgroundColor: hoveredDocumentId === doc.id ? '#3e3b40' : 'white',
+                  color: hoveredDocumentId === doc.id ? 'white' : 'black',
+                }}
+                variant="outline"
+                onClick={() => changeDocumentPosition(doc)}
+              >
+                <p style={{ fontSize: "12px" }}>
+                  <MapIcon alt="Open Map" label="Open Map"></MapIcon>
+                </p>
+              </Button>
+            </Container>
+          )}
         </div>
+      </div>
+    </div>
+  ))}
+</div>
+
       </div>
 
       {/* Modal per visualizzare i dettagli del documento */}

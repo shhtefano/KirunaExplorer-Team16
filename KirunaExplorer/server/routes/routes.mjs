@@ -52,7 +52,6 @@ router.get("/api/document/geo/list", async (req, res) => {
 router.post("/api/document/connections", async (req, res) => {
   const { parent_id, children_id, connection_type } = req.body;
   try {
-    console.log("router:", parent_id, children_id, connection_type)
     await documentDAO.linkDocuments(parent_id, children_id, connection_type);
 
     res.status(201).send("Documents successfully linked");
@@ -64,10 +63,8 @@ router.post("/api/document/connections", async (req, res) => {
 
 router.post("/api/document/update/georeference", async (req, res) => {
   const { markerId, lng, lat } = req.body;
-  console.log(markerId, lng, lat, 'waaaa');
   
   try {
-    console.log("received: ", markerId, lng, lat)
     await documentDAO.updatePointCoords(markerId, lng, lat);
 
     res.status(201).send("Georeference data successfully update");
@@ -81,7 +78,6 @@ router.post("/api/document/updatePointCoords", async (req, res) => {
   const { document_id, lng, lat } = req.body;
 
   try {
-    console.log("router:", document_id, lng, lat);
 
     const result = await documentDAO.updatePointCoordinates(document_id, lng, lat);
 
@@ -94,24 +90,18 @@ router.post("/api/document/updatePointCoords", async (req, res) => {
 
 router.put("/api/document/updateDocumentArea", async (req, res) => {
   const { document_id, area_id } = req.body;
-  console.log(document_id, area_id);
   
-  if (document_id === undefined || area_id === undefined) {
-    console.log('se entro qua no');
-    
+  if (document_id === undefined || area_id === undefined) {    
     return res.status(400).json({ error: 'Missing required parameters.' });
   }
 
   try {
 
     const result = await documentDAO.updateDocumentArea(document_id, area_id);
-    console.log('aoo', result);
     
-    // res.status(200).send("Document area successfully updated");
     res.status(200).json({ message: "Document area successfully updated" });
 
   } catch (error) {
-    console.log('qua è impossibile');
     
     console.error(error);
     res.status(500).send("An error occurred while updating the Document area.");

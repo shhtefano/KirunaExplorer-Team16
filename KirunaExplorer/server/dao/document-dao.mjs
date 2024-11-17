@@ -406,7 +406,6 @@ class DocumentDAO {
 
   async updateDocumentArea(document_id, area_id) {
     return new Promise((resolve, reject) => {
-      console.log('tutto ok?' , document_id, area_id);
 
       const updateCoordinatesQuery = `
       UPDATE Geolocation_Documents
@@ -419,7 +418,6 @@ class DocumentDAO {
           console.error("Errore durante l'aggiornamento delle coordinate:", err);
           return reject(new Error("Errore durante l'aggiornamento delle coordinate."));
         }
-        console.log('tutto ok?');
         
         // Restituisce l'area_id e le nuove coordinate
         resolve({
