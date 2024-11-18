@@ -66,7 +66,9 @@ const stakeholders = [
 const DocumentDescriptionForm = () => {
   const [isWholeArea, setIsWholeArea] = useState(false);
   const [isPending, startTransition] = useTransition();
-  const [showPopup, setShowPopup] = useState(false); // New state for the popup
+  const [showPopupMap, setShowPopupMap] = useState(false); // New state for the popup for linking document
+  const [showPopupLink, setShowPopupLink] = useState(false); // New state for the popup for showing map
+
   const [documentId, setDocumentId] = useState(null);
   const [temporaryLinks, setTemporaryLinks] = useState([]);
 
@@ -88,7 +90,7 @@ const DocumentDescriptionForm = () => {
   });
 
   const onSaveTemporaryLinks = () => {
-    setShowPopup(false); // Close the dialog after saving links
+    setShowPopupLink(false); // Close the dialog after saving links
   };
 
   const onSubmit = async (values) => {
@@ -154,7 +156,7 @@ const DocumentDescriptionForm = () => {
   };
 
   const onSubmitCoordinates = (lat, long) => {
-    setShowPopup(false);
+    setShowPopupMap(false);
     form.setValue("latitude", parseFloat(lat.toFixed(6)));
     form.setValue("longitude", parseFloat(long.toFixed(6)));
   };
@@ -379,7 +381,7 @@ const DocumentDescriptionForm = () => {
                 render={() => (
                   <FormItem>
                     <FormControl>
-                      <Dialog open={showPopup} onOpenChange={setShowPopup}>
+                      <Dialog open={showPopupLink} onOpenChange={setShowPopupLink}>
                         <DialogTrigger asChild>
                           <Button variant="">Link documents</Button>
                         </DialogTrigger>
@@ -513,7 +515,7 @@ const DocumentDescriptionForm = () => {
                 >
                   <Button
                     type="button"
-                    onClick={() => setShowPopup(true)}
+                    onClick={() => setShowPopupMap(true)}
                     className="ml-2"
                   >
                     Open Map
@@ -521,20 +523,20 @@ const DocumentDescriptionForm = () => {
                 </div>
               </div>
               {/* Popup per fornire informazioni su latitudine e longitudine */}
-              {showPopup && (
+              {showPopupMap&& (
                 <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
                   <div
                     className="bg-white p-6 rounded shadow-lg"
                     style={{ textAlign: "center" }}
                   >
                     <CoordsMap
-                      setShowPopup={setShowPopup}
+                      setShowPopupMap={setShowPopupMap}
                       onSubmitCoordinates={onSubmitCoordinates}
                     />
 
                 <Button
                       type="button"
-                      onClick={() => setShowPopup(false)}
+                      onClick={() => setShowPopupMap(false)}
                       className="mt-4"
                     >
                       Close Map
