@@ -12,12 +12,11 @@ import {
 import { toast } from "sonner";
 import API from "../services/API.js";
 
-export default function DocumentLinkOnCreation({ onSave , initialDocumentTitle}) {
+export default function DocumentLinkOnCreation({ onSave , initialDocumentTitle,temporaryLinks, setTemporaryLinks }) {
   const [documents, setDocuments] = useState([]);
   const [selectedDocument, setSelectedDocument] = useState(null);
   const [linkType, setLinkType] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
-  const [temporaryLinks, setTemporaryLinks] = useState([]);
  // const initialDocument = { document_title: '2001 Material Access.pdf' }; // MOCK
 
   useEffect(() => {
@@ -63,8 +62,10 @@ export default function DocumentLinkOnCreation({ onSave , initialDocumentTitle})
   );
 
   const handleSave = () => {
-    onSave(temporaryLinks);  // Salva i link temporanei senza chiamare l'API
-    setTemporaryLinks([]);
+    setTemporaryLinks(temporaryLinks);
+
+    onSave();  // Salva i link temporanei senza chiamare l'API
+   // setTemporaryLinks([]);
     toast.success("Temporary links saved locally.");
   };
 
@@ -102,9 +103,17 @@ export default function DocumentLinkOnCreation({ onSave , initialDocumentTitle})
           Save Links 
         </Button>}
 
-        <div className="text-muted-foreground mt-4">
+        {initialDocumentTitle ? (<div className="text-muted-foreground mt-4">
           Search and select a document to link it to "{initialDocumentTitle}".
-        </div>
+        </div>) : 
+
+          (<div className="text-red-500 mt-4">
+
+            Write the document title before selecting a link.
+          </div>) 
+        
+      
+      }
         
         <Input
           placeholder="Search by document title"
@@ -120,6 +129,7 @@ export default function DocumentLinkOnCreation({ onSave , initialDocumentTitle})
                 document={doc}
                 isSelected={selectedDocument?.document_title === doc.document_title}
                 onClick={() => handleDocumentClick(doc)}
+                initialDocumentTitle={initialDocumentTitle}
               />
 
               {selectedDocument?.document_title === doc.document_title && (
@@ -156,9 +166,10 @@ export default function DocumentLinkOnCreation({ onSave , initialDocumentTitle})
 }
 
 // Componente del pulsante per i documenti
-export function DocButton({ document, isSelected, onClick }) {
+export function DocButton({ document, isSelected, onClick , initialDocumentTitle}) {
   return (
     <Button
+    disabled={!initialDocumentTitle}
       onClick={onClick}
       className={`bg-white text-black border border-gray-200 shadow-sm w-full hover:bg-gray-100 ${
         isSelected ? "bg-blue-500 text-white border-blue-700" : ""
