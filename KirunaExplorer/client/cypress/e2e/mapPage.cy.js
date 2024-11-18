@@ -1,3 +1,5 @@
+//npx cypress open
+
 describe('Map Page Tests', () => {
     const baseUrl = 'http://localhost:5173';
   
