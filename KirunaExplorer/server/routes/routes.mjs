@@ -40,7 +40,6 @@ router.post("/api/document", async (req,res) => {
     try {
       // Recupera tutti i documenti dal database
       const documents = await documentDAO.getDocumentsGeo();
-      
       // Risponde con i documenti in formato JSON
       res.status(200).json(documents);
     } catch (error) {
