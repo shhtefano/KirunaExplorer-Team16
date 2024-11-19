@@ -77,7 +77,7 @@ const DocumentDescriptionForm = () => {
   const [showPopupMap, setShowPopupMap] = useState(false); // New state for the popup for linking document
   const [showPopupLink, setShowPopupLink] = useState(false); // New state for the popup for showing map
 
-  // const [documentId, setDocumentId] = useState(null);
+  const [documentId, setDocumentId] = useState(null);
   const [temporaryLinks, setTemporaryLinks] = useState([]);
   const [toast, setToast] = useState({
     open: false,
@@ -125,14 +125,14 @@ const DocumentDescriptionForm = () => {
 
         const response = await API.addDocumentDescription(body);
         // toast.success("Document description added");
-        // setDocumentId(response.documentId); // Set the documentId
+         setDocumentId(response.documentId); // Set the documentId
 
         // Save links only if there are any
-        // if (temporaryLinks.length > 0) {
-        //   await onSaveLinks(response.documentId); // Pass the documentId directly
-        // }
+        if (temporaryLinks.length > 0) {
+           await onSaveLinks(response.documentId); // Pass the documentId directly
+         }
 
-        // form.reset();
+         form.reset();
 
         // Check if response contains an error
         if (response.error) {
@@ -152,11 +152,7 @@ const DocumentDescriptionForm = () => {
           form.reset();
         }
       } catch (error) {
-        setToast({
-          open: true,
-          message: "An unexpected error occurred",
-          severity: "error",
-        });
+        setToast({ open: true, message: error, severity: "error" });
       }
 
       /* setTimeout(() => {
@@ -182,18 +178,12 @@ const DocumentDescriptionForm = () => {
         );
 
         if (response.error) {
-          toast.error(
-            `Error linking "${link.from}" to "${link.to}": ${response.error}`
-          );
+        //  toast.error(`Error linking "${link.from}" to "${link.to}": ${response.error}`);
         } else {
-          toast.success(
-            `Link saved: "${link.from}" to "${link.to}" (${link.type})`
-          );
+         // toast.success(`Link saved: "${link.from}" to "${link.to}" (${link.type})`);
         }
       } catch (error) {
-        toast.error(
-          `An error occurred while linking "${link.from}" to "${link.to}".`
-        );
+       // toast.error(`An error occurred while linking "${link.from}" to "${link.to}".`);
         console.error(`Error linking "${link.from}" to "${link.to}":`, error);
       }
     }
