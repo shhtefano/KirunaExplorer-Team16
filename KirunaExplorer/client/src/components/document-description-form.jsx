@@ -71,7 +71,7 @@ const DocumentDescriptionForm = () => {
   const [showPopupMap, setShowPopupMap] = useState(false); // New state for the popup for linking document
   const [showPopupLink, setShowPopupLink] = useState(false); // New state for the popup for showing map
 
-  const [documentId, setDocumentId] = useState(null);
+  // const [documentId, setDocumentId] = useState(null);
   const [temporaryLinks, setTemporaryLinks] = useState([]);
   const [toast, setToast] = useState({ open: false, message: "", severity: "success" });
 
@@ -111,16 +111,18 @@ const DocumentDescriptionForm = () => {
       console.log({ ...body });
       // API request
       try {
-        const response = await API.addDocumentDescription(body);
-        toast.success("Document description added");
-        setDocumentId(response.documentId); // Set the documentId
+        console.log('chiamo documentdescription');
+        
+        const response = await API.addDocumentDescription(body);        
+        // toast.success("Document description added");
+        // setDocumentId(response.documentId); // Set the documentId
 
         // Save links only if there are any
-        if (temporaryLinks.length > 0) {
-          await onSaveLinks(response.documentId); // Pass the documentId directly
-        }
+        // if (temporaryLinks.length > 0) {
+        //   await onSaveLinks(response.documentId); // Pass the documentId directly
+        // }
 
-        form.reset();
+        // form.reset();
 
         // Check if response contains an error
         if (response.error) {
@@ -191,13 +193,6 @@ const DocumentDescriptionForm = () => {
     // Cleanup al dismontaggio del componente
     return () => subscription.unsubscribe();
   }, [form]);
-  
-  
-  // Monitorare i cambiamenti di temporaryLinks e loggare i valori aggiornati
-  useEffect(() => {
-    console.log("Temporary Links Updated:", temporaryLinks);
-  }, [temporaryLinks]);
-  
   
   return (
     <div>
@@ -390,58 +385,6 @@ const DocumentDescriptionForm = () => {
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="link"
-                render={() => (
-                  <FormItem>
-                    <FormControl>
-                      <Dialog open={showPopupLink} onOpenChange={setShowPopupLink}>
-                        <DialogTrigger asChild>
-                          <Button variant="">Link documents</Button>
-                        </DialogTrigger>
-                        <DialogContent className="sm:max-w-[825px]">
-                          <DialogHeader>
-                            <DialogTitle>Link documents</DialogTitle>
-                            <DialogDescription>
-                              Link this document with other documents.
-                            </DialogDescription>
-                          </DialogHeader>
-                          <div className="flex p-2 justify-center items-center">
-                            <ScrollArea className="h-[500px] p-2">
-                              <DocumentLinkOnCreation onSave={onSaveTemporaryLinks}                   
-                              initialDocumentTitle={form.watch("document_title")}  temporaryLinks={temporaryLinks} setTemporaryLinks={setTemporaryLinks}
-                              // Passa il titolo del documento corrente
-                              />
-                            </ScrollArea>
-                          </div>
-                       {   /*<DialogFooter>
-                            <Button
-                              type="button"
-                              onClick={() => {
-                               
-                              }}
-                            >
-                              Save links
-                            </Button>
-                          </DialogFooter>*/}
-                        </DialogContent>
-                      </Dialog>
-                    </FormControl>
-                    <FormMessage />
-                    {temporaryLinks.length > 0 && (
-                      <div className="mt-4">
-                        <h3 className="text-sm font-semibold">Temporary Links:</h3>
-                        <ul className="list-disc pl-5 space-y-1">
-                          {temporaryLinks.map((link, index) => (
-                            <li key={index} className="text-sm">{link.from} -- {link.to} ({link.type})</li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                  </FormItem>
-                )}
-              />
 
               {/* Map button and other fields */}
               <div className="flex gap-x-4 items-center">
@@ -562,6 +505,49 @@ const DocumentDescriptionForm = () => {
                   </div>
                 </div>
               )}
+
+<FormField
+                control={form.control}
+                name="link"
+                render={() => (
+                  <FormItem>
+                    <FormControl>
+                      <Dialog open={showPopupLink} onOpenChange={setShowPopupLink}>
+                        <DialogTrigger asChild>
+                          <Button variant="">Link documents</Button>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-[825px]">
+                          <DialogHeader>
+                            <DialogTitle>Link documents</DialogTitle>
+                            <DialogDescription>
+                              Link this document with other documents.
+                            </DialogDescription>
+                          </DialogHeader>
+                          <div className="flex p-2 justify-center items-center">
+                            <ScrollArea className="h-[500px] p-2">
+                              <DocumentLinkOnCreation onSave={onSaveTemporaryLinks}                   
+                              initialDocumentTitle={form.watch("document_title")}  temporaryLinks={temporaryLinks} setTemporaryLinks={setTemporaryLinks}
+                              // Passa il titolo del documento corrente
+                              />
+                            </ScrollArea>
+                          </div>
+                        </DialogContent>
+                      </Dialog>
+                    </FormControl>
+                    <FormMessage />
+                    {temporaryLinks.length > 0 && (
+                      <div className="mt-4">
+                        <h3 className="text-sm font-semibold">Temporary Links:</h3>
+                        <ul className="list-disc pl-5 space-y-1">
+                          {temporaryLinks.map((link, index) => (
+                            <li key={index} className="text-sm">{link.from} -- {link.to} ({link.type})</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </FormItem>
+                )}
+              />
               <div style={{ textAlign: "center", marginTop: "60px" }}>
                 <Button type="submit" disabled={isPending}>
                   Add document description
