@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Map, GanttChart } from "lucide-react";
 import LoginForm from "@/components/login-form";
 import { useAuth } from "@/contexts/AuthContext";
+import LoginForm from "@/components/login-form";
+import { useAuth } from "@/contexts/AuthContext";
 
 
 const HomePage = () => {
@@ -26,7 +28,7 @@ const HomePage = () => {
         </CardContent>
         <CardFooter className="flex justify-between">
           <div className="flex gap-x-2 justify-center items-center">
-          <a href="/add-document-description">
+            <a href="/add-document-description">
               <Button variant="outline" className="mr-2">
                 Add doc
                 <Map />
@@ -59,7 +61,20 @@ const HomePage = () => {
           </div>
         </CardFooter>
       </Card>
-      {!user && <LoginForm/>}
+      {!user && <LoginForm />}
+      {user && (
+        <Card className="min-w-[270px] max-w-[800px] w-full mt-4">
+
+          <CardHeader>
+          <CardTitle>
+          Welcome back {user.username}! - Your role is: {user.role}
+            </CardTitle>
+
+          </CardHeader>
+
+
+        </Card>
+      )}
     </div>
   );
 };
