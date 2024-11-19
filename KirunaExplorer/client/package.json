@@ -14,7 +14,12 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@emotion/react": "^11.13.3",
+    "@emotion/styled": "^11.13.0",
     "@hookform/resolvers": "^3.9.0",
+    "@maptiler/sdk": "^2.4.1",
+    "@mui/icons-material": "^6.1.7",
+    "@mui/material": "^6.1.7",
     "@radix-ui/react-alert-dialog": "^1.1.2",
     "@radix-ui/react-aspect-ratio": "^1.1.0",
     "@radix-ui/react-avatar": "^1.1.1",
@@ -37,6 +42,7 @@
     "clsx": "^2.1.1",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.453.0",
+    "material-icons": "^1.13.12",
     "next-themes": "^0.3.0",
     "osm": "^1.0.0",
     "react": "^18.2.0",
@@ -46,7 +52,7 @@
     "react-leaflet": "^4.2.1",
     "react-leaflet-draw": "^0.20.4",
     "react-router-dom": "^6.27.0",
-    "sonner": "^1.5.0",
+    "sonner": "^1.7.0",
     "tailwind-merge": "^2.5.4",
     "tailwindcss-animate": "^1.0.7",
     "zod": "^3.23.8"

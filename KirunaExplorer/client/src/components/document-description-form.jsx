@@ -2,7 +2,6 @@ import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/componen
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import CoordsMap from "./CoordsMap";
 import {
@@ -42,6 +41,9 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import API from "../services/API";
 import DocumentLinkOnCreation from "./creation-document-link.jsx";
+import Snackbar from "@mui/material/Snackbar";
+import Alert from "@mui/material/Alert";
+import MapIcon from '@mui/icons-material/Map';
 
 const documents = [
   { type: "Design", icon: null },
@@ -71,9 +73,9 @@ const DocumentDescriptionForm = () => {
 
   const [documentId, setDocumentId] = useState(null);
   const [temporaryLinks, setTemporaryLinks] = useState([]);
+  const [toast, setToast] = useState({ open: false, message: "", severity: "success" });
 
   const form = useForm({
-    // Initialized for uncontrolled component error
     defaultValues: {
       document_title: "",
       document_description: "",
@@ -82,10 +84,10 @@ const DocumentDescriptionForm = () => {
       scale: "",
       issuance_date: "",
       language: "",
-      pages: 0,
-      latitude: 0,
-      longitude: 0,
-      link: ""
+      pages: "",
+      area_name: "",
+      latitude: "",
+      longitude: "",
     },
   });
 
@@ -119,10 +121,19 @@ const DocumentDescriptionForm = () => {
         }
 
         form.reset();
+
+        // Check if response contains an error
+        if (response.error) {
+          console.log(response.error);
+          setToast({ open: true, message: response.error.toString(), severity: "error" });
+        } else {
+
+          console.log(response); // Logs the response status (e.g., 200)
+          setToast({ open: true, message: "Added document description", severity: "success" });
+          form.reset();
+        }
       } catch (error) {
-        toast.error(error, {
-          description: "",
-        });
+        setToast({ open: true, message: "An unexpected error occurred", severity: "error" });
       }
 
      /* setTimeout(() => {
@@ -153,6 +164,10 @@ const DocumentDescriptionForm = () => {
         console.error(`Error linking "${link.from}" to "${link.to}":`, error);
       }
     }
+  };
+
+  const handleCloseToast = () => {
+    setToast((prev) => ({ ...prev, open: false }));
   };
 
   const onSubmitCoordinates = (lat, long) => {
@@ -188,11 +203,11 @@ const DocumentDescriptionForm = () => {
     <div>
       <Card className="min-w-[280px] max-w-[700px]">
         <CardHeader>
-          <CardTitle>Add document description</CardTitle>
+          <CardTitle>Add new document</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-muted-foreground mb-4">
-            Here you can add a document description and link other documents to it.
+            Fill out this form to add metadata to a document. Language and pages are not mandatory. Please choose between 'Whole Area' OR a single point with coordinates.
           </div>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -517,8 +532,9 @@ const DocumentDescriptionForm = () => {
                     type="button"
                     onClick={() => setShowPopupMap(true)}
                     className="ml-2"
+                    variant="outline"
                   >
-                    Open Map
+                    <MapIcon></MapIcon>
                   </Button>
                 </div>
               </div>
@@ -538,6 +554,8 @@ const DocumentDescriptionForm = () => {
                       type="button"
                       onClick={() => setShowPopupMap(false)}
                       className="mt-4"
+                      variant="outline"
+                      
                     >
                       Close Map
                     </Button>
@@ -554,6 +572,18 @@ const DocumentDescriptionForm = () => {
         </CardContent>
         <CardFooter className="flex justify-between"></CardFooter>
       </Card>
+
+            {/* Material UI Snackbar for Toast */}
+            <Snackbar
+        open={toast.open}
+        autoHideDuration={6000}
+        onClose={handleCloseToast}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert onClose={handleCloseToast} severity={toast.severity} sx={{ width: "100%" }}>
+          {toast.message}
+        </Alert>
+      </Snackbar>
     </div>
   );
 };

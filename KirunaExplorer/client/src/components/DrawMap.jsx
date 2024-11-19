@@ -7,6 +7,13 @@ import osm from "./osm-providers";
 import "leaflet/dist/leaflet.css";
 import "leaflet-draw/dist/leaflet.draw.css";
 import API from "../services/API";
+import { EditControl } from "react-leaflet-draw";
+import { useAuth } from "@/contexts/AuthContext";
+import { Container } from "@mui/material";
+import ArticleIcon from '@mui/icons-material/Article';
+import { MapIcon } from "lucide-react";
+import CoordsMap from "./CoordsMap";
+import { Snackbar, Alert } from "@mui/material";
 
 // Configura l'icona di default di Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
@@ -45,14 +52,21 @@ const DrawMap = () => {
   const [filteredDocuments, setFilteredDocuments] = useState([]);
   const [searchQuery, setSearchQuery] = useState(""); // Stato per la ricerca
   const [showModal, setShowModal] = useState(false);
+  const [showPopup, setShowPopup] = useState(false);
+  const [showEditCoordinatesModal, setShowEditCoordinatesModal] = useState(false);
   const [hoveredDocumentId, setHoveredDocumentId] = useState(null); // Stato per il documento in hover
   const [selectedMarkerId, setSelectedMarkerId] = useState(null); // Stato per il marker selezionato
-
+  const { user } = useAuth();
   const mapRef = useRef(null); // Riferimento alla mappa
+  const selectedAreaRef = useRef(selectedArea);
+  const [isWholeAreaChecked, setIsWholeAreaChecked] = useState(false); // Stato per la checkbox
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState("success");
 
-  const ZOOM_LEVEL = 15;
+  const ZOOM_LEVEL = 14;
   const WHOLE_AREA_CENTER = { lat: 67.85572, lng: 20.22513 }; // Definisci le coordinate per Whole Area
-  const WHOLE_AREA_ZOOM = 13; // Definisci un livello di zoom per Whole Area
+  const WHOLE_AREA_ZOOM = 12; // Definisci un livello di zoom per Whole Area
 
   useEffect(() => {
     const fetchDocumentsGeo = async () => {
@@ -74,7 +88,7 @@ const DrawMap = () => {
 
           const allDocs = filteredMarkers.map((doc) => ({
             id: doc.document.document_id,
-            title: doc.document.document_title,
+            document_title: doc.document.document_title,
             description: doc.document.document_description,
             stakeholder: doc.document.stakeholder,
             scale: doc.document.scale,
@@ -95,8 +109,7 @@ const DrawMap = () => {
               (geo) => geo.area_name === "Whole Area"
             );
           });
-          console.log(markers + 'www');
-          
+
           const filteredMarkers = markers.map((doc) => ({
             id: doc.document_id,
             type: "marker",
@@ -106,7 +119,7 @@ const DrawMap = () => {
 
           const wholeAreaDocs = filteredMarkers.map((doc) => ({
             id: doc.document.document_id,
-            title: doc.document.document_title,
+            document_title: doc.document.document_title,
             description: doc.document.document_description,
             stakeholder: doc.document.stakeholder,
             scale: doc.document.scale,
@@ -118,7 +131,7 @@ const DrawMap = () => {
             coordinates: doc.document.geolocations[0].coordinates,
           }));
           console.log(wholeAreaDocs);
-          
+
           setFilteredDocuments(wholeAreaDocs); // Set documents for Whole Area
           setFilteredMarkers([]);
         }
@@ -126,10 +139,12 @@ const DrawMap = () => {
         console.error("Error while fetching documents:", error);
       }
     };
+    selectedAreaRef.current = selectedArea;
 
     fetchDocumentsGeo();
   }, [selectedArea]);
 
+  // Funzione per aprire popup dei documenti
   const handleMarkerClick = (document) => {
     setSelectedDocument(document);
     setShowModal(true);
@@ -140,19 +155,21 @@ const DrawMap = () => {
     const map = mapRef.current;
     if (!map) return;
 
+    // Check if the document is point-based
     if (doc.area_name === "Point") {
-      // Se il documento è un Point, usa le coordinate specifiche
+      // Use the document's updated coordinates for a point-based location
       const [lat, lng] = [doc.coordinates[0].lat, doc.coordinates[0].long];
       map.setView([lat, lng], ZOOM_LEVEL);
     } else if (doc.area_name === "Whole Area") {
-      // Se il documento è Whole Area, usa le coordinate predefinite per l'intera area
+      // If the document is "Whole Area", use predefined coordinates for the entire area
       map.setView([WHOLE_AREA_CENTER.lat, WHOLE_AREA_CENTER.lng], WHOLE_AREA_ZOOM);
     }
 
-    // Aggiorna l'ID del marker selezionato
+    // Update the selected marker ID (after setting map view)
     setSelectedMarkerId(doc.id);
   };
 
+  // Funzione per cambiare colore icona
   const getMarkerIcon = (id) => {
     return id === selectedMarkerId
       ? new L.Icon({
@@ -182,7 +199,7 @@ const DrawMap = () => {
     } else {
       // Altrimenti, filtra i documenti in base al titolo e alla descrizione
       const filtered = allDocuments.filter((doc) =>
-        doc.title.toLowerCase().includes(query.toLowerCase()) ||
+        doc.document_title.toLowerCase().includes(query.toLowerCase()) ||
         doc.description.toLowerCase().includes(query.toLowerCase())
       );
 
@@ -190,13 +207,198 @@ const DrawMap = () => {
     }
   };
 
+  const _onEdited = async (e) => {
+    const currentSelectedArea = selectedAreaRef.current; // Usa il valore aggiornato
+    const editedLayers = e.layers; // Get all edited layers from the event
+  
+    const updatedMarkers = [];
+    const updatedDocuments = [];
+  
+    editedLayers.eachLayer(async (layer) => {
+      if (layer instanceof L.Marker) {
+        const { lat, lng } = layer.getLatLng();
+  
+        const latitude = parseFloat(lat.toFixed(6)); // Trunca alla sesta cifra decimale
+        const longitude = parseFloat(lng.toFixed(6)); // Trunca alla sesta cifra decimale
+  
+        // Accedi all'ID personalizzato tramite options.id
+        const markerId = layer.options.customId;
+  
+        // Trova il marker aggiornato tramite il markerId
+        const updatedMarker = filteredMarkers.find((marker) => marker.id === markerId);
+  
+        if (updatedMarker) {
+          // Aggiorna la posizione del marker
+          updatedMarker.latlngs = [latitude, longitude];
+  
+          // Aggiungi il marker aggiornato alla lista
+          updatedMarkers.push({ ...updatedMarker, latlngs: [latitude, longitude] });
+  
+          // Trova e aggiorna il documento corrispondente nella lista dei documenti filtrati
+          const updatedDocument = filteredDocuments.find((doc) => doc.id === updatedMarker.id);
+  
+          if (updatedDocument) {
+            updatedDocuments.push({
+              ...updatedDocument,
+              coordinates: [{ lat: latitude, long: longitude }],
+            });
+  
+            // Chiamata al backend per aggiornare le coordinate (implementa la tua logica backend)
+            try{
+              await API.updateDocumentCoordinates(updatedMarker.id, latitude, longitude);
+              setSnackbarMessage("Document position successfully updated!");
+              setSnackbarSeverity("success");
+              setSnackbarOpen(true);
+            }catch(error){
+              setSnackbarMessage("Error updating document position.");
+              setSnackbarSeverity("error");
+              setSnackbarOpen(true);
+            }
+
+          }
+        }
+      } else if (layer instanceof L.Polygon) {
+        if (currentSelectedArea.name === "Whole Area") {
+          // Inserire qui codice per cambiare altre aree, questa non dovrebbe essere modificabile.
+          return;
+        }
+      }
+    });
+  
+    // Aggiorna lo stato con i documenti aggiornati
+    setFilteredDocuments((prevDocuments) => {
+      return prevDocuments.map((doc) => {
+        const updated = updatedDocuments.find((updatedDoc) => updatedDoc.id === doc.id);
+        return updated || doc; // Aggiorna il documento se è stato modificato, altrimenti mantieni quello originale
+      });
+    });
+  
+    // Aggiorna lo stato con i marker aggiornati
+    setFilteredMarkers((prevMarkers) => {
+      return prevMarkers.map((marker) => {
+        const updated = updatedMarkers.find((updatedMarker) => updatedMarker.id === marker.id);
+        return updated || marker; // Aggiorna il marker se è stato modificato, altrimenti mantieni quello originale
+      });
+    });
+  };
+  
+
+  const changeDocumentPosition = (document) => {
+    setSelectedDocument(document);
+    setShowEditCoordinatesModal(true);
+  }
+
+  const onSubmitCoordinates = (lat, long) => {
+    setShowPopup(false);
+    setSelectedDocument((prevDoc) => ({
+      ...prevDoc,
+      coordinates: [{ lat, long }],
+    }));
+  }
+  const submitNewDocumentPosition = async () => {
+    if (selectedDocument) {
+      try {
+        const { lat, long } = selectedDocument.coordinates[0];
+        if (isWholeAreaChecked) {
+          await API.updateDocumentArea(selectedDocument.id, 0);
+          setSelectedArea(areas[1]);
+          // Aggiorna filteredDocuments
+          setFilteredDocuments((prevDocuments) =>
+            prevDocuments.map((doc) =>
+              doc.id === selectedDocument.id
+                ? { ...doc, coordinates: [{ lat, long }] }
+                : doc
+            )
+          );
+  
+          // Aggiorna filteredMarkers
+          setFilteredMarkers((prevMarkers) =>
+            prevMarkers.map((marker) =>
+              marker.id === selectedDocument.id
+                ? { ...marker, latlngs: [lat, long] }
+                : marker
+            )
+          );
+  
+          // Sposta la mappa sulla nuova posizione
+          if (mapRef.current) {
+            mapRef.current.setView([lat, long], ZOOM_LEVEL);
+          }
+        } else {
+          await API.updateDocumentCoordinates(selectedDocument.id, lat, long);
+  
+          // Aggiorna filteredDocuments
+          setFilteredDocuments((prevDocuments) =>
+            prevDocuments.map((doc) =>
+              doc.id === selectedDocument.id
+                ? { ...doc, coordinates: [{ lat, long }] }
+                : doc
+            )
+          );
+  
+          // Aggiorna filteredMarkers
+          setFilteredMarkers((prevMarkers) =>
+            prevMarkers.map((marker) =>
+              marker.id === selectedDocument.id
+                ? { ...marker, latlngs: [lat, long] }
+                : marker
+            )
+          );
+  
+          // Sposta la mappa sulla nuova posizione
+          if (mapRef.current) {
+            mapRef.current.setView([lat, long], ZOOM_LEVEL);
+          }
+
+          setSelectedArea(areas[0]);
+        }
+  
+        // Chiudi i modali
+        setShowEditCoordinatesModal(false);
+        setShowModal(false);
+  
+        // Imposta il messaggio di successo per lo Snackbar
+        setSnackbarMessage("Document position successfully updated!");
+        setSnackbarSeverity("success");
+        setSnackbarOpen(true);
+      } catch (error) {
+        console.error("Error updating document position:", error);
+  
+        // Imposta il messaggio di errore per lo Snackbar
+        setSnackbarMessage("Error updating document position.");
+        setSnackbarSeverity("error");
+        setSnackbarOpen(true);
+      }
+    }
+  };
+  
+
+
+
+
   return (
     <div className="row" style={{ padding: '0px', width: '100%', margin: '0', }}>
       <div className="col text-center">
         <MapContainer ref={mapRef} center={center} zoom={ZOOM_LEVEL} style={{ height: "700px", width: "1000px" }}>
 
           <FeatureGroup>
-
+            {user && selectedArea.name !== "Whole Area" && <EditControl
+              position="topright"
+              edit={{
+                remove: false,
+              }}
+              onEdited={_onEdited}
+              // onDeleted={_onDeleted}
+              draw={{
+                rectangle: false,
+                circle: false,
+                circlemarker: false,
+                marker: false,
+                polyline: false,
+                polygon: false,
+              }}
+            />
+            }
             {selectedArea.name === "Point-Based Documents" && (
               filteredMarkers.map((marker) => {
                 return (
@@ -207,6 +409,8 @@ const DrawMap = () => {
                     eventHandlers={{
                       click: () => handleMarkerClick(marker.document),
                     }}
+                    customId={marker.id} // Qui assegni customId direttamente
+
                   />
                 );
               })
@@ -239,7 +443,7 @@ const DrawMap = () => {
         {/* Barra di ricerca */}
         <Form.Control
           type="text"
-          placeholder="Cerca documenti..."
+          placeholder="Search..."
           value={searchQuery}
           onChange={handleSearchChange}
           className="mb-3"
@@ -247,48 +451,105 @@ const DrawMap = () => {
 
         {/* Lista dei documenti filtrati */}
         <div style={{ maxHeight: '550px', overflowY: 'auto' }}>
-          {filteredDocuments.map((doc) => (
-            <div key={doc.id}>
-              <div
+  {filteredDocuments.map((doc) => (
+    <div key={doc.id}>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          border: '1px solid #ddd',
+          borderRadius: '8px',
+          padding: '10px',
+          marginBottom: '20px',
+          marginLeft: '5px',
+          marginRight: '5px',
+          cursor: 'pointer',
+          backgroundColor: hoveredDocumentId === doc.id ? '#3e3b40' : 'white',
+          color: hoveredDocumentId === doc.id ? 'white' : 'black',
+          fontSize: '17px',
+        }}
+        onMouseEnter={() => setHoveredDocumentId(doc.id)}
+        onMouseLeave={() => setHoveredDocumentId(null)}
+        onClick={doc.area_name === "Whole Area" ? () => handleMarkerClick(doc) : () => changeMapPosition(doc)}
+      >
+        <div>
+          <h2><strong>{doc.document_title}</strong></h2>
+          <p className="mt-3"><strong>Type:</strong> {doc.document_type}</p>
+          <p className="mt-1"><strong>Date:</strong> {doc.issuance_date}</p>
+          <p className="mt-1"><strong>Area:</strong> {doc.area_name==="Point" ? "Point" : doc.area_name}</p>
+          {/* Mostra le coordinate */}
+          {doc.coordinates && doc.coordinates.length > 0 && doc.area_name === "Point" && (
+            <p className="mt-1">
+              {doc.coordinates.map((coord, index) => (
+                <span className="" key={index}> 
+                  <strong>Latitude:</strong> {coord.lat.toFixed(6)} <strong>Longitude:</strong> {coord.long.toFixed(6)}
+                </span>
+              ))}
+            </p>
+          )}
+        </div>
+        <div>
+          {user && (
+            <Container className="flex flex-row gap-x-4 text-center">
+              <Button
+                className="mt-4"
                 style={{
-                  border: '1px solid #ddd',
-                  borderRadius: '8px',
-                  padding: '10px',
-                  marginBottom: '20px',
-                  marginLeft:'5px',
-                  marginRight:'5px',
-                  cursor: 'pointer',
+                  width: "70%",
+                  border: "1px solid #ddd",
+                  borderRadius: "8px",
+                  padding: "8px",
                   backgroundColor: hoveredDocumentId === doc.id ? '#3e3b40' : 'white',
                   color: hoveredDocumentId === doc.id ? 'white' : 'black',
                 }}
-                onMouseEnter={() => setHoveredDocumentId(doc.id)}
-                onMouseLeave={() => setHoveredDocumentId(null)}
-                onClick={doc.area_name === "Whole Area" ? () => handleMarkerClick(doc) : () => changeMapPosition(doc)}
+                variant="outline"
+                onClick={() => handleMarkerClick(doc)}
               >
-                <h4><strong>{doc.title}</strong></h4>
-                <p><strong>Type:</strong> {doc.document_type}</p>
-                <p><strong>Date:</strong> {doc.issuance_date}</p>
-              </div>
-            </div>
-          ))}
+                <p style={{ fontSize: "12px" }}>
+                  <ArticleIcon></ArticleIcon>
+                </p>
+              </Button>
+              <Button
+                className="mt-4"
+                style={{
+                  width: "70%",
+                  border: "1px solid #ddd",
+                  borderRadius: "8px",
+                  padding: "8px",
+                  backgroundColor: hoveredDocumentId === doc.id ? '#3e3b40' : 'white',
+                  color: hoveredDocumentId === doc.id ? 'white' : 'black',
+                }}
+                variant="outline"
+                onClick={() => changeDocumentPosition(doc)}
+              >
+                <p style={{ fontSize: "12px" }}>
+                  <MapIcon alt="Open Map" label="Open Map"></MapIcon>
+                </p>
+              </Button>
+            </Container>
+          )}
         </div>
+      </div>
+    </div>
+  ))}
+</div>
+
       </div>
 
       {/* Modal per visualizzare i dettagli del documento */}
-      {selectedDocument && (
+      {selectedDocument && showModal && (
         <Modal style={{ marginTop: '8%' }} show={showModal} onHide={() => setShowModal(false)}>
           <Modal.Header closeButton>
             <Modal.Title>Document info</Modal.Title>
           </Modal.Header>
           <Modal.Body>
-            <p><strong>Name:</strong> {selectedDocument.title}</p>
-            <p><strong>Stakeholder:</strong> {selectedDocument.stakeholder}</p>
-            <p><strong>Scale:</strong> {selectedDocument.scale}</p>
-            <p><strong>Date:</strong> {selectedDocument.issuance_date}</p>
-            <p><strong>Language:</strong> {selectedDocument.language}</p>
-            <p><strong>Pages:</strong> {selectedDocument.pages}</p>
+            <p><strong>Name:</strong> {selectedDocument.document_title}</p>
             <p><strong>Document Type:</strong> {selectedDocument.document_type}</p>
+            <p><strong>Stakeholder:</strong> {selectedDocument.stakeholder}</p>
+            <p><strong>Date:</strong> {selectedDocument.issuance_date}</p>
             <p><strong>Description:</strong> {selectedDocument.document_description}</p>
+            <p><strong>Scale:</strong> {selectedDocument.scale}</p>
+            <p><strong>Language:</strong> {selectedDocument.language ? selectedDocument.language : "--"}</p>
+            <p><strong>Pages:</strong> {selectedDocument.pages ? selectedDocument.pages : "--"}</p>
           </Modal.Body>
           <Modal.Footer>
             <Button variant="dark" onClick={() => setShowModal(false)}>
@@ -297,6 +558,135 @@ const DrawMap = () => {
           </Modal.Footer>
         </Modal>
       )}
+
+      {/* Modal to change document position */}
+      {selectedDocument && showEditCoordinatesModal && (
+        <Modal
+          style={{ marginTop: '8%' }}
+          show={showEditCoordinatesModal}
+          onHide={() => setShowEditCoordinatesModal(false)}
+        >
+          <Modal.Header closeButton>
+            <Modal.Title>Change Document Position</Modal.Title>
+          </Modal.Header>
+          <Modal.Body className="text-center">
+            {/* Campi per modificare latitudine e longitudine */}
+            <Form className="d-flex flex-column align-items-center justify-content-center" style={{ height: "100%" }}>
+              <div className="row mb-4" style={{ width: "100%", maxWidth: "500px" }}>
+                <div className="col">
+                  <Form.Group controlId="latitude">
+                    <Form.Label className="text-center w-100">Latitude</Form.Label>
+                    <Form.Control
+                      className="text-center"
+                      type="number"
+                      value={selectedDocument.coordinates[0]?.lat || ""}
+                      onChange={(e) => {
+                        const newLat = parseFloat(e.target.value);
+                        setSelectedDocument((prevDoc) => ({
+                          ...prevDoc,
+                          coordinates: [{ ...prevDoc.coordinates[0], lat: newLat }],
+                        }));
+                      }}
+                      disabled={isWholeAreaChecked}
+                    />
+                  </Form.Group>
+                </div>
+                <div className="col">
+                  <Form.Group controlId="longitude">
+                    <Form.Label className="text-center w-100">Longitude</Form.Label>
+                    <Form.Control
+                      className="text-center"
+                      type="number"
+                      value={selectedDocument.coordinates[0]?.long || ""}
+                      onChange={(e) => {
+                        const newLng = parseFloat(e.target.value);
+                        setSelectedDocument((prevDoc) => ({
+                          ...prevDoc,
+                          coordinates: [{ ...prevDoc.coordinates[0], long: newLng }],
+                        }));
+                      }}
+                      disabled={isWholeAreaChecked}
+                    />
+                  </Form.Group>
+                </div>
+              </div>
+              <div style={{ textAlign: "center", width: "100%", marginTop: "10px" }}>
+                <Button
+                  type="button"
+                  onClick={() => setShowPopup(true)}
+                  className="ml-2"
+                  variant="outline"
+                >
+                  <MapIcon></MapIcon>
+                </Button>
+
+              </div>
+              {showPopup && (
+                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+                  <div className="bg-white p-6 rounded shadow-lg" style={{ textAlign: "center" }}>
+                    <CoordsMap
+                      setShowPopup={setShowPopup}
+                      onSubmitCoordinates={onSubmitCoordinates}
+                    />
+
+                    <Button
+                      type="button"
+                      onClick={() => setShowPopup(false)}
+                      className="mt-4"
+                      variant="outline"
+
+                    >
+                      Close Map
+                    </Button>
+                  </div>
+                </div>
+              )}
+              <div className="my-4 text-center">
+                <span style={{ fontWeight: "bold", fontSize: "1.2rem" }}>OR</span>
+              </div>
+
+              <Form.Group controlId="wholeAreaCheckbox" className="text-center">
+                <Form.Check
+                  type="checkbox"
+                  label="Set as Whole Area"
+                  checked={isWholeAreaChecked}
+                  onChange={(e) => {
+                    const checked = e.target.checked;
+                    setIsWholeAreaChecked(checked);
+                    setSelectedDocument((prevDoc) => ({
+                      ...prevDoc,
+                      area_name: checked ? "Whole Area" : "Point",
+                    }));
+                  }}
+                />
+              </Form.Group>
+            </Form>
+
+          </Modal.Body>
+          <Modal.Footer className="display-flex justify-content-center">
+            <Button
+              variant="dark"
+              onClick={() => {
+                submitNewDocumentPosition();
+              }}
+            >
+              Save
+            </Button>
+          </Modal.Footer>
+        </Modal>
+
+      )}
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={3000}
+        onClose={() => setSnackbarOpen(false)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert onClose={() => setSnackbarOpen(false)} severity={snackbarSeverity} sx={{ width: '100%' }}>
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
+
     </div>
   );
 };

@@ -29,7 +29,7 @@ export function NavUser({ user }) {
   const handleLogout = async () => {
     try {
       await logout();
-      navigate("/login");
+      navigate("/");
       toast.success("Logged out successfully");
     } catch (error) {
       console.error("Logout failed:", error);
@@ -43,7 +43,7 @@ export function NavUser({ user }) {
         <SidebarMenuItem>
           <SidebarMenuButton
             size="lg"
-            onClick={() => navigate("/login")}
+            onClick={() => navigate("/")}
             className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
           >
             <Avatar className="h-8 w-8 rounded-lg">
