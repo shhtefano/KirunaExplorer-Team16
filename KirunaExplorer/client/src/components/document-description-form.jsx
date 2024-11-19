@@ -255,7 +255,7 @@ const DocumentDescriptionForm = () => {
                     <FormControl>
                       <Select
                         onValueChange={field.onChange}
-                        defaultValue={field.value}
+                        value={field.value} 
                       >
                         <FormControl>
                           <SelectTrigger>
@@ -278,7 +278,7 @@ const DocumentDescriptionForm = () => {
                   </FormItem>
                 )}
               />
-              {/* Stakeholder */}
+               {/* Stakeholder */}
               <FormField
                 control={form.control}
                 name="stakeholder"
@@ -289,7 +289,7 @@ const DocumentDescriptionForm = () => {
                     <FormControl>
                       <Select
                         onValueChange={field.onChange}
-                        defaultValue={field.value}
+                        value={field.value} 
                       >
                         <FormControl>
                           <SelectTrigger>
