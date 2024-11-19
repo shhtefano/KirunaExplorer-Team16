@@ -7,12 +7,16 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Map, GanttChart } from "lucide-react";
+import LoginForm from "@/components/login-form";
+import { useAuth } from "@/contexts/AuthContext";
 
 
 const HomePage = () => {
+  const { user } = useAuth();
+  
   return (
-    <div className="flex flex-col w-full h-full items-center justify-start p-5 mt-0 space-y-4">
-      <Card className="min-w-[270px] max-w-[600px]">
+    <div className="flex flex-col w-full h-full items-center justify-start p-5 mt-0 space-y-4 text-center">
+      <Card className="min-w-[270px] max-w-[800px]">
         <CardHeader>
           <CardTitle>Kiruna Explorer</CardTitle>
         </CardHeader>
@@ -22,6 +26,24 @@ const HomePage = () => {
         </CardContent>
         <CardFooter className="flex justify-between">
           <div className="flex gap-x-2 justify-center items-center">
+          <a href="/add-document-description">
+              <Button variant="outline" className="mr-2">
+                Add doc
+                <Map />
+              </Button>
+            </a>
+            <a href="/documents/link">
+              <Button variant="outline" className="mr-2">
+                Link doc
+                <Map />
+              </Button>
+            </a>
+            <a href="/documents">
+              <Button variant="outline" className="mr-2">
+                See docs
+                <Map />
+              </Button>
+            </a>
             <a href="/map">
               <Button variant="outline" className="mr-2">
                 See Map
@@ -37,7 +59,7 @@ const HomePage = () => {
           </div>
         </CardFooter>
       </Card>
-      
+      {!user && <LoginForm/>}
     </div>
   );
 };

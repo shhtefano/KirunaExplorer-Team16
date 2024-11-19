@@ -115,16 +115,4 @@ describe("Home Page", () => {
     });
   });
 
-  // Skip responsive tests for now until we fix the selectors
-  describe.skip("Responsive Design", () => {
-    it("maintains layout on mobile viewport", () => {
-      cy.viewport("iphone-6");
-      cy.get('[class*="rounded-lg border"]').should("be.visible");
-    });
-
-    it("maintains layout on tablet viewport", () => {
-      cy.viewport("ipad-2");
-      cy.get('[class*="rounded-lg border"]').should("be.visible");
-    });
-  });
 });
