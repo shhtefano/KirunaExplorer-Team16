@@ -1,4 +1,10 @@
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  CardFooter,
+} from "@/components/ui/card";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -43,7 +49,7 @@ import API from "../services/API";
 import DocumentLinkOnCreation from "./creation-document-link.jsx";
 import Snackbar from "@mui/material/Snackbar";
 import Alert from "@mui/material/Alert";
-import MapIcon from '@mui/icons-material/Map';
+import MapIcon from "@mui/icons-material/Map";
 
 const documents = [
   { type: "Design", icon: null },
@@ -73,7 +79,11 @@ const DocumentDescriptionForm = () => {
 
   // const [documentId, setDocumentId] = useState(null);
   const [temporaryLinks, setTemporaryLinks] = useState([]);
-  const [toast, setToast] = useState({ open: false, message: "", severity: "success" });
+  const [toast, setToast] = useState({
+    open: false,
+    message: "",
+    severity: "success",
+  });
 
   const form = useForm({
     defaultValues: {
@@ -111,9 +121,9 @@ const DocumentDescriptionForm = () => {
       console.log({ ...body });
       // API request
       try {
-        console.log('chiamo documentdescription');
-        
-        const response = await API.addDocumentDescription(body);        
+        console.log("chiamo documentdescription");
+
+        const response = await API.addDocumentDescription(body);
         // toast.success("Document description added");
         // setDocumentId(response.documentId); // Set the documentId
 
@@ -127,21 +137,32 @@ const DocumentDescriptionForm = () => {
         // Check if response contains an error
         if (response.error) {
           console.log(response.error);
-          setToast({ open: true, message: response.error.toString(), severity: "error" });
+          setToast({
+            open: true,
+            message: response.error.toString(),
+            severity: "error",
+          });
         } else {
-
           console.log(response); // Logs the response status (e.g., 200)
-          setToast({ open: true, message: "Added document description", severity: "success" });
+          setToast({
+            open: true,
+            message: "Added document description",
+            severity: "success",
+          });
           form.reset();
         }
       } catch (error) {
-        setToast({ open: true, message: "An unexpected error occurred", severity: "error" });
+        setToast({
+          open: true,
+          message: "An unexpected error occurred",
+          severity: "error",
+        });
       }
 
-     /* setTimeout(() => {
+      /* setTimeout(() => {
         window.location.reload();
       }, 1000);*/
-      setTemporaryLinks([])
+      setTemporaryLinks([]);
     });
   };
 
@@ -154,15 +175,25 @@ const DocumentDescriptionForm = () => {
           type: link.type, // Link type
         };
 
-        const response = await API.linkDocuments(payload.from, payload.to, payload.type);
+        const response = await API.linkDocuments(
+          payload.from,
+          payload.to,
+          payload.type
+        );
 
         if (response.error) {
-          toast.error(`Error linking "${link.from}" to "${link.to}": ${response.error}`);
+          toast.error(
+            `Error linking "${link.from}" to "${link.to}": ${response.error}`
+          );
         } else {
-          toast.success(`Link saved: "${link.from}" to "${link.to}" (${link.type})`);
+          toast.success(
+            `Link saved: "${link.from}" to "${link.to}" (${link.type})`
+          );
         }
       } catch (error) {
-        toast.error(`An error occurred while linking "${link.from}" to "${link.to}".`);
+        toast.error(
+          `An error occurred while linking "${link.from}" to "${link.to}".`
+        );
         console.error(`Error linking "${link.from}" to "${link.to}":`, error);
       }
     }
@@ -180,20 +211,21 @@ const DocumentDescriptionForm = () => {
   useEffect(() => {
     const subscription = form.watch((values) => {
       const currentTitle = values.document_title;
-  
+
       setTemporaryLinks((prevLinks) =>
         prevLinks.map((link) =>
-          link.from === currentTitle || link.from === prevLinks.find((l) => l.from)?.from
+          link.from === currentTitle ||
+          link.from === prevLinks.find((l) => l.from)?.from
             ? { ...link, from: currentTitle }
             : link
         )
       );
     });
-  
+
     // Cleanup al dismontaggio del componente
     return () => subscription.unsubscribe();
   }, [form]);
-  
+
   return (
     <div>
       <Card className="min-w-[280px] max-w-[700px]">
@@ -202,7 +234,9 @@ const DocumentDescriptionForm = () => {
         </CardHeader>
         <CardContent>
           <div className="text-muted-foreground mb-4">
-            Fill out this form to add metadata to a document. Language and pages are not mandatory. Please choose between 'Whole Area' OR a single point with coordinates.
+            Fill out this form to add metadata to a document. Language and pages
+            are not mandatory. Please choose between 'Whole Area' OR a single
+            point with coordinates.
           </div>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -213,12 +247,14 @@ const DocumentDescriptionForm = () => {
                 rules={documentRules}
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Document</FormLabel>
+                    <FormLabel htmlFor="document-title">Document</FormLabel>
                     <FormControl>
                       <Input
                         {...field}
                         type="text"
                         placeholder="Your document title"
+                        id="document-title"
+                        aria-label="document"
                       />
                     </FormControl>
                     <FormMessage />
@@ -232,9 +268,13 @@ const DocumentDescriptionForm = () => {
                 rules={descriptionRules}
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Description</FormLabel>
+                    <FormLabel htmlFor="document-description">
+                      Description
+                    </FormLabel>
                     <FormControl>
                       <Textarea
+                        id="document-description"
+                        aria-label="description"
                         placeholder="Your document description"
                         className="resize-none"
                         {...field}
@@ -482,7 +522,7 @@ const DocumentDescriptionForm = () => {
                 </div>
               </div>
               {/* Popup per fornire informazioni su latitudine e longitudine */}
-              {showPopupMap&& (
+              {showPopupMap && (
                 <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
                   <div
                     className="bg-white p-6 rounded shadow-lg"
@@ -493,12 +533,11 @@ const DocumentDescriptionForm = () => {
                       onSubmitCoordinates={onSubmitCoordinates}
                     />
 
-                <Button
+                    <Button
                       type="button"
                       onClick={() => setShowPopupMap(false)}
                       className="mt-4"
                       variant="outline"
-                      
                     >
                       Close Map
                     </Button>
@@ -506,13 +545,16 @@ const DocumentDescriptionForm = () => {
                 </div>
               )}
 
-<FormField
+              <FormField
                 control={form.control}
                 name="link"
                 render={() => (
                   <FormItem>
                     <FormControl>
-                      <Dialog open={showPopupLink} onOpenChange={setShowPopupLink}>
+                      <Dialog
+                        open={showPopupLink}
+                        onOpenChange={setShowPopupLink}
+                      >
                         <DialogTrigger asChild>
                           <Button variant="">Link documents</Button>
                         </DialogTrigger>
@@ -525,9 +567,14 @@ const DocumentDescriptionForm = () => {
                           </DialogHeader>
                           <div className="flex p-2 justify-center items-center">
                             <ScrollArea className="h-[500px] p-2">
-                              <DocumentLinkOnCreation onSave={onSaveTemporaryLinks}                   
-                              initialDocumentTitle={form.watch("document_title")}  temporaryLinks={temporaryLinks} setTemporaryLinks={setTemporaryLinks}
-                              // Passa il titolo del documento corrente
+                              <DocumentLinkOnCreation
+                                onSave={onSaveTemporaryLinks}
+                                initialDocumentTitle={form.watch(
+                                  "document_title"
+                                )}
+                                temporaryLinks={temporaryLinks}
+                                setTemporaryLinks={setTemporaryLinks}
+                                // Passa il titolo del documento corrente
                               />
                             </ScrollArea>
                           </div>
@@ -537,10 +584,14 @@ const DocumentDescriptionForm = () => {
                     <FormMessage />
                     {temporaryLinks.length > 0 && (
                       <div className="mt-4">
-                        <h3 className="text-sm font-semibold">Temporary Links:</h3>
+                        <h3 className="text-sm font-semibold">
+                          Temporary Links:
+                        </h3>
                         <ul className="list-disc pl-5 space-y-1">
                           {temporaryLinks.map((link, index) => (
-                            <li key={index} className="text-sm">{link.from} -- {link.to} ({link.type})</li>
+                            <li key={index} className="text-sm">
+                              {link.from} -- {link.to} ({link.type})
+                            </li>
                           ))}
                         </ul>
                       </div>
@@ -559,14 +610,18 @@ const DocumentDescriptionForm = () => {
         <CardFooter className="flex justify-between"></CardFooter>
       </Card>
 
-            {/* Material UI Snackbar for Toast */}
-            <Snackbar
+      {/* Material UI Snackbar for Toast */}
+      <Snackbar
         open={toast.open}
         autoHideDuration={6000}
         onClose={handleCloseToast}
         anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
       >
-        <Alert onClose={handleCloseToast} severity={toast.severity} sx={{ width: "100%" }}>
+        <Alert
+          onClose={handleCloseToast}
+          severity={toast.severity}
+          sx={{ width: "100%" }}
+        >
           {toast.message}
         </Alert>
       </Snackbar>

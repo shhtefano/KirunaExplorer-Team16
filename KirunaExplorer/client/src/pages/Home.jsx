@@ -28,7 +28,7 @@ const HomePage = () => {
             <a href="/add-document-description">
               <Button variant="outline" className="mr-2">
                 Add doc
-                <Map />
+                <Map data-testid="map-icon" />
               </Button>
             </a>
             <a href="/documents/link">
@@ -52,7 +52,7 @@ const HomePage = () => {
             <a href="/graph">
               <Button variant="outline" className="mr-2">
                 See graph
-                <GanttChart />
+                <GanttChart data-testid="gantt-chart-icon" />
               </Button>
             </a>
           </div>

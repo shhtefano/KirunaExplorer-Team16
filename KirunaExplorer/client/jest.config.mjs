@@ -3,6 +3,9 @@ export default {
   transform: {
     "^.+\\.(js|jsx|ts|tsx)$": "babel-jest",
   },
+  transformIgnorePatterns: [
+    "node_modules/(?!(react-leaflet|@react-leaflet|leaflet|leaflet-draw)/)",
+  ],
   moduleNameMapper: {
     // Handle module aliases (if any) defined in your Vite config
     "^@/(.*)$": "<rootDir>/src/$1",
