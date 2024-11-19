@@ -12,7 +12,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loader2 } from "lucide-react";
-import { toast } from "sonner";
 
 export default function LoginForm() {
   const [username, setUsername] = useState("");
@@ -30,7 +29,6 @@ export default function LoginForm() {
     try {
       await login({ username, password });
       navigate("/"); // Use React Router navigation instead of window.location
-      toast.success("Logged in successfully");
     } catch (err) {
       setError(
         typeof err === "string" ? err : "Login failed. Please try again."

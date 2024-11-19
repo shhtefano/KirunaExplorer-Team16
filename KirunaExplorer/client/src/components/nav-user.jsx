@@ -43,7 +43,7 @@ export function NavUser({ user }) {
         <SidebarMenuItem>
           <SidebarMenuButton
             size="lg"
-            onClick={() => navigate("/login")}
+            onClick={() => navigate("/")}
             className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
           >
             <Avatar className="h-8 w-8 rounded-lg">
