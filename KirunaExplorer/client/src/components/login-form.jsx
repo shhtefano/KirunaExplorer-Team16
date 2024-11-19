@@ -12,7 +12,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loader2 } from "lucide-react";
-import { toast } from "sonner";
 
 export default function LoginForm() {
   const [username, setUsername] = useState("");
@@ -30,7 +29,6 @@ export default function LoginForm() {
     try {
       await login({ username, password });
       navigate("/"); // Use React Router navigation instead of window.location
-      toast.success("Logged in successfully");
     } catch (err) {
       setError(
         typeof err === "string" ? err : "Login failed. Please try again."
@@ -41,7 +39,7 @@ export default function LoginForm() {
   };
 
   return (
-    <Card className="mx-auto max-w-sm">
+    <Card style={{ width: "800px", marginTop:"80px", paddingLeft:"200px", paddingRight:"200px"}}>
       <CardHeader>
         <CardTitle className="text-2xl">Login</CardTitle>
         <CardDescription>
@@ -78,7 +76,7 @@ export default function LoginForm() {
               {error}
             </div>
           )}
-          <Button type="submit" disabled={isLoading}>
+          <Button type="submit" variant="outline" disabled={isLoading}>
             {isLoading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -90,16 +88,10 @@ export default function LoginForm() {
           </Button>
         </form>
         <Link to="/">
-          <Button variant="outline" className="w-full mt-6">
-            Back to Home page
+          <Button variant="outline" className="w-full mt-12">
+            Home page
           </Button>
         </Link>
-        {/* <div className="mt-4 text-center text-sm">
-          Don&apos;t have an account?{" "}
-          <Link to="/signup" className="underline hover:text-primary">
-            Sign up
-          </Link>
-        </div> */}
       </CardContent>
     </Card>
   );
