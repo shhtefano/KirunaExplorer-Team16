@@ -120,12 +120,15 @@ export default function DocumentsTable() {
       <Drawer isOpen={isDrawerOpen} onClose={() => setIsDrawerOpen(false)} title={selectedDocument?.document_title}>
         {selectedDocument && (
           <div className="p-4">
+            <p><strong>Stakeholders:</strong> {selectedDocument.stakeholder}</p>
+            <p><strong>Scale:</strong> {selectedDocument.scale}</p>
             <p><strong>Issuance Date:</strong> {selectedDocument.issuance_date}</p>
-            <p><strong>Type:</strong> {selectedDocument.document_type}</p>
+            <p><strong>Connections:</strong> {selectedDocument.document_type}</p>
             <p><strong>Language:</strong> {selectedDocument.language}</p>
-            <p><strong>Language:</strong> {selectedDocument.language}</p>
-            <p><strong>Language:</strong> {selectedDocument.language}</p>
-            <p className="mt-4"><strong>Additional Info:</strong></p>
+            <p><strong>Pages:</strong> {selectedDocument.pages}</p>
+            <div className="my-auto">
+              <p><strong >Description:</strong> {selectedDocument.document_dewscription}</p>
+            </div>
           </div>
         )}
       </Drawer>
