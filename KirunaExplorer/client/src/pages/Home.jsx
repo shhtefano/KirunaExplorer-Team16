@@ -9,13 +9,10 @@ import { Button } from "@/components/ui/button";
 import { Map, GanttChart } from "lucide-react";
 import LoginForm from "@/components/login-form";
 import { useAuth } from "@/contexts/AuthContext";
-import LoginForm from "@/components/login-form";
-import { useAuth } from "@/contexts/AuthContext";
-
 
 const HomePage = () => {
   const { user } = useAuth();
-  
+
   return (
     <div className="flex flex-col w-full h-full items-center justify-start p-5 mt-0 space-y-4 text-center">
       <Card className="min-w-[270px] max-w-[800px]">
@@ -64,15 +61,11 @@ const HomePage = () => {
       {!user && <LoginForm />}
       {user && (
         <Card className="min-w-[270px] max-w-[800px] w-full mt-4">
-
           <CardHeader>
-          <CardTitle>
-          Welcome back {user.username}! - Your role is: {user.role}
+            <CardTitle>
+              Welcome back {user.username}! - Your role is: {user.role}
             </CardTitle>
-
           </CardHeader>
-
-
         </Card>
       )}
     </div>
