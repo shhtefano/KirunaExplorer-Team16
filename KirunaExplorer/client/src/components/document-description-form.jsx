@@ -547,7 +547,7 @@ const DocumentDescriptionForm = () => {
                         onOpenChange={setShowPopupLink}
                       >
                         <DialogTrigger asChild>
-                          <Button variant="">Link documents</Button>
+                          <Button variant="outline">Link documents</Button>
                         </DialogTrigger>
                         <DialogContent className="sm:max-w-[825px]">
                           <DialogHeader>
@@ -591,7 +591,7 @@ const DocumentDescriptionForm = () => {
                 )}
               />
               <div style={{ textAlign: "center", marginTop: "60px" }}>
-                <Button type="submit" disabled={isPending}>
+                <Button type="submit" disabled={isPending} variant="outline">
                   Add document description
                 </Button>
               </div>

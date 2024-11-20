@@ -57,7 +57,13 @@ router.post("/api/document/connections", async (req, res) => {
     res.status(201).send("Documents successfully linked");
   } catch (error) {
     console.error(error);
-    res.status(500).send(error.message); //CHANGED ERROR MESSAGE
+    if(error === "Duplicated link"){
+      res.status(403).send("Duplicated Link"); //CHANGED ERROR MESSAGE
+
+    }else{
+
+      res.status(500).send(error.message); //CHANGED ERROR MESSAGE
+    }
   }
 });
 

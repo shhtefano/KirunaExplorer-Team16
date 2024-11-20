@@ -18,12 +18,9 @@ import { Snackbar, Alert } from "@mui/material";
 // Configura l'icona di default di Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
-  iconRetinaUrl:
-    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.3.1/images/marker-icon.png",
-  iconUrl:
-    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.3.1/images/marker-icon.png",
-  shadowUrl:
-    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.3.1/images/marker-shadow.png",
+  iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.3.1/images/marker-icon.png",
+  iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.3.1/images/marker-icon.png",
+  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.3.1/images/marker-shadow.png",
 });
 
 // Define available areas
@@ -385,7 +382,7 @@ const DrawMap = () => {
         <MapContainer ref={mapRef} center={center} zoom={ZOOM_LEVEL} style={{ height: "700px", width: "1000px" }}>
 
           <FeatureGroup>
-            {user && selectedArea.name !== "Whole Area" && <EditControl
+            {user && user.role==="urban_planner" && selectedArea.name !== "Whole Area" && <EditControl
               position="topright"
               edit={{
                 remove: false,
@@ -420,10 +417,7 @@ const DrawMap = () => {
             )}
             <Polygon key={selectedArea.id} positions={selectedArea.latlngs} />
           </FeatureGroup>
-          <TileLayer
-            url={osm.maptiler.url}
-            attribution={osm.maptiler.attribution}
-          />
+          <TileLayer url={osm.maptiler.url} attribution={osm.maptiler.attribution} />
         </MapContainer>
       </div>
 
@@ -552,7 +546,7 @@ const DrawMap = () => {
             <p><strong>Document Type:</strong> {selectedDocument.document_type}</p>
             <p><strong>Stakeholder:</strong> {selectedDocument.stakeholder}</p>
             <p><strong>Date:</strong> {selectedDocument.issuance_date}</p>
-            <p><strong>Description:</strong> {selectedDocument.document_description}</p>
+            <p><strong>Description:</strong> {selectedDocument.description}</p>
             <p><strong>Scale:</strong> {selectedDocument.scale}</p>
             <p><strong>Language:</strong> {selectedDocument.language ? selectedDocument.language : "--"}</p>
             <p><strong>Pages:</strong> {selectedDocument.pages ? selectedDocument.pages : "--"}</p>
