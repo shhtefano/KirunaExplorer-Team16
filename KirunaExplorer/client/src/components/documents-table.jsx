@@ -150,7 +150,7 @@ export default function DocumentsTable() {
                           </div>
                           {showLinkInterface ? (
                             <div className="mt-6 border-t pt-4">
-                              <DocumentLink initialDocument={selectedDocument?.document_title} />
+                              <DocumentLink initialDocument={selectedDocument} />
                             </div>
                           ) : (
                             <button
