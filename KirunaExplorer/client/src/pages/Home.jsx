@@ -77,7 +77,7 @@ const HomePage = () => {
               <Button
                 variant="outline"
                 className="mr-2"
-                onClick={(e) => handleRestrictedAction(e, "/documents/link")}
+                onClick={(e) => handleRestrictedAction(e, "/documents/list")}
               >
                 Link doc
                 <Map />
@@ -85,7 +85,7 @@ const HomePage = () => {
               <Button
                 variant="outline"
                 className="mr-2"
-                onClick={() => navigate("/documents")}
+                onClick={() => navigate("/documents/list")}
               >
                 See docs
                 <Map />
