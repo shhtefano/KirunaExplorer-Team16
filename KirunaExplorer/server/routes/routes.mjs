@@ -58,7 +58,7 @@ router.post("/api/document/connections", async (req, res) => {
       res.status(201).send("Documents successfully linked");
   } catch (error) { 
       console.error(error);
-      res.status(500).send("An error occurred while linking the documents.");
+      res.status(500).send(error.message); //CHANGED ERROR MESSAGE
 }});
 
 
