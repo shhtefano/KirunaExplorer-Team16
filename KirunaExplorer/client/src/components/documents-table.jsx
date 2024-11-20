@@ -89,7 +89,7 @@ export default function DocumentsTable() {
             <TableHead>Issuance Date</TableHead>
             <TableHead>Type</TableHead>
             <TableHead>Language</TableHead>
-            <TableHead></TableHead>
+            <TableHead>Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -114,6 +114,7 @@ export default function DocumentsTable() {
                           <p><strong>Stakeholders:</strong> {doc.stakeholder}</p>
                           <p><strong>Scale:</strong> {doc.scale}</p>
                           <p><strong>Issuance Date:</strong> {doc.issuance_date}</p>
+                          <p><strong>Type:</strong> {doc.document_type}</p>
                           <p><strong>Language:</strong> {doc.language}</p>
                           <p><strong>Pages:</strong> {doc.pages}</p>
                           <div className="my-4">
@@ -123,7 +124,7 @@ export default function DocumentsTable() {
                             className="px-4 py-2 mt-4 text-white bg-blue-500 rounded hover:bg-blue-600"
                             onClick={() => alert("Linking to another document")}
                           >
-                            Connections
+                            Link Documents
                           </button>
                         </DialogDescription>
                       </DialogContent>
