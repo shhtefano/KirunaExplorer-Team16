@@ -8,7 +8,6 @@ import MapPage from "./pages/Map";
 import GraphPage from "./pages/Graph";
 import LoginPage from "./pages/Login";
 import AddDocumentDescPage from "./pages/AddDocumentDesc";
-import LinkDocumentsPage from "./pages/LinkDocuments";
 import ShowDocumentsPage from "./pages/ShowDocuments";
 
 function App() {
@@ -34,14 +33,7 @@ function App() {
               </ProtectedRoute>
             }
           />
-          <Route
-            path="/documents/link"
-            element={
-              <ProtectedRoute>
-                <LinkDocumentsPage />
-              </ProtectedRoute>
-            }
-          />
+         
           <Route
             path="/documents/list"
             element={
