@@ -10,7 +10,6 @@ import { Map, GanttChart } from "lucide-react";
 import LoginForm from "@/components/login-form";
 import { useAuth } from "@/contexts/AuthContext";
 
-
 const HomePage = () => {
   const { user } = useAuth();
 
@@ -38,7 +37,7 @@ const HomePage = () => {
                 <Map />
               </Button>
             </a>
-            <a href="/documents">
+            <a href="/documents/list">
               <Button variant="outline" className="mr-2">
                 See docs
                 <Map />
@@ -62,15 +61,11 @@ const HomePage = () => {
       {!user && <LoginForm />}
       {user && (
         <Card className="min-w-[270px] max-w-[800px] w-full mt-4">
-
           <CardHeader>
-          <CardTitle>
-          Welcome back {user.username}! - Your role is: {user.role}
+            <CardTitle>
+              Welcome back {user.username}! - Your role is: {user.role}
             </CardTitle>
-
           </CardHeader>
-
-
         </Card>
       )}
     </div>
