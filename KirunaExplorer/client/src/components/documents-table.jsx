@@ -99,14 +99,14 @@ export default function DocumentsTable() {
         </Select>
       </div>
 
-      <Table className="border rounded">
+      <Table className="border rounded table-fixed w-full">
         <TableHeader>
           <TableRow>
-            <TableHead>Title</TableHead>
-            <TableHead>Issuance Date</TableHead>
-            <TableHead>Type</TableHead>
-            <TableHead>Language</TableHead>
-            <TableHead>Actions</TableHead>
+            <TableHead className="w-1/4">Title</TableHead>
+            <TableHead className="w-1/5">Issuance Date</TableHead>
+            <TableHead className="w-1/5">Type</TableHead>
+            <TableHead className="w-1/5">Language</TableHead>
+            <TableHead className="w-1/5">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -123,17 +123,17 @@ export default function DocumentsTable() {
                       <DialogTrigger asChild>
                         <button
                           className="px-3 py-1 text-sm text-white bg-blue-500 rounded hover:bg-blue-600"
-                        onClick={() => {
-                          setSelectedDocument(doc);
-                          setShowLinkInterface(false); // Mostra solo la scheda inizialmente
-                        }}
+                          onClick={() => {
+                            setSelectedDocument(doc);
+                            setShowLinkInterface(false);
+                          }}
                         >
                           View
                         </button>
                       </DialogTrigger>
                       <DialogContent
                         className="max-w-lg p-6 bg-white rounded-lg shadow-lg"
-                      style={{ maxHeight: "80vh", overflowY: "auto" }} // Dialog scorrevole
+                        style={{ maxHeight: "80vh", overflowY: "auto" }}
                       >
                         <DialogTitle className="text-xl font-bold text-gray-800">
                           {selectedDocument?.document_title || "No Document Selected"}
