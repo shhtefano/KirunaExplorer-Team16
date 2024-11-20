@@ -14,9 +14,7 @@ This guide explains how to pull the Docker image from the repository and build t
 3. **Verify that the image is successfully pulled by listing all images:**  
    >docker images
 3. **Build the images:**  
-   >docker-compose build
-4. **Run the containers:**  
-   >docker-compose up   
+   >docker-compose up --build 
 
 
 
