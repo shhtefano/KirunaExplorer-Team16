@@ -30,8 +30,8 @@ const insertUser = async (username, role, password) => {
 };
 
 // Inserisci qui i dati dell'utente che vuoi aggiungere
-const username = "test";
-const role = "admin";
-const password = "test";
+const username = "test2";
+const role = "urban_planner";
+const password = "test2";
 
 insertUser(username, role, password);
