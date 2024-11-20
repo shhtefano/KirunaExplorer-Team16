@@ -1,0 +1,26 @@
+services:
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3001"
+    environment:
+      NODE_ENV: production
+      CLIENT_URL: http://localhost:5173
+    volumes:
+      - ./server:/app
+      - /app/node_modules # Anonymous volume for node_modules
+
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    ports:
+      - "5173:5173" # Maps host's 5173 to container's 5173
+    environment:
+      NODE_ENV: production
+      VITE_API_URL: http://server:3001 # Use the Docker service name 'server' here
+    volumes:
+      - ./client:/app
+      - /app/node_modules

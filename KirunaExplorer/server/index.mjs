@@ -8,11 +8,12 @@ import passport from "passport";
 import LocalStrategy from "passport-local";
 import routes from "./routes/routes.mjs"; // Import the routes module
 import { getUser } from "./dao/user-dao.mjs";
+import dotenv from "dotenv";
+
 
 //DAO
 // const documentDao = new DocumentDAO();
-
-
+dotenv.config();
 
 // init express
 const app = express();
@@ -23,10 +24,11 @@ app.use(morgan("dev"));
 
 // Configurazione CORS
 const corsOptions = {
-  origin: "http://localhost:5173",
+  origin: process.env.CLIENT_URL || "http://localhost:5173",
   optionsSuccessStatus: 200,
   credentials: true,
 };
+
 app.use(cors(corsOptions));
 
 // Configurazione Passport
