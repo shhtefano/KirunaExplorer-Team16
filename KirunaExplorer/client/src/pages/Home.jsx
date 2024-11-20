@@ -6,13 +6,14 @@ import {
   CardFooter,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Map, GanttChart } from "lucide-react";
+import { Map, GanttChart, User } from "lucide-react";
 import LoginForm from "@/components/login-form";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { Snackbar, Alert } from "@mui/material";
 import { useState } from "react";
-import kirunaImage from "@/assets/kiruna.jpg"; // Adjust path based on your file location
+import kirunaImage from "@/assets/kiruna.jpg";
+import { UserProfileCard } from "@/components/user-profile-card";
 
 const HomePage = () => {
   const { user } = useAuth();
@@ -100,7 +101,7 @@ const HomePage = () => {
               <Button
                 variant="outline"
                 className="mr-2"
-                onClick={() => navigate("/graph")}
+                onClick={(e) => handleRestrictedAction(e, "/graph")}
               >
                 See graph
                 <GanttChart data-testid="gantt-chart-icon" />
@@ -110,19 +111,24 @@ const HomePage = () => {
         </Card>
 
         {!user && <LoginForm />}
-        {user && (
+        {/* {user && (
           <Card className="min-w-[270px] max-w-[800px] w-full mt-4 bg-white/90 backdrop-blur-sm">
             <CardHeader>
-              <CardTitle>
-                Welcome back {user.username}! - Your role is: {user.role}
-              </CardTitle>
+              <CardTitle>Welcome back {user.username}!</CardTitle>
+              <CardContent>
+                <div className="flex flex-row gap-x-2 items-center">
+                  {<User size={40} />}
+                  <h2>{user.role}</h2>
+                </div>
+              </CardContent>
             </CardHeader>
           </Card>
-        )}
+        )} */}
+        {user && <UserProfileCard user={user} />}
 
         <Snackbar
           open={openSnackbar}
-          autoHideDuration={3000}
+          autoHideDuration={2000}
           onClose={handleCloseSnackbar}
           anchorOrigin={{ vertical: "top", horizontal: "center" }}
         >
