@@ -3,13 +3,24 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogTrigger, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select"; 
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination"
 import API from "../services/API.js";
 
 export default function DocumentsTable() {
 
   const [documents, setDocuments] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedType, setSelectedType] = useState(""); 
+  const [selectedType, setSelectedType] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8;
 
   
   const documentTypes = [
@@ -44,6 +55,8 @@ export default function DocumentsTable() {
   }, []);
 
 
+
+
   // Filtered list based on search query and selected type
   const filteredDocuments = documents.filter((doc) => {
     // search query filter
@@ -53,8 +66,20 @@ export default function DocumentsTable() {
     return matchesSearch && matchesType;
   });
 
+
+
+  // Calculate pagination
+  const totalPages = Math.ceil(filteredDocuments.length / itemsPerPage);
+  const paginatedDocuments = filteredDocuments.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+
+
+
   return (
-    <div className="max-w-4xl mx-auto p-6 bg-white rounded shadow-md">
+    <div className="max-w-4xl mx-auto p-6 pb-12 bg-white rounded shadow-md overflow-auto">
 
       <div className="mb-6 text-gray-700">
         <p className="font-semibold mb-2">Search Document Title:</p>
@@ -65,6 +90,7 @@ export default function DocumentsTable() {
           className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
         />
       </div>
+      
 
       <div className="mb-6 text-gray-700">
         <p className="font-semibold mb-2">Select Document Type:</p>
@@ -93,8 +119,8 @@ export default function DocumentsTable() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {filteredDocuments.length > 0 ? (
-            filteredDocuments.map((doc) => (
+          {paginatedDocuments.length > 0 ? (
+            paginatedDocuments.map((doc) => (
               <TableRow key={doc.document_title} className="hover:bg-gray-50">
                 <TableCell className="py-2 px-4">{doc.document_title}</TableCell>
                 <TableCell className="py-2 px-4">{doc.issuance_date}</TableCell>
@@ -142,6 +168,44 @@ export default function DocumentsTable() {
           )}
         </TableBody>
       </Table>
+
+
+      <div className="mt-8 flex justify-center items-center">
+        <Pagination>
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                href="#"
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+              >
+                Previous
+              </PaginationPrevious>
+            </PaginationItem>
+            {Array.from({ length: totalPages }, (_, index) => (
+              <PaginationItem key={index}>
+                <PaginationLink
+                  href="#"
+                  onClick={() => setCurrentPage(index + 1)}
+                  className={currentPage === index + 1 ? "font-bold text-blue-500" : ""}
+                >
+                  {index + 1}
+                </PaginationLink>
+              </PaginationItem>
+            ))}
+            <PaginationItem>
+              <PaginationNext
+                href="#"
+                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+              >
+                Next
+              </PaginationNext>
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      </div>
+
+
+
     </div>
   );
 }
