@@ -1,7 +1,7 @@
 import sqlite3 from "sqlite3";
 import crypto from "crypto";
 
-const db = new sqlite3.Database("db/kirunadb.db");
+const db = new sqlite3.Database("../db/kirunadb.db");
 const generateSalt = () => {
   return crypto.randomBytes(16).toString("hex");
 };
@@ -30,8 +30,8 @@ const insertUser = async (username, role, password) => {
 };
 
 // Inserisci qui i dati dell'utente che vuoi aggiungere
-const username = "test";
-const role = "admin";
-const password = "test";
+const username = "test3";
+const role = "resident";
+const password = "test3";
 
 insertUser(username, role, password);

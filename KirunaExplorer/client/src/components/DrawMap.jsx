@@ -18,9 +18,12 @@ import { Snackbar, Alert } from "@mui/material";
 // Configura l'icona di default di Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
-  iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.3.1/images/marker-icon.png",
-  iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.3.1/images/marker-icon.png",
-  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.3.1/images/marker-shadow.png",
+  iconRetinaUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.3.1/images/marker-icon.png",
+  iconUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.3.1/images/marker-icon.png",
+  shadowUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.3.1/images/marker-shadow.png",
 });
 
 // Define available areas
@@ -417,7 +420,10 @@ const DrawMap = () => {
             )}
             <Polygon key={selectedArea.id} positions={selectedArea.latlngs} />
           </FeatureGroup>
-          <TileLayer url={osm.maptiler.url} attribution={osm.maptiler.attribution} />
+          <TileLayer
+            url={osm.maptiler.url}
+            attribution={osm.maptiler.attribution}
+          />
         </MapContainer>
       </div>
 
