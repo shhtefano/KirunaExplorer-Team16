@@ -489,7 +489,7 @@ const DrawMap = () => {
           )}
         </div>
         <div>
-          {user && (
+          {user && user.role==="urban_planner" && (
             <Container className="flex flex-row gap-x-4 text-center">
               <Button
                 className="mt-4"
