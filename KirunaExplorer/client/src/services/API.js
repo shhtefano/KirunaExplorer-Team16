@@ -15,26 +15,71 @@ async function getDocuments() {
   return response.json();
 }
 
-// async function linkDocuments(parent_id,children_id, connection_type) {
-//   const response = await fetch(`${SERVER_URL}/api/document/connections`, {
-//     method: "POST",
-//     headers: {
-//       "Content-Type": "application/json",
-//     },
-//     body: JSON.stringify({
-//       parent_id,
-//        children_id,
-//         connection_type
-//     }),
-//   });
+async function getDocumentsGeo() {
+  const response = await fetch(`${SERVER_URL}/api/document/geo/list`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
 
-//   if (!response.ok) {
-//     const error = await response.json();
-//     throw new Error(error.message || "Errore API linkDocuments");
-//   }
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || "Errore API getDocuments");
+  }
 
-//   return response.json();
-// }
+  const data = await response.json();
+
+  return data;
+}
+
+async function updateDocumentCoordinates(document_id, lat, lng){
+  
+  const response = await fetch(`${SERVER_URL}/api/document/updatePointCoords`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      document_id,
+      lat,
+      lng,
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || "Errore API getDocuments");
+  }
+
+  const data = await response.json();
+
+  return data;
+}
+
+async function updateDocumentArea(document_id, area_id){
+  
+  const response = await fetch(`${SERVER_URL}/api/document/updateDocumentArea`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      document_id,
+      area_id
+    }),
+  });
+  
+  if (!response.ok) {
+    
+    const error = await response.json();
+    throw new Error(error.message);
+  }
+
+  const data = await response.json();
+  
+  return data;
+}
 
 async function linkDocuments(parent_id, children_id, connection_type) {
   try {
@@ -175,6 +220,9 @@ const API = {
   linkDocuments,
   addDocumentDescription,
   getDocuments,
+  getDocumentsGeo,
+  updateDocumentCoordinates,
+  updateDocumentArea,
 };
 
 export default API;

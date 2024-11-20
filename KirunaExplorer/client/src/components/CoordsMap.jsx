@@ -34,7 +34,7 @@ const CoordsMap = ({onSubmitCoordinates, setShowPopup}) => {
         onSubmitCoordinates(lat, lng);
 
         // Chiudi il popup
-        setShowPopup(false);
+        // setShowPopup(false);
       },
     });
     return null;
