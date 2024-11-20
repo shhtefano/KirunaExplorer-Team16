@@ -6,75 +6,347 @@ import {
   CardFooter,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Map, GanttChart } from "lucide-react";
+import { Map, GanttChart, User } from "lucide-react";
 import LoginForm from "@/components/login-form";
 import { useAuth } from "@/contexts/AuthContext";
-
+import { useNavigate } from "react-router-dom";
+import { Snackbar, Alert } from "@mui/material";
+import { useState } from "react";
+import kirunaImage from "@/assets/kiruna.jpg";
+import { UserProfileCard } from "@/components/user-profile-card";
 
 const HomePage = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const [openSnackbar, setOpenSnackbar] = useState(false);
+
+  const handleRestrictedAction = (e, path) => {
+    if (!user) {
+      e.preventDefault();
+      setOpenSnackbar(true);
+    } else {
+      navigate(path);
+    }
+  };
+
+  const handleCloseSnackbar = (event, reason) => {
+    if (reason === "clickaway") {
+      return;
+    }
+    setOpenSnackbar(false);
+  };
 
   return (
-    <div className="flex flex-col w-full h-full items-center justify-start p-5 mt-0 space-y-4 text-center">
-      <Card className="min-w-[270px] max-w-[800px]">
-        <CardHeader>
-          <CardTitle>Kiruna Explorer</CardTitle>
-        </CardHeader>
-        <CardContent>
-          Welcome to Kiruna Explorer. Here we will create the webapp for
-          exploring the incredible project of moving the swedish city, Kiruna.
-        </CardContent>
-        <CardFooter className="flex justify-between">
-          <div className="flex gap-x-2 justify-center items-center">
-            <a href="/add-document-description">
-              <Button variant="outline" className="mr-2">
+    <div className="relative min-h-screen w-full">
+      {/* Background Image with Overlay */}
+      <div
+        className="fixed top-0 left-0 w-full h-full z-0"
+        style={{
+          backgroundImage: `url(${kirunaImage})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
+        }}
+      >
+        {/* Dark overlay to improve content readability */}
+        <div className="absolute inset-0 bg-black/40" />
+      </div>
+
+      {/* Content */}
+      <div className="relative z-10 flex flex-col w-full h-full items-center justify-start p-5 mt-0 space-y-4 text-center">
+        <Card className="min-w-[270px] max-w-[800px] bg-white/90 backdrop-blur-sm">
+          <CardHeader>
+            <CardTitle>Kiruna Explorer</CardTitle>
+          </CardHeader>
+          <CardContent>
+            Welcome to Kiruna Explorer. Here we will create the webapp for
+            exploring the incredible project of moving the swedish city, Kiruna.
+          </CardContent>
+          <CardFooter className="flex justify-between">
+            <div className="flex gap-x-2 justify-center items-center">
+              <Button
+                variant="outline"
+                className="mr-2"
+                onClick={(e) =>
+                  handleRestrictedAction(e, "/add-document-description")
+                }
+              >
                 Add doc
-                <Map />
+                <Map data-testid="map-icon" />
               </Button>
-            </a>
-            <a href="/documents/link">
-              <Button variant="outline" className="mr-2">
+              <Button
+                variant="outline"
+                className="mr-2"
+                onClick={(e) => handleRestrictedAction(e, "/documents/list")}
+              >
                 Link doc
                 <Map />
               </Button>
-            </a>
-            <a href="/documents">
-              <Button variant="outline" className="mr-2">
+              <Button
+                variant="outline"
+                className="mr-2"
+                onClick={() => navigate("/documents/list")}
+              >
                 See docs
                 <Map />
               </Button>
-            </a>
-            <a href="/map">
-              <Button variant="outline" className="mr-2">
+              <Button
+                variant="outline"
+                className="mr-2"
+                onClick={() => navigate("/map")}
+              >
                 See Map
                 <Map />
               </Button>
-            </a>
-            <a href="/graph">
-              <Button variant="outline" className="mr-2">
+              <Button
+                variant="outline"
+                className="mr-2"
+                onClick={(e) => handleRestrictedAction(e, "/graph")}
+              >
                 See graph
-                <GanttChart />
+                <GanttChart data-testid="gantt-chart-icon" />
               </Button>
-            </a>
-          </div>
-        </CardFooter>
-      </Card>
-      {!user && <LoginForm />}
-      {user && (
-        <Card className="min-w-[270px] max-w-[800px] w-full mt-4">
-
-          <CardHeader>
-          <CardTitle>
-          Welcome back {user.username}! - Your role is: {user.role}
-            </CardTitle>
-
-          </CardHeader>
-
-
+            </div>
+          </CardFooter>
         </Card>
-      )}
+
+        {!user && <LoginForm />}
+        {/* {user && (
+          <Card className="min-w-[270px] max-w-[800px] w-full mt-4 bg-white/90 backdrop-blur-sm">
+            <CardHeader>
+              <CardTitle>Welcome back {user.username}!</CardTitle>
+              <CardContent>
+                <div className="flex flex-row gap-x-2 items-center">
+                  {<User size={40} />}
+                  <h2>{user.role}</h2>
+                </div>
+              </CardContent>
+            </CardHeader>
+          </Card>
+        )} */}
+        {user && <UserProfileCard user={user} />}
+
+        <Snackbar
+          open={openSnackbar}
+          autoHideDuration={2000}
+          onClose={handleCloseSnackbar}
+          anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        >
+          <Alert
+            onClose={handleCloseSnackbar}
+            severity="error"
+            sx={{ width: "100%" }}
+          >
+            Please log in to access this feature
+          </Alert>
+        </Snackbar>
+      </div>
     </div>
   );
 };
 
 export default HomePage;
+
+// import {
+//   Card,
+//   CardHeader,
+//   CardTitle,
+//   CardContent,
+//   CardFooter,
+// } from "@/components/ui/card";
+// import { Button } from "@/components/ui/button";
+// import { Map, GanttChart } from "lucide-react";
+// import LoginForm from "@/components/login-form";
+// import { useAuth } from "@/contexts/AuthContext";
+// import { useNavigate } from "react-router-dom";
+// import { Snackbar, Alert } from "@mui/material";
+// import { useState } from "react";
+
+// const HomePage = () => {
+//   const { user } = useAuth();
+//   const navigate = useNavigate();
+//   const [openSnackbar, setOpenSnackbar] = useState(false);
+
+//   const handleRestrictedAction = (e, path) => {
+//     if (!user) {
+//       e.preventDefault();
+//       setOpenSnackbar(true);
+//     } else {
+//       navigate(path);
+//     }
+//   };
+
+//   const handleCloseSnackbar = (event, reason) => {
+//     if (reason === "clickaway") {
+//       return;
+//     }
+//     setOpenSnackbar(false);
+//   };
+
+//   return (
+//     <div className="flex flex-col w-full h-full items-center justify-start p-5 mt-0 space-y-4 text-center">
+//       <Card className="min-w-[270px] max-w-[800px]">
+//         <CardHeader>
+//           <CardTitle>Kiruna Explorer</CardTitle>
+//         </CardHeader>
+//         <CardContent>
+//           Welcome to Kiruna Explorer. Here we will create the webapp for
+//           exploring the incredible project of moving the swedish city, Kiruna.
+//         </CardContent>
+//         <CardFooter className="flex justify-between">
+//           <div className="flex gap-x-2 justify-center items-center">
+//             <Button
+//               variant="outline"
+//               className="mr-2"
+//               onClick={(e) =>
+//                 handleRestrictedAction(e, "/add-document-description")
+//               }
+//             >
+//               Add doc
+//               <Map data-testid="map-icon" />
+//             </Button>
+//             <Button
+//               variant="outline"
+//               className="mr-2"
+//               onClick={(e) => handleRestrictedAction(e, "/documents/link")}
+//             >
+//               Link doc
+//               <Map />
+//             </Button>
+//             <Button
+//               variant="outline"
+//               className="mr-2"
+//               onClick={() => navigate("/documents")}
+//             >
+//               See docs
+//               <Map />
+//             </Button>
+//             <Button
+//               variant="outline"
+//               className="mr-2"
+//               onClick={() => navigate("/map")}
+//             >
+//               See Map
+//               <Map />
+//             </Button>
+//             <Button
+//               variant="outline"
+//               className="mr-2"
+//               onClick={(e) => handleRestrictedAction(e, "/graph")}
+//             >
+//               See graph
+//               <GanttChart data-testid="gantt-chart-icon" />
+//             </Button>
+//           </div>
+//         </CardFooter>
+//       </Card>
+//       {!user && <LoginForm />}
+//       {user && (
+//         <Card className="min-w-[270px] max-w-[800px] w-full mt-4">
+//           <CardHeader>
+//             <CardTitle>
+//               Welcome back {user.username}! - Your role is: {user.role}
+//             </CardTitle>
+//           </CardHeader>
+//         </Card>
+//       )}
+
+//       <Snackbar
+//         open={openSnackbar}
+//         autoHideDuration={2000}
+//         onClose={handleCloseSnackbar}
+//         anchorOrigin={{ vertical: "top", horizontal: "center" }}
+//       >
+//         <Alert
+//           onClose={handleCloseSnackbar}
+//           severity="error"
+//           sx={{ width: "100%" }}
+//         >
+//           Please log in to access this feature
+//         </Alert>
+//       </Snackbar>
+//     </div>
+//   );
+// };
+
+// export default HomePage;
+
+//dfafaf
+
+// working code down // --------------------------------------------------------------
+
+// import {
+//   Card,
+//   CardHeader,
+//   CardTitle,
+//   CardContent,
+//   CardFooter,
+// } from "@/components/ui/card";
+// import { Button } from "@/components/ui/button";
+// import { Map, GanttChart } from "lucide-react";
+// import LoginForm from "@/components/login-form";
+// import { useAuth } from "@/contexts/AuthContext";
+
+// const HomePage = () => {
+//   const { user } = useAuth();
+
+//   return (
+//     <div className="flex flex-col w-full h-full items-center justify-start p-5 mt-0 space-y-4 text-center">
+//       <Card className="min-w-[270px] max-w-[800px]">
+//         <CardHeader>
+//           <CardTitle>Kiruna Explorer</CardTitle>
+//         </CardHeader>
+//         <CardContent>
+//           Welcome to Kiruna Explorer. Here we will create the webapp for
+//           exploring the incredible project of moving the swedish city, Kiruna.
+//         </CardContent>
+//         <CardFooter className="flex justify-between">
+//           <div className="flex gap-x-2 justify-center items-center">
+//             <a href="/add-document-description">
+//               <Button variant="outline" className="mr-2">
+//                 Add doc
+//                 <Map data-testid="map-icon" />
+//               </Button>
+//             </a>
+//             <a href="/documents/link">
+//               <Button variant="outline" className="mr-2">
+//                 Link doc
+//                 <Map />
+//               </Button>
+//             </a>
+//             <a href="/documents">
+//               <Button variant="outline" className="mr-2">
+//                 See docs
+//                 <Map />
+//               </Button>
+//             </a>
+//             <a href="/map">
+//               <Button variant="outline" className="mr-2">
+//                 See Map
+//                 <Map />
+//               </Button>
+//             </a>
+//             <a href="/graph">
+//               <Button variant="outline" className="mr-2">
+//                 See graph
+//                 <GanttChart data-testid="gantt-chart-icon" />
+//               </Button>
+//             </a>
+//           </div>
+//         </CardFooter>
+//       </Card>
+//       {!user && <LoginForm />}
+//       {user && (
+//         <Card className="min-w-[270px] max-w-[800px] w-full mt-4">
+//           <CardHeader>
+//             <CardTitle>
+//               Welcome back {user.username}! - Your role is: {user.role}
+//             </CardTitle>
+//           </CardHeader>
+//         </Card>
+//       )}
+//     </div>
+//   );
+// };
+
+// export default HomePage;

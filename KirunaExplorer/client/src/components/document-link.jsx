@@ -12,19 +12,19 @@ import {
 import API from "../services/API.js";
 import { toast } from "sonner";
 
-export default function DocumentLink(/*{ initialDocument }*/) { // MOCK
-  const [documents, setDocuments] = useState([]); // State for documents from the database
-  const [selectedDocument, setSelectedDocument] = useState(null); // State for the document to link
-  const [linkType, setLinkType] = useState("");
-  const [searchQuery, setSearchQuery] = useState("");
-  const initialDocument = { document_title: '2001 Material Access.pdf' }; // MOCK
+export default function DocumentLink({ initialDocument }) {
+  const [documents, setDocuments] = useState([]); // Documenti caricati
+  const [selectedDocument, setSelectedDocument] = useState(null); // Documento selezionato
+  const [linkType, setLinkType] = useState(""); // Tipo di collegamento
+  const [searchQuery, setSearchQuery] = useState(""); // Query di ricerca
+  const [visibleCount, setVisibleCount] = useState(5); // Numero iniziale di documenti visibili
 
-  // useEffect to load documents at startup
+  // Caricamento dei documenti
   useEffect(() => {
     const fetchDocuments = async () => {
       try {
-        const response = await API.getDocuments(); // Function to fetch documents
-        setDocuments(response); // Set documents in state
+        const response = await API.getDocuments();
+        setDocuments(response);
       } catch (error) {
         console.error("Error fetching documents:", error);
       }
@@ -34,7 +34,7 @@ export default function DocumentLink(/*{ initialDocument }*/) { // MOCK
 
   const handleDocumentClick = (document) => {
     setSelectedDocument(document);
-    setLinkType(""); // Reset link type when selecting a new document
+    setLinkType(""); // Reset tipo di link al cambio documento
   };
 
   const handleLinkDocuments = async () => {
@@ -49,26 +49,34 @@ export default function DocumentLink(/*{ initialDocument }*/) { // MOCK
         toast.success(
           `Successfully linked "${initialDocument.document_title}" with "${selectedDocument.document_title}" as ${linkType}.`
         );
-        // Clear selections
+        
+        // Aggiungi il documento appena connesso alla lista dei documenti
+        setDocuments((prevDocuments) => [
+          ...prevDocuments,
+          selectedDocument, // Aggiungiamo il documento selezionato alla lista
+        ]);
+        
+        // Reset stato
         setSelectedDocument(null);
         setLinkType("");
       } else {
-        // Display error message
         toast.error(result.message);
       }
     }
   };
 
-  // Filter documents, excluding the already selected one
+  // Filtraggio documenti
   const filteredDocuments = documents.filter(
     (doc) =>
       doc.document_title.toLowerCase().includes(searchQuery.toLowerCase()) &&
       doc.document_title !== initialDocument.document_title
-  );  return (
+  );
+
+  // Documenti visibili (limitati da `visibleCount`)
+  const visibleDocuments = filteredDocuments.slice(0, visibleCount);
+
+  return (
     <Card className="min-w-[280px] max-w-[600px]">
-      <CardHeader>
-        <CardTitle>Link Document to "{initialDocument.document_title}"</CardTitle>
-      </CardHeader>
       <CardContent>
         <div className="text-muted-foreground mb-4">
           Search and select a document to link it to "{initialDocument.document_title}".
@@ -82,9 +90,9 @@ export default function DocumentLink(/*{ initialDocument }*/) { // MOCK
           className="mb-4"
         />
 
-        {/* Filtered document list */}
+        {/* Lista documenti */}
         <div className="grid grid-cols-1 gap-2">
-          {filteredDocuments.map((doc) => (
+          {visibleDocuments.map((doc) => (
             <div key={doc.document_title}>
               <DocButton
                 document={doc}
@@ -92,7 +100,7 @@ export default function DocumentLink(/*{ initialDocument }*/) { // MOCK
                 onClick={() => handleDocumentClick(doc)}
               />
 
-              {/* Selection and link section below selected document */}
+              {/* Mostra opzioni di collegamento sotto il documento selezionato */}
               {selectedDocument?.document_title === doc.document_title && (
                 <div className="mt-2 space-y-2 p-4 border rounded-md bg-gray-50">
                   <div className="font-semibold text-sm">
@@ -121,6 +129,19 @@ export default function DocumentLink(/*{ initialDocument }*/) { // MOCK
             </div>
           ))}
         </div>
+
+        {/* Pulsante "Load More" stilizzato */}
+        {filteredDocuments.length > visibleCount && (
+          <div className="mt-4 text-center">
+            <Button
+              onClick={() => setVisibleCount((prev) => prev + 5)}
+              variant="ghost" // Varianta 'ghost' per un aspetto diverso
+              className="w-full py-2 text-sm font-semibold text-blue-600 border border-blue-500 rounded-md hover:bg-blue-50 focus:outline-none"
+            >
+              Load More
+            </Button>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
@@ -135,9 +156,6 @@ export function DocButton({ document, isSelected, onClick }) {
     >
       <div className="flex justify-between items-center">
         <span className="font-semibold text-sm">{document.document_title}</span>
-        {/*isSelected && (
-          <span className="text-green-500 font-semibold text-xs">Selected</span>
-        )*/}
       </div>
     </Button>
   );

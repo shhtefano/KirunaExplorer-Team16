@@ -32,7 +32,7 @@ export const descriptionRules = {
 };
 
 export const documentRules = {
-  required: "You have to select a document",
+  required: "A document title is required",
 };
 export const stakeholderRules = {
   requried: "You have to select a stakeholder",
