@@ -37,8 +37,6 @@ Definition of done:
 | 5     | 5       | 3      | 18h        | 15h          |     |
 | 6     | 4       | 1      | 14h        | 16h          |     |
 
-> story `#0` is for technical tasks, leave out story points (not applicable in this case)
-
 - Hours per task average, standard deviation (estimate and actual)
 
 Estimate:
@@ -83,7 +81,7 @@ Actual:
 
 - Which improvement goals set in the previous retrospective were you able to achieve?
 
-  > We wanted to hit a test coverage goal of <70%, which we hit for the backend. We also implemented more E2E tests. We wanted more comprehensive documentation within the team, so that we could more easily collaborate on different tasks. We improved the sharing of core information in our google document which.
+  > We wanted to hit a test coverage goal of <70%, which we hit for the backend. We also implemented more E2E tests. We wanted more comprehensive documentation within the team, so that we could more easily collaborate on different tasks. We improved the sharing of core information in our google document which led to us being more efficent.
 
 - Which ones you were not able to achieve? Why?
 
