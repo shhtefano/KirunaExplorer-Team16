@@ -99,19 +99,25 @@ async function linkDocuments(parent_id, children_id, connection_type) {
     if (!response.ok) {
       // Clone the response to safely read it in multiple ways
       const responseClone = response.clone();
+      console.log(response);
+      if(response.status === 403){        
+        return { success: false, message: "Duplicated Link" };
+      }else if(response.status === 500){
+        return { success: false, message: "Internal Server Error" };
 
-      // Try to parse the error response as JSON
-      let errorMessage = "An unknown error occurred.";
-      try {
-        const errorData = await response.json();
-        errorMessage = errorData.message || errorMessage;
-      } catch (jsonError) {
-        // If parsing fails, use the cloned response to read text
-        errorMessage = await responseClone.text();
       }
+      // // Try to parse the error response as JSON
+      // let errorMessage = "An unknown error occurred.";
+      // try {
+      //   const errorData = await response.json();
+      //   errorMessage = errorData.message || errorMessage;
+      // } catch (jsonError) {
+      //   // If parsing fails, use the cloned response to read text
+      //   errorMessage = await responseClone.text();
+      // }
 
-      // Return an error response
-      return { success: false, message: errorMessage };
+      // // Return an error response
+      // return { success: false, message: errorMessage };
     }
 
     // Handle successful responses - safely attempt to parse as JSON if content exists

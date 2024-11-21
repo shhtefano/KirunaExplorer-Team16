@@ -269,7 +269,7 @@ class DocumentDAO {
     await new Promise((resolve, reject) => {
       db.get(sqlQueryConnectionExistence, [parent_id, children_id], (err, row) => {
         if (row) {
-          reject(new Error("A connection already exists between these nodes. Duplicate entries are not allowed!"));
+          reject("Duplicated link");
         } else if (err) {
           reject(new Error(`Error while checking connection existence: ${err.message}`));
         } else {
@@ -282,7 +282,7 @@ class DocumentDAO {
     await new Promise((resolve, reject) => {
       db.get(sqlQueryInverseConnectionExistence, [children_id, parent_id], (err, row) => {
         if (row) {
-          reject(new Error("An inverse connection already exists between these nodes. Duplicate entries in reverse order are not allowed!"));
+          reject("Duplicated link");
         } else if (err) {
           reject(new Error(`Error while checking inverse connection existence: ${err.message}`));
         } else {

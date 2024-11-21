@@ -10,7 +10,7 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import API from "../services/API.js";
-import { toast } from "sonner";
+import { Snackbar, Alert } from "@mui/material";
 
 export default function DocumentLink({ initialDocument }) {
   const [documents, setDocuments] = useState([]); // Documenti caricati
@@ -18,6 +18,9 @@ export default function DocumentLink({ initialDocument }) {
   const [linkType, setLinkType] = useState(""); // Tipo di collegamento
   const [searchQuery, setSearchQuery] = useState(""); // Query di ricerca
   const [visibleCount, setVisibleCount] = useState(5); // Numero iniziale di documenti visibili
+  const [openSnackbar, setOpenSnackbar] = useState(false);
+  const [snackbarMsg, setSnackbarMsg] = useState('');
+  const [errorSeverity, setErrorSeverity] = useState('');
 
   // Caricamento dei documenti
   useEffect(() => {
@@ -37,6 +40,13 @@ export default function DocumentLink({ initialDocument }) {
     setLinkType(""); // Reset tipo di link al cambio documento
   };
 
+  const handleCloseSnackbar = (event, reason) => {
+    if (reason === "clickaway") {
+      return;
+    }
+    setOpenSnackbar(false);
+  };
+
   const handleLinkDocuments = async () => {
     if (selectedDocument && linkType) {
       const result = await API.linkDocuments(
@@ -46,9 +56,6 @@ export default function DocumentLink({ initialDocument }) {
       );
 
       if (result.success) {
-        toast.success(
-          `Successfully linked "${initialDocument.document_title}" with "${selectedDocument.document_title}" as ${linkType}.`
-        );
         
         // Aggiungi il documento appena connesso alla lista dei documenti
         setDocuments((prevDocuments) => [
@@ -57,9 +64,17 @@ export default function DocumentLink({ initialDocument }) {
         ]);
         
         // Reset stato
+        setSnackbarMsg('Linked successfully');
+        setOpenSnackbar(true);
+        setErrorSeverity('success');
+
         setSelectedDocument(null);
         setLinkType("");
       } else {
+        console.log(result);
+        setSnackbarMsg('Duplicated link');
+        setOpenSnackbar(true);
+        setErrorSeverity('error');
         toast.error(result.message);
       }
     }
@@ -76,6 +91,7 @@ export default function DocumentLink({ initialDocument }) {
   const visibleDocuments = filteredDocuments.slice(0, visibleCount);
 
   return (
+    <div>
     <Card className="min-w-[280px] max-w-[600px]">
       <CardContent>
         <div className="text-muted-foreground mb-4">
@@ -144,6 +160,23 @@ export default function DocumentLink({ initialDocument }) {
         )}
       </CardContent>
     </Card>
+    <Snackbar
+          open={openSnackbar}
+          autoHideDuration={2000}
+          onClose={handleCloseSnackbar}
+          anchorOrigin={{ vertical: "top", horizontal: "center" }}
+          style={{marginTop:"60px"}}
+        >
+          <Alert
+            onClose={handleCloseSnackbar}
+            severity={errorSeverity}
+            sx={{ width: "100%" }}
+          >
+            {snackbarMsg}
+          </Alert>
+        </Snackbar>
+    </div>
+    
   );
 }
 
