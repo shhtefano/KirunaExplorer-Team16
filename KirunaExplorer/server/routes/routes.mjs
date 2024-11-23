@@ -49,6 +49,18 @@ router.get("/api/document/geo/list", async (req, res) => {
   }
 });
 
+router.get("/api/document/:document_id/geo/", async (req, res) => {
+  try {
+    // Recupera tutti i documenti dal database
+    const document = await documentDAO.getDocumentPosition(req.params.document_id);
+    // Risponde con i documenti in formato JSON
+    res.status(200).json(document);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("An error occurred while fetching document position.");
+  }
+});
+
 router.post("/api/document/connections", async (req, res) => {
   const { parent_id, children_id, connection_type } = req.body;
   try {

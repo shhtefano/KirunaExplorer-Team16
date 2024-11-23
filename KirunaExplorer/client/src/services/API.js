@@ -33,8 +33,8 @@ async function getDocumentsGeo() {
   return data;
 }
 
-async function updateDocumentCoordinates(document_id, lat, lng){
-  
+async function updateDocumentCoordinates(document_id, lat, lng) {
+
   const response = await fetch(`${SERVER_URL}/api/document/updatePointCoords`, {
     method: "POST",
     headers: {
@@ -57,8 +57,8 @@ async function updateDocumentCoordinates(document_id, lat, lng){
   return data;
 }
 
-async function updateDocumentArea(document_id, area_id){
-  
+async function updateDocumentArea(document_id, area_id) {
+
   const response = await fetch(`${SERVER_URL}/api/document/updateDocumentArea`, {
     method: "PUT",
     headers: {
@@ -69,15 +69,15 @@ async function updateDocumentArea(document_id, area_id){
       area_id
     }),
   });
-  
+
   if (!response.ok) {
-    
+
     const error = await response.json();
     throw new Error(error.message);
   }
 
   const data = await response.json();
-  
+
   return data;
 }
 
@@ -100,9 +100,9 @@ async function linkDocuments(parent_id, children_id, connection_type) {
       // Clone the response to safely read it in multiple ways
       const responseClone = response.clone();
       console.log(response);
-      if(response.status === 403){        
+      if (response.status === 403) {
         return { success: false, message: "Duplicated Link" };
-      }else if(response.status === 500){
+      } else if (response.status === 500) {
         return { success: false, message: "Internal Server Error" };
 
       }
@@ -140,25 +140,21 @@ async function linkDocuments(parent_id, children_id, connection_type) {
   }
 }
 
-/* example
-async function fetchServices() {
-  const response = await fetch(SERVER_URL + "/api/services", {
+async function getDocumentPosition(document_id) {
+  const response = await fetch(`${SERVER_URL}/api/document/${document_id}/geo`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
     },
-    credentials: "include", // Se necessario per la sessione
   });
 
   if (!response.ok) {
-    throw new Error("Errore API fetchServices");
+    const error = await response.json();
+    throw new Error(error.message || "Errore API getDocuments");
   }
 
-  const services = await response.json();
-  return services;
+  return response.json();
 }
-
-*/
 
 const logIn = async (credentials) => {
   const response = await fetch(SERVER_URL + "/api/sessions", {
@@ -194,8 +190,8 @@ const addDocumentDescription = async (body) => {
   else if (res.status === 422) {
     return { error: "Missing Latitude/Longitude or Municipal area" };
   }
-  else{
-    return { error: "Server error" }; 
+  else {
+    return { error: "Server error" };
   }
 };
 
@@ -221,14 +217,15 @@ const logOut = async () => {
 
 const API = {
   logIn,
-  getUserInfo,
   logOut,
-  linkDocuments,
-  addDocumentDescription,
+  getUserInfo,
   getDocuments,
   getDocumentsGeo,
+  getDocumentPosition,
   updateDocumentCoordinates,
   updateDocumentArea,
+  addDocumentDescription,
+  linkDocuments,
 };
 
 export default API;

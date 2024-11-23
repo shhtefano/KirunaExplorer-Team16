@@ -126,14 +126,14 @@ const DocumentDescriptionForm = () => {
 
         const response = await API.addDocumentDescription(body);
         // toast.success("Document description added");
-         setDocumentId(response.documentId); // Set the documentId
+        setDocumentId(response.documentId); // Set the documentId
 
         // Save links only if there are any
         if (temporaryLinks.length > 0) {
-           await onSaveLinks(response.documentId); // Pass the documentId directly
-         }
+          await onSaveLinks(response.documentId); // Pass the documentId directly
+        }
 
-         form.reset();
+        form.reset();
 
         // Check if response contains an error
         if (response.error) {
@@ -179,12 +179,12 @@ const DocumentDescriptionForm = () => {
         );
 
         if (response.error) {
-        //  toast.error(`Error linking "${link.from}" to "${link.to}": ${response.error}`);
+          //  toast.error(`Error linking "${link.from}" to "${link.to}": ${response.error}`);
         } else {
-         // toast.success(`Link saved: "${link.from}" to "${link.to}" (${link.type})`);
+          // toast.success(`Link saved: "${link.from}" to "${link.to}" (${link.type})`);
         }
       } catch (error) {
-       // toast.error(`An error occurred while linking "${link.from}" to "${link.to}".`);
+        // toast.error(`An error occurred while linking "${link.from}" to "${link.to}".`);
         console.error(`Error linking "${link.from}" to "${link.to}":`, error);
       }
     }
@@ -206,7 +206,7 @@ const DocumentDescriptionForm = () => {
       setTemporaryLinks((prevLinks) =>
         prevLinks.map((link) =>
           link.from === currentTitle ||
-          link.from === prevLinks.find((l) => l.from)?.from
+            link.from === prevLinks.find((l) => l.from)?.from
             ? { ...link, from: currentTitle }
             : link
         )
@@ -219,12 +219,14 @@ const DocumentDescriptionForm = () => {
 
   return (
     <div>
+            <div className="d-flex justify-content-center" style={{ fontSize: "34px", fontWeight: "bold", marginBottom: '20px' }}>
+              <h1>
+                Add new document        </h1>
+            </div>
       <Card className="min-w-[280px] max-w-[700px]">
-        <CardHeader>
-          <CardTitle>Add new document</CardTitle>
-        </CardHeader>
+
         <CardContent>
-          <div className="text-muted-foreground mb-4">
+          <div className="text-muted-foreground mt-4 mb-4">
             Fill out this form to add metadata to a document. Language and pages
             are not mandatory. Please choose between 'Whole Area' OR a single
             point with coordinates.
@@ -286,7 +288,7 @@ const DocumentDescriptionForm = () => {
                     <FormControl>
                       <Select
                         onValueChange={field.onChange}
-                        value={field.value} 
+                        value={field.value}
                       >
                         <FormControl>
                           <SelectTrigger>
@@ -309,7 +311,7 @@ const DocumentDescriptionForm = () => {
                   </FormItem>
                 )}
               />
-               {/* Stakeholder */}
+              {/* Stakeholder */}
               <FormField
                 control={form.control}
                 name="stakeholder"
@@ -320,7 +322,7 @@ const DocumentDescriptionForm = () => {
                     <FormControl>
                       <Select
                         onValueChange={field.onChange}
-                        value={field.value} 
+                        value={field.value}
                       >
                         <FormControl>
                           <SelectTrigger>
@@ -516,7 +518,7 @@ const DocumentDescriptionForm = () => {
               {showPopupMap && (
                 <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
                   <div
-                    className="bg-white p-6 rounded shadow-lg"
+                    className="bg-white p-4 rounded shadow-lg"
                     style={{ textAlign: "center" }}
                   >
                     <CoordsMap
@@ -565,7 +567,7 @@ const DocumentDescriptionForm = () => {
                                 )}
                                 temporaryLinks={temporaryLinks}
                                 setTemporaryLinks={setTemporaryLinks}
-                                // Passa il titolo del documento corrente
+                              // Passa il titolo del documento corrente
                               />
                             </ScrollArea>
                           </div>

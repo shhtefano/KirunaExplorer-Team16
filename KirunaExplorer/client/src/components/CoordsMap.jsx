@@ -1,11 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import L, { latLng } from "leaflet";
 import { MapContainer, TileLayer, FeatureGroup, Polygon, useMapEvents  } from "react-leaflet";
-import { EditControl } from "react-leaflet-draw";
-import osm from "./osm-providers";
 import "leaflet/dist/leaflet.css";
 import "leaflet-draw/dist/leaflet.draw.css";
-
+import { Button } from "react-bootstrap";
 // Configura l'icona di default di Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
 
@@ -18,11 +16,25 @@ L.Icon.Default.mergeOptions({
     "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.3.1/images/marker-shadow.png",
 });
 
+const tileLayers = {
+  maptiler: {
+    url: "https://api.maptiler.com/maps/basic/256/{z}/{x}/{y}.png?key=BIzjthaYAgeFFw8kkpi9",
+  },
+  satellite: {
+    url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+  },
+  dark: {
+    url: "https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png",
+  },
+};
+
+
 const CoordsMap = ({onSubmitCoordinates, setShowPopup}) => {
   const [center] = useState({ lat: 67.85572, lng: 20.22513 });
   const [mapLayers, setMapLayers] = useState([]);
+  const [mapType, setMapType] = useState("satellite"); // Tipo di mappa selezionato
 
-  const ZOOM_LEVEL = 15;
+  const ZOOM_LEVEL = 13;
 
   const MapClickHandler = () => {
     useMapEvents({
@@ -41,13 +53,45 @@ const CoordsMap = ({onSubmitCoordinates, setShowPopup}) => {
   };
 
   return (
-    <div className="row">
-      <div className="col text-center">
-        <div className="col">
+    <div className="row d-flex justify-content-center">
+            {/* Menu per cambiare tipo di mappa */}
+            <div className="mb-3 ">
+        <Button
+          type="button"
+          variant="outline-dark"
+          className={`btn ${mapType === "maptiler" ? "btn-dark" : "btn-outline-primary"} rounded-pill`}
+          style={{ color: `${mapType === "maptiler" ? "white" : "black"}`, fontSize: '12px' }}
+          onClick={() => setMapType("maptiler")}
+        >
+          MAPTILER
+        </Button>
+        <Button
+          type="button"
+          variant="outline-dark"
+
+          className={`ml-3 btn ${mapType === "satellite" ? "btn-dark" : "btn-outline-primary"} rounded-pill`}
+          style={{ color: `${mapType === "satellite" ? "white" : "black"}`, fontSize: '12px' }}
+          onClick={() => setMapType("satellite")}
+        >
+          SATELLITE
+        </Button>
+        <Button
+          type="button"
+          variant="outline-dark"
+
+          className={`ml-3 btn ${mapType === "dark" ? "btn-dark" : "btn-outline-primary"} rounded-pill`}
+          style={{ color: `${mapType === "dark" ? "white" : "black"}`, fontSize: '12px' }}
+          onClick={() => setMapType("dark")}
+        >
+          DARK
+        </Button>
+      </div>
+      <div className="col text-center d-flex justify-content-center m-0">
+        <div className="col  text-center d-flex justify-content-center m-0">
           <MapContainer
             center={center}
             zoom={ZOOM_LEVEL}
-            style={{ height: "500px", width: "1000px" }}
+            style={{ height: "50em", width: "75em", margin:'0'}}
           >
                         <MapClickHandler /> {/* Questo gestisce i click sulla mappa */}
             <FeatureGroup>
@@ -67,8 +111,10 @@ const CoordsMap = ({onSubmitCoordinates, setShowPopup}) => {
                 ) : null
               )}
             </FeatureGroup>
-            <TileLayer url={osm.maptiler.url} attribution={osm.maptiler.attribution} />
-          </MapContainer>
+            <TileLayer
+          url={tileLayers[mapType].url}
+          attribution={tileLayers[mapType].attribution}
+        />          </MapContainer>
         </div>
       </div>
     </div>

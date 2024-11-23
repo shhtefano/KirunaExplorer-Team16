@@ -137,7 +137,7 @@ export default function DocumentLink({ initialDocument }) {
                       <SelectItem value="Direct Consequence">Direct Consequence</SelectItem>
                     </SelectContent>
                   </Select>
-                  <Button onClick={handleLinkDocuments} disabled={!linkType}>
+                  <Button variant="outline" onClick={handleLinkDocuments} disabled={!linkType}>
                     Link Documents
                   </Button>
                 </div>

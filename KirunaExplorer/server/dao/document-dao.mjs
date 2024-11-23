@@ -60,47 +60,55 @@ class DocumentDAO {
     });
   }
   
-  
-
   async getDocumentsGeo() {
     return new Promise((resolve, reject) => {
       const query = `
-          SELECT D.document_id, D.document_title, D.stakeholder, D.scale, D.issuance_date,
-                 D.language, D.pages, D.document_type, D.document_description,
-                 G.area_id, G.long, G.lat, G.area_name
-          FROM Documents D
-          JOIN Geolocation_Documents GD ON D.document_id = GD.document_id
-          JOIN Geolocation G ON G.area_id = GD.area_id
+        SELECT 
+          D.document_id, D.document_title, D.scale, D.issuance_date,
+          D.language, D.pages, D.document_type, D.document_description,
+          G.area_id, G.long, G.lat, G.area_name,
+          S.stakeholder_name
+        FROM Documents D
+        JOIN Geolocation_Documents GD ON D.document_id = GD.document_id
+        JOIN Geolocation G ON G.area_id = GD.area_id
+        JOIN Document_Stakeholder DS ON D.document_id = DS.document_id
+        JOIN Stakeholders S ON DS.stakeholder_id = S.stakeholder_id
       `;
-
+  
       db.all(query, [], (err, rows) => {
         if (err) {
           console.error("Errore durante il recupero dei documenti:", err);
           return reject(new Error("Errore durante il recupero dei documenti."));
         }
-
-        // Raggruppa i risultati per documento e area_id
+  
+        // Raggruppa i risultati per documento
         const documentsMap = {};
-
+  
         rows.forEach(row => {
           const docId = row.document_id;
-
+  
           // Se il documento non esiste ancora nella mappa, inizializzalo
           if (!documentsMap[docId]) {
             documentsMap[docId] = {
               document_id: row.document_id,
               document_title: row.document_title,
-              stakeholder: row.stakeholder,
               scale: row.scale,
               issuance_date: row.issuance_date,
               language: row.language,
               pages: row.pages,
               document_type: row.document_type,
               document_description: row.document_description,
-              geolocations: {}
+              stakeholders: [], // Array per gli stakeholder
+              geolocations: {} // Oggetto per le geolocalizzazioni
             };
           }
-
+  
+          // Aggiungi lo stakeholder se non è già presente
+          const stakeholderName = row.stakeholder_name;
+          if (!documentsMap[docId].stakeholders.includes(stakeholderName)) {
+            documentsMap[docId].stakeholders.push(stakeholderName);
+          }
+  
           // Aggiungi le coordinate per l'area_id corrente
           const areaId = row.area_id;
           if (!documentsMap[docId].geolocations[areaId]) {
@@ -109,25 +117,95 @@ class DocumentDAO {
               coordinates: []
             };
           }
-
+  
           // Aggiungi la coordinata corrente
           documentsMap[docId].geolocations[areaId].coordinates.push({
             long: row.long,
             lat: row.lat
           });
         });
-
+  
         // Trasforma la mappa in un array di documenti con geolocalizzazioni
         const documentsArray = Object.values(documentsMap).map(document => {
           document.geolocations = Object.values(document.geolocations);
           return document;
         });
 
+        console.log(documentsArray);
+        
+  
         // Restituisce l'elenco dei documenti strutturato come richiesto
         resolve(documentsArray);
       });
     });
   }
+  
+  async getDocumentPosition(document_id) {
+    return new Promise((resolve, reject) => {
+      // Query SQL per ottenere i dettagli del documento e le coordinate
+      const query = `
+        SELECT 
+          d.document_id,
+          d.document_title,
+          d.scale,
+          d.issuance_date,
+          d.language,
+          d.pages,
+          d.document_type,
+          d.document_description,
+          g.lat,
+          g.long,
+          g.area_name
+        FROM 
+          Documents d
+        LEFT JOIN 
+          Geolocation_Documents gd 
+          ON d.document_id = gd.document_id
+        LEFT JOIN 
+          Geolocation g 
+          ON gd.area_id = g.area_id
+        WHERE 
+          d.document_id = ?
+      `;
+
+      db.all(query, [document_id], (err, rows) => {
+        if (err) {
+          return reject(err); // Gestione errori
+        }
+
+        if (rows.length === 0) {
+          return resolve(null); // Documento non trovato
+        }
+
+        // Estrai informazioni comuni del documento (valori identici in tutte le righe)
+        const documentInfo = {
+          document_id: rows[0].document_id,
+          document_title: rows[0].document_title,
+          scale: rows[0].scale,
+          issuance_date: rows[0].issuance_date,
+          language: rows[0].language,
+          pages: rows[0].pages,
+          document_type: rows[0].document_type,
+          document_description: rows[0].document_description,
+          area_name: rows[0].area_name, // Area associata
+        };
+
+        // Mappa le coordinate in un array
+        const coordinates = rows.map(row => ({
+          lat: row.lat,
+          lng: row.long,
+        }));
+console.log(documentInfo, coordinates);
+
+        // Restituisci il risultato
+        resolve({
+          ...documentInfo,
+          coordinates,
+        });
+      });
+    });
+  }
+
 
   async insertDocument(document_title, stakeholder, scale, issuance_date, language, pages, document_type, document_description, area_name, coords) {
     return new Promise((resolve, reject) => {
@@ -217,7 +295,7 @@ class DocumentDAO {
 
                     const insertCoordinates = coordinates.map(coord => {
                       return new Promise((resolveCoord, rejectCoord) => {
-                        db.run(insertGeolocationQuery, [newAreaId, coord.long, coord.lat, "Point"], function (err) {
+                        db.run(insertGeolocationQuery, [newAreaId, coord.long, coord.lat, "Point-Based Documents"], function (err) {
                           if (err) return rejectCoord(err);
                           resolveCoord();
                         });
@@ -388,7 +466,7 @@ class DocumentDAO {
 
 
 
-            db.run(insertGeolocationQuery, [newAreaId, long, lat, "Point"], function (err) {
+            db.run(insertGeolocationQuery, [newAreaId, long, lat, "Point-Based Documents"], function (err) {
               if(err){
                 console.error("Errore durante aggiornamento associazione delle coordinate:", err);
                 return reject(new Error("Errore durante l'aggiornamento associazione delle coordinate."));            

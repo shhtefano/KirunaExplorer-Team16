@@ -3,27 +3,18 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogTrigger, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
+import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import API from "../services/API.js";
 import DocumentLink from "./document-link.jsx";
-import DocumentMap from "./DocumentMap.jsx"; // Importa il componente mappa
-import { MapIcon } from "lucide-react";
-import { Button } from "react-bootstrap";
+import DocumentMap from "./DocumentMap";
+
 export default function DocumentsTable() {
   const [documents, setDocuments] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedType, setSelectedType] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
-
+  
   const documentTypes = [
     { type: "All" },
     { type: "Design" },
@@ -35,7 +26,6 @@ export default function DocumentsTable() {
     { type: "Conflict" },
     { type: "Consultation" },
   ];
-  const [selectedMapDocument, setSelectedMapDocument] = useState(null);
 
   const [selectedDocument, setSelectedDocument] = useState(null);
   const [showLinkInterface, setShowLinkInterface] = useState(false);
@@ -44,9 +34,7 @@ export default function DocumentsTable() {
     const fetchDocuments = async () => {
       try {
         const response = await API.getDocuments();
-        const sortedDocuments = response.sort((a, b) =>
-          a.document_title.localeCompare(b.document_title)
-        );
+        const sortedDocuments = response.sort((a, b) => a.document_title.localeCompare(b.document_title));
         setDocuments(sortedDocuments);
       } catch (error) {
         console.error("Error fetching documents:", error);
@@ -57,25 +45,19 @@ export default function DocumentsTable() {
 
   const filteredDocuments = documents.filter((doc) => {
     const matchesSearch = doc.document_title.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesType =
-      selectedType && selectedType !== "All" ? doc.document_type === selectedType : true;
+    const matchesType = selectedType && selectedType !== "All" ? doc.document_type === selectedType : true;
     return matchesSearch && matchesType;
   });
 
   const totalPages = Math.ceil(filteredDocuments.length / itemsPerPage);
-  const paginatedDocuments = filteredDocuments.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+  const paginatedDocuments = filteredDocuments.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
-  useEffect(() => {
-    if (!selectedDocument) {
-      setShowLinkInterface(false);
-    }
-  }, [selectedDocument]);
+  const handleViewOnMapClick = (doc) => {
+    setSelectedDocument(doc);
+  };
 
   return (
-    <div className="max-w-6xl mx-auto p-6 pb-12 bg-white rounded shadow-md overflow-auto">
+    <div className="max-w-4xl mx-auto p-6 pb-12 bg-white rounded shadow-md overflow-auto">
       <div className="mb-6 text-gray-700">
         <p className="font-semibold mb-2">Search Document Title:</p>
         <Input
@@ -125,93 +107,21 @@ export default function DocumentsTable() {
                     <Dialog>
                       <DialogTrigger asChild>
                         <button
-                          style={{ backgroundColor: "black", color: "white" }}
                           className="px-3 py-1 text-sm text-white bg-blue-500 rounded hover:bg-blue-600"
-                          onClick={() => {
-                            setSelectedDocument(doc);
-                            setShowLinkInterface(false);
-                          }}
+                          onClick={() => setSelectedDocument(doc)}
                         >
-                          Open
+                          View
                         </button>
-
-
                       </DialogTrigger>
-                      <DialogContent
-                        className=" p-6 bg-white rounded-lg shadow-lg"
-                        style={{ maxHeight: "140vh", overflowY: "auto" }}
-                      >
-                        <DialogTitle className="text-xl font-bold text-gray-800">
-                          {selectedDocument?.document_title || "No Document Selected"}
-                        </DialogTitle>
-                        <DialogDescription className="mt-3 space-y-3 text-gray-700">
-
-                          {showLinkInterface ? (
-                            <div className="mt-6 border-t pt-4">
-                              <DocumentLink initialDocument={selectedDocument} />
-                            </div>
-                          ) : (
-                            <div style={{fontSize: "16px", margin:'10px'}}>
-
-                             <p className="m-2"><strong>Stakeholders:</strong> {selectedDocument?.stakeholders?.length > 0
-                              ? selectedDocument.stakeholders.join(", ")
-                              : "No Stakeholders"}</p>
-                            <p className="m-2"><strong>Scale:</strong> {selectedDocument?.scale}</p>
-                            <p className="m-2"><strong>Issuance Date:</strong> {selectedDocument?.issuance_date}</p>
-                            <p className="m-2"><strong>Type:</strong> {selectedDocument?.document_type}</p>
-                            <p className="m-2"><strong>Language:</strong> {selectedDocument?.language}</p>
-                            <p className="m-2"><strong>Pages:</strong> {selectedDocument?.pages}</p> 
-                             <div className="m-2 my-4">
-                               <p><strong>Description:</strong> {selectedDocument?.document_description}</p>
-                             </div>
-                            <Button
-                            variant="outline"
-                            style={{ backgroundColor: "black", color: "white" }}
-                            className="px-4 py-2 mt-4 text-white bg-blue-500 rounded hover:bg-blue-600"
-                            onClick={() => setShowLinkInterface(true)}
-                            >
-                              Link Documents
-                            </Button>
-                              </div>
-                          )}
-
-                        </DialogDescription>
-                      </DialogContent>
-                    </Dialog>
-
-                    <Dialog>
                       <DialogTrigger asChild>
                         <button
-                          style={{ backgroundColor: "white", color: "black" }}
-
-                          className="px-3 py-1 text-sm text-white bg-green-500 rounded hover:bg-green-600"
-                          onClick={() => {
-                            console.log(doc);
-
-                            setSelectedMapDocument(doc)
-                          }}
+                          className="px-3 py-1 text-sm text-white bg-blue-500 rounded hover:bg-blue-600"
+                          onClick={() => handleViewOnMapClick(doc)}
                         >
-                          {/* <p style={{ fontSize: "12px" }}> */}
-                            <MapIcon
-                              color="black"
-                              alt="Open Map" label="Open Map"></MapIcon>
-                          {/* </p>                           */}
-                          </button>
+                          View on map
+                        </button>
                       </DialogTrigger>
-                      <DialogContent className="max-w-2xl p-6 bg-white rounded-lg shadow-lg">
-                        <DialogTitle className="text-xl font-bold text-gray-800">
-                          {doc.document_title} - Map View
-                        </DialogTitle>
-                        <DialogDescription className="mt-4">
-                          <DocumentMap
-                            document_id={doc.document_id
-                            }
-                          />
-                        </DialogDescription>
-                      </DialogContent>
                     </Dialog>
-
-
                   </div>
                 </TableCell>
               </TableRow>
@@ -259,6 +169,17 @@ export default function DocumentsTable() {
           </PaginationContent>
         </Pagination>
       </div>
+
+      {selectedDocument && (
+        <Dialog open={true}>
+          <DialogContent>
+            <DialogTitle>{selectedDocument.document_title}</DialogTitle>
+            <DialogDescription>
+              <DocumentMap coordinates={selectedDocument.coordinates} documentType={selectedDocument.document_type} />
+            </DialogDescription>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }

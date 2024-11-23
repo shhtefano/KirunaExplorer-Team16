@@ -3,7 +3,6 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import L from "leaflet";
 import { MapContainer, TileLayer, FeatureGroup, Marker, Polygon } from "react-leaflet";
 import { Modal, Button, Dropdown, Form } from "react-bootstrap";
-import osm from "./osm-providers";
 import "leaflet/dist/leaflet.css";
 import "leaflet-draw/dist/leaflet.draw.css";
 import API from "../services/API";
@@ -43,6 +42,18 @@ const areas = [
   // Add more areas here as needed
 ];
 
+const tileLayers = {
+  maptiler: {
+    url: "https://api.maptiler.com/maps/basic/256/{z}/{x}/{y}.png?key=BIzjthaYAgeFFw8kkpi9",
+  },
+  satellite: {
+    url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+  },
+  dark: {
+    url: "https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png",
+  },
+};
+
 
 const DrawMap = () => {
   const [center] = useState({ lat: 67.85572, lng: 20.22513 });
@@ -63,6 +74,7 @@ const DrawMap = () => {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
+  const [mapType, setMapType] = useState("satellite"); // Tipo di mappa selezionato
 
   const ZOOM_LEVEL = 14;
   const WHOLE_AREA_CENTER = { lat: 67.85572, lng: 20.22513 }; // Definisci le coordinate per Whole Area
@@ -73,10 +85,11 @@ const DrawMap = () => {
       try {
         const response = await API.getDocumentsGeo();
         const documents = Array.isArray(response) ? response : [];
+        console.log(documents);
 
         if (selectedArea.name === "Point-Based Documents") {
           let markers = documents.filter((document) => {
-            return document.geolocations.some((geo) => geo.area_name === "Point" && geo.coordinates.length === 1);
+            return document.geolocations.some((geo) => geo.area_name === "Point-Based Documents" && geo.coordinates.length === 1);
           });
 
           const filteredMarkers = markers.map((doc) => ({
@@ -155,9 +168,9 @@ const DrawMap = () => {
     const map = mapRef.current;
     if (!map) return;
 
-    // Check if the document is point-based
-    if (doc.area_name === "Point") {
-      // Use the document's updated coordinates for a point-based location
+    // Check if the document is Point-Based Documents-based
+    if (doc.area_name === "Point-Based Documents") {
+      // Use the document's updated coordinates for a Point-Based Documents-based location
       const [lat, lng] = [doc.coordinates[0].lat, doc.coordinates[0].long];
       map.setView([lat, lng], ZOOM_LEVEL);
     } else if (doc.area_name === "Whole Area") {
@@ -210,46 +223,46 @@ const DrawMap = () => {
   const _onEdited = async (e) => {
     const currentSelectedArea = selectedAreaRef.current; // Usa il valore aggiornato
     const editedLayers = e.layers; // Get all edited layers from the event
-  
+
     const updatedMarkers = [];
     const updatedDocuments = [];
-  
+
     editedLayers.eachLayer(async (layer) => {
       if (layer instanceof L.Marker) {
         const { lat, lng } = layer.getLatLng();
-  
+
         const latitude = parseFloat(lat.toFixed(6)); // Trunca alla sesta cifra decimale
         const longitude = parseFloat(lng.toFixed(6)); // Trunca alla sesta cifra decimale
-  
+
         // Accedi all'ID personalizzato tramite options.id
         const markerId = layer.options.customId;
-  
+
         // Trova il marker aggiornato tramite il markerId
         const updatedMarker = filteredMarkers.find((marker) => marker.id === markerId);
-  
+
         if (updatedMarker) {
           // Aggiorna la posizione del marker
           updatedMarker.latlngs = [latitude, longitude];
-  
+
           // Aggiungi il marker aggiornato alla lista
           updatedMarkers.push({ ...updatedMarker, latlngs: [latitude, longitude] });
-  
+
           // Trova e aggiorna il documento corrispondente nella lista dei documenti filtrati
           const updatedDocument = filteredDocuments.find((doc) => doc.id === updatedMarker.id);
-  
+
           if (updatedDocument) {
             updatedDocuments.push({
               ...updatedDocument,
               coordinates: [{ lat: latitude, long: longitude }],
             });
-  
+
             // Chiamata al backend per aggiornare le coordinate (implementa la tua logica backend)
-            try{
+            try {
               await API.updateDocumentCoordinates(updatedMarker.id, latitude, longitude);
               setSnackbarMessage("Document position successfully updated!");
               setSnackbarSeverity("success");
               setSnackbarOpen(true);
-            }catch(error){
+            } catch (error) {
               setSnackbarMessage("Error updating document position.");
               setSnackbarSeverity("error");
               setSnackbarOpen(true);
@@ -264,7 +277,7 @@ const DrawMap = () => {
         }
       }
     });
-  
+
     // Aggiorna lo stato con i documenti aggiornati
     setFilteredDocuments((prevDocuments) => {
       return prevDocuments.map((doc) => {
@@ -272,7 +285,7 @@ const DrawMap = () => {
         return updated || doc; // Aggiorna il documento se è stato modificato, altrimenti mantieni quello originale
       });
     });
-  
+
     // Aggiorna lo stato con i marker aggiornati
     setFilteredMarkers((prevMarkers) => {
       return prevMarkers.map((marker) => {
@@ -281,7 +294,7 @@ const DrawMap = () => {
       });
     });
   };
-  
+
 
   const changeDocumentPosition = (document) => {
     setSelectedDocument(document);
@@ -310,7 +323,7 @@ const DrawMap = () => {
                 : doc
             )
           );
-  
+
           // Aggiorna filteredMarkers
           setFilteredMarkers((prevMarkers) =>
             prevMarkers.map((marker) =>
@@ -319,14 +332,14 @@ const DrawMap = () => {
                 : marker
             )
           );
-  
+
           // Sposta la mappa sulla nuova posizione
           if (mapRef.current) {
             mapRef.current.setView([lat, long], ZOOM_LEVEL);
           }
         } else {
           await API.updateDocumentCoordinates(selectedDocument.id, lat, long);
-  
+
           // Aggiorna filteredDocuments
           setFilteredDocuments((prevDocuments) =>
             prevDocuments.map((doc) =>
@@ -335,7 +348,7 @@ const DrawMap = () => {
                 : doc
             )
           );
-  
+
           // Aggiorna filteredMarkers
           setFilteredMarkers((prevMarkers) =>
             prevMarkers.map((marker) =>
@@ -344,7 +357,7 @@ const DrawMap = () => {
                 : marker
             )
           );
-  
+
           // Sposta la mappa sulla nuova posizione
           if (mapRef.current) {
             mapRef.current.setView([lat, long], ZOOM_LEVEL);
@@ -352,18 +365,18 @@ const DrawMap = () => {
 
           setSelectedArea(areas[0]);
         }
-  
+
         // Chiudi i modali
         setShowEditCoordinatesModal(false);
         setShowModal(false);
-  
+
         // Imposta il messaggio di successo per lo Snackbar
         setSnackbarMessage("Document position successfully updated!");
         setSnackbarSeverity("success");
         setSnackbarOpen(true);
       } catch (error) {
         console.error("Error updating document position:", error);
-  
+
         // Imposta il messaggio di errore per lo Snackbar
         setSnackbarMessage("Error updating document position.");
         setSnackbarSeverity("error");
@@ -371,18 +384,20 @@ const DrawMap = () => {
       }
     }
   };
-  
+
 
 
 
 
   return (
     <div className="row" style={{ padding: '0px', width: '100%', margin: '0', }}>
-      <div className="col text-center">
-        <MapContainer ref={mapRef} center={center} zoom={ZOOM_LEVEL} style={{ height: "700px", width: "1000px" }}>
+
+      <div className="col text-center ">
+
+        <MapContainer ref={mapRef} center={center} zoom={ZOOM_LEVEL} style={{ height: "50em", width: "80em" }}>
 
           <FeatureGroup>
-            {user && user.role==="urban_planner" && selectedArea.name !== "Whole Area" && <EditControl
+            {user && user.role === "urban_planner" && selectedArea.name !== "Whole Area" && <EditControl
               position="topright"
               edit={{
                 remove: false,
@@ -417,16 +432,59 @@ const DrawMap = () => {
             )}
             <Polygon key={selectedArea.id} positions={selectedArea.latlngs} />
           </FeatureGroup>
-          <TileLayer url={osm.maptiler.url} attribution={osm.maptiler.attribution} />
+          <TileLayer
+            url={tileLayers[mapType].url}
+            attribution={tileLayers[mapType].attribution}
+          />
+
         </MapContainer>
+                {/* Menu per cambiare tipo di mappa */}
+                <div className="mt-3 ">
+          <Button
+            type="button"
+            variant="outline-dark"
+            className={`btn ${mapType === "maptiler" ? "btn-dark" : "btn-outline-primary"} rounded-pill`}
+            style={{ color: `${mapType === "maptiler" ? "white" : "black"}`, fontSize: "12px" }}
+            onClick={() => setMapType("maptiler")}
+          >
+
+            MAPTILER
+          </Button>
+          <Button
+            type="button"
+            variant="outline-dark"
+
+            className={`ml-3 btn ${mapType === "satellite" ? "btn-dark" : "btn-outline-primary"} rounded-pill`}
+            style={{ color: `${mapType === "satellite" ? "white" : "black"}`, fontSize: "12px" }}
+            onClick={() => setMapType("satellite")}
+          >
+            SATELLITE
+          </Button>
+          <Button
+            type="button"
+            variant="outline-dark"
+
+            className={`ml-3 btn ${mapType === "dark" ? "btn-dark" : "btn-outline-primary"} rounded-pill`}
+            style={{ color: `${mapType === "dark" ? "white" : "black"}`, fontSize: "12px" }}
+            onClick={() => setMapType("dark")}
+          >
+            DARK
+          </Button>
+        </div>
       </div>
 
       {/* Sidebar con Dropdown, Search e Lista dei Documenti */}
       <div className="col">
         {/* Dropdown per selezionare l'area */}
-        <Dropdown className="mb-3">
+        <Dropdown className="mb-3 d-flex justify-content-center">
           <Dropdown.Toggle variant="outline" id="dropdown-basic">
-            {selectedArea.name}
+            <div style={{ fontSize: '20px' }}>
+
+              <h3><strong>
+                {selectedArea.name}
+
+              </strong></h3>
+            </div>
           </Dropdown.Toggle>
           <Dropdown.Menu>
             {areas.map((area) => (
@@ -434,7 +492,13 @@ const DrawMap = () => {
                 key={area.id}
                 onClick={() => setSelectedArea(area)}
               >
-                {area.name}
+                <div style={{ fontSize: '16px' }}>
+
+                  <h3><strong>
+                    {area.name}
+
+                  </strong></h3>
+                </div>
               </Dropdown.Item>
             ))}
           </Dropdown.Menu>
@@ -451,87 +515,87 @@ const DrawMap = () => {
 
         {/* Lista dei documenti filtrati */}
         <div style={{ maxHeight: '550px', overflowY: 'auto' }}>
-  {filteredDocuments.map((doc) => (
-    <div key={doc.id}>
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          border: '1px solid #ddd',
-          borderRadius: '8px',
-          padding: '10px',
-          marginBottom: '20px',
-          marginLeft: '5px',
-          marginRight: '5px',
-          cursor: 'pointer',
-          backgroundColor: hoveredDocumentId === doc.id ? '#3e3b40' : 'white',
-          color: hoveredDocumentId === doc.id ? 'white' : 'black',
-          fontSize: '17px',
-        }}
-        onMouseEnter={() => setHoveredDocumentId(doc.id)}
-        onMouseLeave={() => setHoveredDocumentId(null)}
-        onClick={doc.area_name === "Whole Area" ? () => handleMarkerClick(doc) : () => changeMapPosition(doc)}
-      >
-        <div>
-          <h2><strong>{doc.document_title}</strong></h2>
-          <p className="mt-3"><strong>Type:</strong> {doc.document_type}</p>
-          <p className="mt-1"><strong>Date:</strong> {doc.issuance_date}</p>
-          <p className="mt-1"><strong>Area:</strong> {doc.area_name==="Point" ? "Point" : doc.area_name}</p>
-          {/* Mostra le coordinate */}
-          {doc.coordinates && doc.coordinates.length > 0 && doc.area_name === "Point" && (
-            <p className="mt-1">
-              {doc.coordinates.map((coord, index) => (
-                <span className="" key={index}> 
-                  <strong>Latitude:</strong> {coord.lat.toFixed(6)} <strong>Longitude:</strong> {coord.long.toFixed(6)}
-                </span>
-              ))}
-            </p>
-          )}
-        </div>
-        <div>
-          {user && user.role==="urban_planner" && (
-            <Container className="flex flex-row gap-x-4 text-center">
-              <Button
-                className="mt-4"
+          {filteredDocuments.map((doc) => (
+            <div key={doc.id}>
+              <div
                 style={{
-                  width: "70%",
-                  border: "1px solid #ddd",
-                  borderRadius: "8px",
-                  padding: "8px",
-                  backgroundColor: hoveredDocumentId === doc.id ? '#3e3b40' : 'white',
-                  color: hoveredDocumentId === doc.id ? 'white' : 'black',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  border: '1px solid #ddd',
+                  borderRadius: '8px',
+                  padding: '10px',
+                  marginBottom: '20px',
+                  marginLeft: '5px',
+                  marginRight: '5px',
+                  cursor: 'Point-Based Documents',
+                  backgroundColor: hoveredDocumentId === doc.id ? '#cfcfcf' : 'white',
+                  color: 'black',
+                  fontSize: '14px',
                 }}
-                variant="outline"
-                onClick={() => handleMarkerClick(doc)}
+                onMouseEnter={() => setHoveredDocumentId(doc.id)}
+                onMouseLeave={() => setHoveredDocumentId(null)}
+                onClick={doc.area_name === "Whole Area" ? () => handleMarkerClick(doc) : () => changeMapPosition(doc)}
               >
-                <p style={{ fontSize: "12px" }}>
-                  <ArticleIcon></ArticleIcon>
-                </p>
-              </Button>
-              <Button
-                className="mt-4"
-                style={{
-                  width: "70%",
-                  border: "1px solid #ddd",
-                  borderRadius: "8px",
-                  padding: "8px",
-                  backgroundColor: hoveredDocumentId === doc.id ? '#3e3b40' : 'white',
-                  color: hoveredDocumentId === doc.id ? 'white' : 'black',
-                }}
-                variant="outline"
-                onClick={() => changeDocumentPosition(doc)}
-              >
-                <p style={{ fontSize: "12px" }}>
-                  <MapIcon alt="Open Map" label="Open Map"></MapIcon>
-                </p>
-              </Button>
-            </Container>
-          )}
+                <div className="p-2">
+                  <h2><strong>{doc.document_title}</strong></h2>
+                  <p className="mt-3"><strong>Type:</strong> {doc.document_type}</p>
+                  <p className="mt-1"><strong>Date:</strong> {doc.issuance_date}</p>
+                  {/* <p className="mt-1"><strong>Area:</strong> {doc.area_name === "Point-Based Documents" ? "Point-Based Documents" : doc.area_name}</p> */}
+                  {/* Mostra le coordinate */}
+                  {doc.coordinates && doc.coordinates.length > 0 && doc.area_name === "Point-Based Documents" && (
+                    <p className="mt-1">
+                      {doc.coordinates.map((coord, index) => (
+                        <span className="" key={index}>
+                          <strong>LAT:</strong> {coord.lat.toFixed(6)}  <strong>LONG:</strong> {coord.long.toFixed(6)}
+                        </span>
+                      ))}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  {user && user.role === "urban_planner" && (
+                    <Container className="flex flex-row gap-x-4 text-center">
+                      <Button
+                        className="mt-4"
+                        style={{
+                          width: "70%",
+                          border: "1px solid #ddd",
+                          borderRadius: "8px",
+                          padding: "8px",
+                          backgroundColor: hoveredDocumentId === doc.id ? '#3e3b40' : 'white',
+                          color: hoveredDocumentId === doc.id ? 'white' : 'black',
+                        }}
+                        variant="outline"
+                        onClick={() => handleMarkerClick(doc)}
+                      >
+                        <p style={{ fontSize: "12px" }}>
+                          <ArticleIcon></ArticleIcon>
+                        </p>
+                      </Button>
+                      <Button
+                        className="mt-4"
+                        style={{
+                          width: "70%",
+                          border: "1px solid #ddd",
+                          borderRadius: "8px",
+                          padding: "8px",
+                          backgroundColor: hoveredDocumentId === doc.id ? '#3e3b40' : 'white',
+                          color: hoveredDocumentId === doc.id ? 'white' : 'black',
+                        }}
+                        variant="outline"
+                        onClick={() => changeDocumentPosition(doc)}
+                      >
+                        <p style={{ fontSize: "12px" }}>
+                          <MapIcon alt="Open Map" label="Open Map"></MapIcon>
+                        </p>
+                      </Button>
+                    </Container>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
-      </div>
-    </div>
-  ))}
-</div>
 
       </div>
 
@@ -657,7 +721,7 @@ const DrawMap = () => {
                     setIsWholeAreaChecked(checked);
                     setSelectedDocument((prevDoc) => ({
                       ...prevDoc,
-                      area_name: checked ? "Whole Area" : "Point",
+                      area_name: checked ? "Whole Area" : "Point-Based Documents",
                     }));
                   }}
                 />
