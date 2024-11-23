@@ -73,26 +73,39 @@ const HomePage = () => {
             Welcome to Kiruna Explorer. Here we will create the webapp for
             exploring the incredible project of moving the swedish city, Kiruna.
           </CardContent>
+          {/* Conditional rendering of the buttons based on the role */}
           <CardFooter className="flex justify-between justify-center">
             <div className="flex gap-x-2 justify-center items-center">
-              <Button
-                variant="outline"
-                className="mr-2"
-                onClick={(e) =>
-                  handleRestrictedAction(e, "/add-document-description")
-                }
-              >
-                Add doc
-                <Map data-testid="map-icon" />
-              </Button>
-              <Button
-                variant="outline"
-                className="mr-2"
-                onClick={(e) => handleRestrictedAction(e,"/documents/list")}
-              >
-                See docs
-                <Map />
-              </Button>
+              {user?.role === "urban_planner" && (
+                <>
+                  <Button
+                    variant="outline"
+                    className="mr-2"
+                    onClick={(e) =>
+                      handleRestrictedAction(e, "/add-document-description")
+                    }
+                  >
+                    Add doc
+                    <Map data-testid="map-icon" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="mr-2"
+                    onClick={(e) => handleRestrictedAction(e, "/documents/list")}
+                  >
+                    See docs
+                    <Map />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="mr-2"
+                    onClick={(e) => handleRestrictedAction(e, "/graph")}
+                  >
+                    See graph
+                    <GanttChart data-testid="gantt-chart-icon" />
+                  </Button>
+                </>
+              )}
               <Button
                 variant="outline"
                 className="mr-2"
@@ -100,14 +113,6 @@ const HomePage = () => {
               >
                 See Map
                 <Map />
-              </Button>
-              <Button
-                variant="outline"
-                className="mr-2"
-                onClick={(e) => handleRestrictedAction(e, "/graph")}
-              >
-                See graph
-                <GanttChart data-testid="gantt-chart-icon" />
               </Button>
             </div>
           </CardFooter>
