@@ -238,7 +238,7 @@ const DocumentDescriptionForm = () => {
                 rules={documentRules}
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel htmlFor="document-title">Document</FormLabel>
+                    <FormLabel htmlFor="document-title">Document *</FormLabel>
                     <FormControl>
                       <Input
                         {...field}
@@ -260,7 +260,7 @@ const DocumentDescriptionForm = () => {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel htmlFor="document-description">
-                      Description
+                      Description *
                     </FormLabel>
                     <FormControl>
                       <Textarea
@@ -282,7 +282,7 @@ const DocumentDescriptionForm = () => {
                 rules={typeRules}
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Document type</FormLabel>
+                    <FormLabel>Document type *</FormLabel>
                     <FormControl>
                       <Select
                         onValueChange={field.onChange}
@@ -316,7 +316,7 @@ const DocumentDescriptionForm = () => {
                 rules={stakeholderRules}
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Stakeholder</FormLabel>
+                    <FormLabel>Stakeholder *</FormLabel>
                     <FormControl>
                       <Select
                         onValueChange={field.onChange}
@@ -347,7 +347,7 @@ const DocumentDescriptionForm = () => {
                 rules={scaleRules}
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Scale</FormLabel>
+                    <FormLabel>Scale *</FormLabel>
                     <FormControl>
                       <Input
                         {...field}
@@ -366,7 +366,7 @@ const DocumentDescriptionForm = () => {
                 rules={issuanceRules}
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Issuance date</FormLabel>
+                    <FormLabel>Issuance date *</FormLabel>
                     <FormControl>
                       <Input
                         {...field}
