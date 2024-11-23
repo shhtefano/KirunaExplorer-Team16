@@ -548,8 +548,10 @@ const DrawMap = () => {
             <p><strong>Date:</strong> {selectedDocument.issuance_date}</p>
             <p><strong>Description:</strong> {selectedDocument.description}</p>
             <p><strong>Scale:</strong> {selectedDocument.scale}</p>
-            <p><strong>Language:</strong> {selectedDocument.language ? selectedDocument.language : "--"}</p>
-            <p><strong>Pages:</strong> {selectedDocument.pages ? selectedDocument.pages : "--"}</p>
+            <>
+              {selectedDocument.language && <p><strong>Language:</strong> {selectedDocument.language}</p>}
+              {selectedDocument.pages && <p><strong>Pages:</strong> {selectedDocument.pages}</p>}
+            </>
           </Modal.Body>
           <Modal.Footer>
             <Button variant="dark" onClick={() => setShowModal(false)}>
