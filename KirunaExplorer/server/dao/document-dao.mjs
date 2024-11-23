@@ -5,21 +5,62 @@ class DocumentDAO {
   async getDocuments() {
     return new Promise((resolve, reject) => {
       const query = `
-            SELECT *
-            FROM Documents
-        `;
-
+        SELECT 
+          D.document_id,
+          D.document_title,
+          D.scale,
+          D.issuance_date,
+          D.language,
+          D.pages,
+          D.document_type,
+          D.document_description,
+          S.stakeholder_name
+        FROM Documents D
+        JOIN Document_Stakeholder DS ON D.document_id = DS.document_id
+        JOIN Stakeholders S ON DS.stakeholder_id = S.stakeholder_id;
+      `;
+  
       db.all(query, [], (err, rows) => {
         if (err) {
           console.error("Errore durante il recupero dei documenti:", err);
           return reject(new Error("Errore durante il recupero dei documenti."));
         }
-
-        // Restituisce l'elenco dei documenti recuperati
-        resolve(rows);
+  
+        // Raggruppa i dati
+        const documentsMap = {};
+  
+        rows.forEach(row => {
+          const docId = row.document_id;
+  
+          if (!documentsMap[docId]) {
+            // Crea un nuovo oggetto per il documento
+            documentsMap[docId] = {
+              document_id: row.document_id,
+              document_title: row.document_title,
+              scale: row.scale,
+              issuance_date: row.issuance_date,
+              language: row.language,
+              pages: row.pages,
+              document_type: row.document_type,
+              document_description: row.document_description,
+              stakeholders: [], // Inizializza un array per gli stakeholder
+            };
+          }
+  
+          // Aggiungi il nome dello stakeholder all'array del documento
+          documentsMap[docId].stakeholders.push(row.stakeholder_name);
+        });
+  
+        // Converti la mappa in un array
+        const documents = Object.values(documentsMap);
+        console.log(documents);
+        
+        resolve(documents);
       });
     });
   }
+  
+  
 
   async getDocumentsGeo() {
     return new Promise((resolve, reject) => {
@@ -87,7 +128,6 @@ class DocumentDAO {
       });
     });
   }
-
 
   async insertDocument(document_title, stakeholder, scale, issuance_date, language, pages, document_type, document_description, area_name, coords) {
     return new Promise((resolve, reject) => {

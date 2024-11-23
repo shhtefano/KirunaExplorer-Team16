@@ -139,7 +139,9 @@ export default function DocumentsTable() {
                           {selectedDocument?.document_title || "No Document Selected"}
                         </DialogTitle>
                         <DialogDescription className="mt-3 space-y-3 text-gray-700">
-                          <p><strong>Stakeholders:</strong> {selectedDocument?.stakeholder}</p>
+                          <p><strong>Stakeholders:</strong> {selectedDocument?.stakeholders?.length > 0
+                            ? selectedDocument.stakeholders.join(", ")
+                            : "No Stakeholders"}</p>
                           <p><strong>Scale:</strong> {selectedDocument?.scale}</p>
                           <p><strong>Issuance Date:</strong> {selectedDocument?.issuance_date}</p>
                           <p><strong>Type:</strong> {selectedDocument?.document_type}</p>
