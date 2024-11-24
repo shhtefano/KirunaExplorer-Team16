@@ -15,6 +15,22 @@ async function getDocuments() {
   return response.json();
 }
 
+async function getStakeholders() {
+  const response = await fetch(`${SERVER_URL}/api/stakeholder`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || "Errore API getDocuments");
+  }
+
+  return response.json();
+}
+
 async function getDocumentsGeo() {
   const response = await fetch(`${SERVER_URL}/api/document/geo/list`, {
     method: "GET",
@@ -195,6 +211,29 @@ const addDocumentDescription = async (body) => {
   }
 };
 
+const addNewStakeholder = async (body) => {
+  console.log(body);
+  
+  const res = await fetch(SERVER_URL + "/api/stakeholder", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({stakeholder_name: body}),
+  });
+  console.log(res.status);
+  
+  if (res.ok) {
+    return res.status;
+  } else if (res.status === 403) {
+    return { error: "Stakeholder already exists." };
+  }
+  else {
+    return { error: "Server error" };
+  }
+};
+
+
 const getUserInfo = async () => {
   const response = await fetch(SERVER_URL + "/api/sessions/current", {
     credentials: "include",
@@ -222,9 +261,11 @@ const API = {
   getDocuments,
   getDocumentsGeo,
   getDocumentPosition,
+  getStakeholders,
   updateDocumentCoordinates,
   updateDocumentArea,
   addDocumentDescription,
+  addNewStakeholder,
   linkDocuments,
 };
 

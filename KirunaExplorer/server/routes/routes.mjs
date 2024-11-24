@@ -8,17 +8,17 @@ const documentDAO = new DocumentDAO();
 
 router.post("/api/document", async (req, res) => {
 
-  const { document_title, stakeholder, scale, issuance_date, language, pages, document_type, document_description, area_name, coordinates } = req.body;
+  const { document_title, stakeholders, scale, issuance_date, language, pages, document_type, document_description, area_name, coordinates } = req.body;
   try {
     // Step 1: Aggiungere il documento      
-    await documentDAO.insertDocument(document_title, stakeholder, scale, issuance_date, language, pages, document_type, document_description, area_name, coordinates);
+    await documentDAO.insertDocument(document_title, stakeholders, scale, issuance_date, language, pages, document_type, document_description, area_name, coordinates);
 
     res.status(201).send("Document successfully inserted");
   } catch (error) {
     if (error == 403)
       res.status(403).send("Document already exists");
     else if (error == 422)
-      res.status(403).send("Missing Latitude/Longitude or Municipal area");
+      res.status(422).send("Missing Latitude/Longitude or Municipal area");
     else
       res.status(500).send("An error occurred while adding node and area.");
   }
@@ -49,6 +49,18 @@ router.get("/api/document/geo/list", async (req, res) => {
   }
 });
 
+router.get("/api/stakeholder", async (req, res) => {
+  try {
+    // Recupera tutti i documenti dal database
+    const stakeholders = await documentDAO.getStakeholders();
+    // Risponde con i documenti in formato JSON
+    res.status(200).json(stakeholders);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("An error occurred while fetching documents.");
+  }
+});
+
 router.get("/api/document/:document_id/geo/", async (req, res) => {
   try {
     // Recupera tutti i documenti dal database
@@ -58,6 +70,27 @@ router.get("/api/document/:document_id/geo/", async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).send("An error occurred while fetching document position.");
+  }
+});
+
+router.post("/api/stakeholder", async (req, res) => {
+  console.log('salame');
+  
+  try {
+    console.log('miaooo',req.body);
+    
+    await documentDAO.util_insertStakeholder(req.body.stakeholder_name);
+
+    res.status(201).send("Stakeholder successfully inserted");
+  } catch (error) {
+    console.error(error);
+    if(error === "Duplicated stakeholder"){
+      res.status(403).send("Duplicated stakeholder"); //CHANGED ERROR MESSAGE
+
+    }else{
+
+      res.status(500).send(error.message); //CHANGED ERROR MESSAGE
+    }
   }
 });
 

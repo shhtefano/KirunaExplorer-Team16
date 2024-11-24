@@ -60,7 +60,23 @@ class DocumentDAO {
     });
   }
 
+  async getStakeholders() {
+    return new Promise((resolve, reject) => {
+      const query = `SELECT stakeholder_name FROM Stakeholders;`;
   
+      db.all(query, [], (err, rows) => {
+        if (err) {
+          console.error("Errore durante il recupero dei documenti:", err);
+          return reject(new Error("Errore durante il recupero dei documenti."));
+        }
+  
+        console.log(rows);
+        
+        resolve(rows);
+      });
+    });
+  }
+
   
   async getDocumentsGeo() {
     return new Promise((resolve, reject) => {
@@ -212,7 +228,9 @@ console.log(documentInfo, coordinates);
   async insertDocument(document_title, stakeholders, scale, issuance_date, language, pages, document_type, document_description, area_name, coords) {
     //Converting stakeholder names to stakeholderIds
     let stakeholderIds = [];
+    
     stakeholderIds= await this.util_getStakeholdersIDs(stakeholders);  
+    
     return new Promise((resolve, reject) => {
       db.serialize(() => {
         let coordinates = [];
@@ -569,12 +587,16 @@ console.log(documentInfo, coordinates);
 
   async util_getStakeholdersIDs(stakeholders) {
     return new Promise((resolve, reject) => {
+      console.log('aroorororo', stakeholders);
+      
       const stakeholderIds = [];
       let processedCount = 0;
   
       const getStakeholderIdQuery = 'SELECT stakeholder_id FROM Stakeholders WHERE stakeholder_name = ?';
   
       for (const stakeholderName of stakeholders) {
+        console.log('ziocane: ' + stakeholderName);
+        
         db.get(getStakeholderIdQuery, [stakeholderName], (err, row) => {
           if (err) {
             console.error("Errore durante il recupero dello stakeholder:", err);
@@ -591,6 +613,8 @@ console.log(documentInfo, coordinates);
   
           // Controlla se tutte le query sono state elaborate
           if (processedCount === stakeholders.length) {
+            console.log('stakholder ids: ' + stakeholderIds);
+            
             resolve(stakeholderIds);
           }
         });

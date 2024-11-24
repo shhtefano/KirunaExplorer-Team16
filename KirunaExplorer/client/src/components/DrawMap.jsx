@@ -56,7 +56,7 @@ const tileLayers = {
 
 
 const DrawMap = () => {
-  const [center] = useState({ lat: 67.85572, lng: 20.22513 });
+  const [center, setCenter] = useState({ lat: 67.85572, lng: 20.22513 });
   const [filteredMarkers, setFilteredMarkers] = useState([]);
   const [selectedArea, setSelectedArea] = useState(areas[0]);
   const [selectedDocument, setSelectedDocument] = useState(null);

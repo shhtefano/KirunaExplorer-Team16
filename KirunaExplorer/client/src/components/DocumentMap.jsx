@@ -8,12 +8,26 @@ import { Button } from "react-bootstrap";
 
 // Configura l'icona di default di Leaflet
 const icon = new L.Icon({
-  iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.3.1/images/marker-icon-2x.png", // Icona blu per gli altri marker
+  iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png", // Icona blu per gli altri marker
   iconSize: [25, 41],
   iconAnchor: [12, 41],
   popupAnchor: [1, -34],
   shadowSize: [41, 41],
 });
+
+const areas = [
+  {
+    id: 0,
+    name: "Whole Area",
+    latlngs: [
+      { lat: 67.864354, lng: 20.198879 },
+      { lat: 67.845556, lng: 20.198879 },
+      { lat: 67.840539, lng: 20.28059 },
+      { lat: 67.864871, lng: 20.304966 },
+    ],
+  },
+  // Add more areas here as needed
+];
 
 const tileLayers = {
   maptiler: {
@@ -28,7 +42,8 @@ const tileLayers = {
 };
 
 const DocumentMap = ({ document_id }) => {
-  const [center, setCenter] = useState([0, 0]);
+  const [center, setCenter] = useState([67.85572, 20.22513]);
+
   const [zoomLevel, setZoomLevel] = useState(12);
   const [coordinates, setCoordinates] = useState([]);
   const [areaName, setAreaName] = useState(null);
@@ -40,18 +55,23 @@ const DocumentMap = ({ document_id }) => {
         const document = await API.getDocumentPosition(document_id);
 
         if (document && document.coordinates && document.coordinates.length > 0) {
-          if (document.area_name === "Whole Area" || document.area_name === "Custom Area") {
+          if (document.area_name === "Whole Area") {
             const latitudes = document.coordinates.map((coord) => coord.lat);
             const longitudes = document.coordinates.map((coord) => coord.lng);
             const avgLat = latitudes.reduce((a, b) => a + b, 0) / latitudes.length;
             const avgLng = longitudes.reduce((a, b) => a + b, 0) / longitudes.length;
-            setCenter([avgLat, avgLng]);
-            setCoordinates(document.coordinates);
+            setCenter([67.85572, 20.22513]);
+            // setCenter([avgLat, avgLng]);
+            setCoordinates(areas[0].latlngs);
+            // setCoordinates(document.coordinates);
             setAreaName(document.area_name);
           } else if (document.area_name === "Point-Based Documents") {
             setCenter([document.coordinates[0].lat, document.coordinates[0].lng]);
             setCoordinates([document.coordinates[0].lat, document.coordinates[0].lng]);
             setAreaName(document.area_name);
+          } else if (document.area_name === "Custom Area"){
+            //TODO
+            return;
           } else {
             console.log("error");
           }

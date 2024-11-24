@@ -90,12 +90,12 @@ INSERT INTO Document_Stakeholder(stakeholder_id, document_id) VALUES(1,2);
 INSERT INTO Document_Stakeholder(stakeholder_id, document_id) VALUES(1,3);
 INSERT INTO Document_Stakeholder(stakeholder_id, document_id) VALUES(2,4);
 
-INSERT INTO Geolocation(area_id, long, lat, area_name) VALUES(0,67.86639 , 20.201883, 'Whole Area');
-INSERT INTO Geolocation(area_id, long, lat, area_name) VALUES(0,67.867071 , 20.307369, 'Whole Area');
-INSERT INTO Geolocation(area_id, long, lat, area_name) VALUES(0,67.83225 , 20.199909, 'Whole Area');
-INSERT INTO Geolocation(area_id, long, lat, area_name) VALUES(0,67.837947, 20.292263, 'Whole Area');
-INSERT INTO Geolocation(area_id, long, lat, area_name) VALUES(1,67.847947, 20.392263, 'Point-Based Documents');
-INSERT INTO Geolocation(area_id, long, lat, area_name) VALUES(2,67.737947, 20.192263, 'Point-Based Documents');
+INSERT INTO Geolocation(area_id, long, lat, area_name) VALUES(0,20.198879 ,67.864354, 'Whole Area');
+INSERT INTO Geolocation(area_id, long, lat, area_name) VALUES(0,20.198879 ,67.845556 , 'Whole Area');
+INSERT INTO Geolocation(area_id, long, lat, area_name) VALUES(0,20.28059 , 67.840539 , 'Whole Area');
+INSERT INTO Geolocation(area_id, long, lat, area_name) VALUES(0,20.304966, 67.864871, 'Whole Area');
+INSERT INTO Geolocation(area_id, long, lat, area_name) VALUES(1,20.392263, 67.847947, 'Point-Based Documents');
+INSERT INTO Geolocation(area_id, long, lat, area_name) VALUES(2,20.192263, 67.737947, 'Point-Based Documents');
 
 INSERT INTO Geolocation_Documents(area_id, document_id) VALUES(0, 1);
 INSERT INTO Geolocation_Documents(area_id, document_id) VALUES(0, 2);
