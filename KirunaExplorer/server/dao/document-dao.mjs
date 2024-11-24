@@ -598,6 +598,45 @@ console.log(documentInfo, coordinates);
     });
   }
 
+  async util_insertStakeholder(stakeholder_name) {
+    return new Promise((resolve, reject) => {
+      const checkStakeholderQuery = `
+        SELECT stakeholder_id FROM Stakeholders
+        WHERE stakeholder_name = ?
+      `;
+  
+      const insertStakeholderQuery = `
+        INSERT INTO Stakeholders (stakeholder_name)
+        VALUES (?)
+      `;
+  
+      db.get(checkStakeholderQuery, [stakeholder_name], (err, row) => {
+        if (err) {
+          console.error("Errore durante la verifica dello stakeholder:", err);
+          return reject(new Error("Errore durante la verifica dello stakeholder."));
+        }
+  
+        if (row) {
+          return resolve({
+            stakeholder_id: row.stakeholder_id,
+            stakeholder_name: stakeholder_name
+          });
+        }
+  
+        db.run(insertStakeholderQuery, [stakeholder_name], function (err) {
+          if (err) {
+            console.error("Errore durante l'inserimento dello stakeholder:", err);
+            return reject(new Error("Errore durante l'inserimento dello stakeholder."));
+          }
+          resolve({
+            stakeholder_id: this.lastID,
+            stakeholder_name: stakeholder_name
+          });
+        });
+      });
+    });
+  }
+  
 }
 
 export default DocumentDAO;
