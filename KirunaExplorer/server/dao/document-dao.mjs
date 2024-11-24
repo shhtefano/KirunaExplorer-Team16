@@ -59,6 +59,8 @@ class DocumentDAO {
       });
     });
   }
+
+  
   
   async getDocumentsGeo() {
     return new Promise((resolve, reject) => {
@@ -207,12 +209,15 @@ console.log(documentInfo, coordinates);
   }
 
 
-  async insertDocument(document_title, stakeholder, scale, issuance_date, language, pages, document_type, document_description, area_name, coords) {
+  async insertDocument(document_title, stakeholders, scale, issuance_date, language, pages, document_type, document_description, area_name, coords) {
+    //Converting stakeholder names to stakeholderIds
+    let stakeholderIds = [];
+    stakeholderIds= await this.util_getStakeholdersIDs(stakeholders);  
     return new Promise((resolve, reject) => {
       db.serialize(() => {
         let coordinates = [];
         coordinates.push(coords);   //devo mettere le coordinate nell'array perchè sennò da errore la map
-
+        console.log(stakeholderIds);
         db.run('BEGIN TRANSACTION', (err) => {
           if (err) return reject(err);
 
@@ -231,10 +236,10 @@ console.log(documentInfo, coordinates);
 
 
             const insertDocumentQuery = `
-                        INSERT INTO Documents(document_title, stakeholder, scale, issuance_date, language, pages, document_type, document_description) 
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                        INSERT INTO Documents(document_title, scale, issuance_date, language, pages, document_type, document_description) 
+                        VALUES (?, ?, ?, ?, ?, ?, ?)
                     `;
-            db.run(insertDocumentQuery, [document_title, stakeholder, scale, issuance_date, language, pages, document_type, document_description], function (err) {
+            db.run(insertDocumentQuery, [document_title, scale, issuance_date, language, pages, document_type, document_description], function (err) {
               if (err) {
                 console.log(err);
 
@@ -243,6 +248,19 @@ console.log(documentInfo, coordinates);
               }
 
               const document_id = this.lastID;
+
+              const insertDocumentStakeholderQuery = `
+              INSERT INTO Document_Stakeholder (stakeholder_id,document_id) 
+              VALUES (?, ?)
+            `; 
+            stakeholderIds.forEach(stakeholder => {
+              db.run(insertDocumentStakeholderQuery, [stakeholder,document_id], function (err) {
+                if (err) {
+                  db.run('ROLLBACK');
+                  return reject(err);
+                }
+              });
+            });
 
 
               const checkAreaQuery = `SELECT area_id FROM Geolocation WHERE area_name = ?`;
@@ -549,16 +567,38 @@ console.log(documentInfo, coordinates);
 
   };
 
-
-
-
-
-
+  async util_getStakeholdersIDs(stakeholders) {
+    return new Promise((resolve, reject) => {
+      const stakeholderIds = [];
+      let processedCount = 0;
+  
+      const getStakeholderIdQuery = 'SELECT stakeholder_id FROM Stakeholders WHERE stakeholder_name = ?';
+  
+      for (const stakeholderName of stakeholders) {
+        db.get(getStakeholderIdQuery, [stakeholderName], (err, row) => {
+          if (err) {
+            console.error("Errore durante il recupero dello stakeholder:", err);
+            return reject(err);
+          }
+  
+          if (row) {
+            stakeholderIds.push(row.stakeholder_id);
+          } else {
+            console.log(`Nessun ID trovato per lo stakeholder: ${stakeholderName}`);
+          }
+  
+          processedCount++;
+  
+          // Controlla se tutte le query sono state elaborate
+          if (processedCount === stakeholders.length) {
+            resolve(stakeholderIds);
+          }
+        });
+      }
+    });
+  }
 
 }
-
-
-
 
 export default DocumentDAO;
 
