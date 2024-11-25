@@ -199,11 +199,11 @@ async getDocumentsGeo() {
             `;
         const sqlQueryConnectionExistence = `
               SELECT * FROM Connections
-              WHERE parent_id = ? AND children_id = ?
+              WHERE parent_id = ? AND children_id = ? AND connection_type = ?
             `;
         const sqlQueryInverseConnectionExistence = `
               SELECT * FROM Connections
-              WHERE parent_id = ? AND children_id = ?
+              WHERE parent_id = ? AND children_id = ? AND connection_type = ?
             `;
         const sqlInsertConnection = `
               INSERT INTO Connections (parent_id, children_id, connection_type)
@@ -239,7 +239,7 @@ async getDocumentsGeo() {
     
         // Confirm that the connection does not already exist between these specific nodes
         await new Promise((resolve, reject) => {
-          db.get(sqlQueryConnectionExistence, [parent_id, children_id], (err, row) => {
+          db.get(sqlQueryConnectionExistence, [parent_id, children_id, connection_type], (err, row) => {
             if (row) {
               reject(new Error("A connection already exists between these nodes. Duplicate entries are not allowed!"));
             } else if (err) {
@@ -252,7 +252,7 @@ async getDocumentsGeo() {
     
         // Confirm that the inverse connection does not already exist (to prevent duplicate connections in reverse order)
         await new Promise((resolve, reject) => {
-          db.get(sqlQueryInverseConnectionExistence, [children_id, parent_id], (err, row) => {
+          db.get(sqlQueryInverseConnectionExistence, [children_id, parent_id, connection_type], (err, row) => {
             if (row) {
               reject(new Error("An inverse connection already exists between these nodes. Duplicate entries in reverse order are not allowed!"));
             } else if (err) {
