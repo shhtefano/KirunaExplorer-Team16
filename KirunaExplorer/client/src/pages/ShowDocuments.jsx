@@ -12,7 +12,7 @@ const ShowDocumentsPage = () => {
       </div>
       <div className="flex items-center justify-center align-center">
         <a href="/">
-          <Button>Back to Home</Button>
+          <Button variant="outline">Back to Home</Button>
         </a>
       </div>
     </div>

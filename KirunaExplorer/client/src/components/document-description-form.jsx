@@ -63,20 +63,23 @@ const documents = [
   { type: "Consultation", icon: null },
 ];
 
-const stakeholders = [
-  "LKAB",
-  "Municipality",
-  "Regional authority",
-  "Architecture firms",
-  "Citizens",
-  "Others",
-];
+// const stakeholders = [
+//   "LKAB",
+//   "Municipality",
+//   "Regional authority",
+//   "Architecture firms",
+//   "Citizens",
+//   "Others",
+// ];
 
 const DocumentDescriptionForm = () => {
   const [isWholeArea, setIsWholeArea] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [showPopupMap, setShowPopupMap] = useState(false); // New state for the popup for linking document
   const [showPopupLink, setShowPopupLink] = useState(false); // New state for the popup for showing map
+  const [stakeholders, setStakeholders] = useState([]); // Stato per gestire gli stakeholder esistenti
+  const [isLoading, setIsLoading] = useState(false); // Stato di caricamento
+  const [stakeholderInput, setStakeholderInput] = useState('');
 
   const [documentId, setDocumentId] = useState(null);
   const [temporaryLinks, setTemporaryLinks] = useState([]);
@@ -91,7 +94,7 @@ const DocumentDescriptionForm = () => {
       document_title: "",
       document_description: "",
       document_type: "",
-      stakeholder: "",
+      stakeholders: [],
       scale: "",
       issuance_date: "",
       language: "",
@@ -108,7 +111,6 @@ const DocumentDescriptionForm = () => {
 
   const onSubmit = async (values) => {
     startTransition(async () => {
-      console.log(values);
       const body = {
         ...values,
         scale: values.scale.replace(/\s+/g, ""),
@@ -122,18 +124,50 @@ const DocumentDescriptionForm = () => {
       console.log({ ...body });
       // API request
       try {
-        console.log("chiamo documentdescription");
+        console.log("chiamo documentdescription " + body.coordinates);
 
+        if(body.stakeholders.length === 0){
+          setToast({
+            open: true,
+            message: "Stakeholders missing",
+            severity: "error",
+          });
+          return;
+        }
+
+        if((body.coordinates.lat === "" || body.coordinates.long === "") && body.area_name === ""){
+          
+          setToast({
+            open: true,
+            message: "Geolocation data missing",
+            severity: "error",
+          });
+          return;
+        }else if((body.coordinates.lat === "" || body.coordinates.long === "") && body.area_name === "Whole Area"){
+          console.log('xxx');
+          // return
+        }else if((body.coordinates.lat !== "" || body.coordinates.long !== "") && body.area_name === "Whole Area"){
+          console.log('yyyy');
+          body.coordinates=[];
+          // return
+        }else if((body.coordinates.lat !== "" || body.coordinates.long !== "") && body.area_name !== "Whole Area"){
+          console.log('zzzz');
+          // return
+        }
+
+      
+
+        
         const response = await API.addDocumentDescription(body);
         // toast.success("Document description added");
-         setDocumentId(response.documentId); // Set the documentId
+        setDocumentId(response.documentId); // Set the documentId
 
         // Save links only if there are any
         if (temporaryLinks.length > 0) {
-           await onSaveLinks(response.documentId); // Pass the documentId directly
-         }
+          await onSaveLinks(response.documentId); // Pass the documentId directly
+        }
 
-         form.reset();
+        form.reset();
 
         // Check if response contains an error
         if (response.error) {
@@ -179,12 +213,12 @@ const DocumentDescriptionForm = () => {
         );
 
         if (response.error) {
-        //  toast.error(`Error linking "${link.from}" to "${link.to}": ${response.error}`);
+          //  toast.error(`Error linking "${link.from}" to "${link.to}": ${response.error}`);
         } else {
-         // toast.success(`Link saved: "${link.from}" to "${link.to}" (${link.type})`);
+          // toast.success(`Link saved: "${link.from}" to "${link.to}" (${link.type})`);
         }
       } catch (error) {
-       // toast.error(`An error occurred while linking "${link.from}" to "${link.to}".`);
+        // toast.error(`An error occurred while linking "${link.from}" to "${link.to}".`);
         console.error(`Error linking "${link.from}" to "${link.to}":`, error);
       }
     }
@@ -206,7 +240,7 @@ const DocumentDescriptionForm = () => {
       setTemporaryLinks((prevLinks) =>
         prevLinks.map((link) =>
           link.from === currentTitle ||
-          link.from === prevLinks.find((l) => l.from)?.from
+            link.from === prevLinks.find((l) => l.from)?.from
             ? { ...link, from: currentTitle }
             : link
         )
@@ -217,14 +251,61 @@ const DocumentDescriptionForm = () => {
     return () => subscription.unsubscribe();
   }, [form]);
 
+  useEffect(() => {
+    const fetchStakeholders = async () => {
+      setIsLoading(true);
+      try {
+        const data = await API.getStakeholders();
+        const stakeholders = data.map(stakeholder => stakeholder.stakeholder_name);
+        console.log(stakeholders); // Controlla che la struttura sia quella attesa
+
+        setStakeholders(stakeholders);
+      } catch (error) {
+        console.error('Error fetching stakeholders:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchStakeholders();
+  }, []);
+
+
+  // Aggiungere un nuovo stakeholder
+  const handleAddStakeholder = async (newStakeholderName) => {
+    console.log(newStakeholderName);
+
+    try {
+      if (newStakeholderName.trim() === '') {
+        setToast({
+          open: true,
+          message: 'Stakeholder name cannot be empty',
+          severity: "error",
+        });
+        return;
+      } else {
+
+        const result = await API.addNewStakeholder(newStakeholderName);
+        if(result === 201){
+          setStakeholders((prev) => [...prev, newStakeholderName]);
+          setStakeholderInput('');
+
+        }
+      }
+    } catch (error) {
+      console.error('Error adding stakeholder:', error);
+    }
+  };
+
   return (
     <div>
+      <div className="d-flex justify-content-center" style={{ fontSize: "34px", fontWeight: "bold", marginBottom: '20px' }}>
+        <h1>
+          Add new document        </h1>
+      </div>
       <Card className="min-w-[280px] max-w-[700px]">
-        <CardHeader>
-          <CardTitle>Add new document</CardTitle>
-        </CardHeader>
+
         <CardContent>
-          <div className="text-muted-foreground mb-4">
+          <div className="text-muted-foreground mt-4 mb-4">
             Fill out this form to add metadata to a document. Language and pages
             are not mandatory. Please choose between 'Whole Area' OR a single
             point with coordinates.
@@ -238,7 +319,7 @@ const DocumentDescriptionForm = () => {
                 rules={documentRules}
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel htmlFor="document-title">Document</FormLabel>
+                    <FormLabel htmlFor="document-title">Document *</FormLabel>
                     <FormControl>
                       <Input
                         {...field}
@@ -260,7 +341,7 @@ const DocumentDescriptionForm = () => {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel htmlFor="document-description">
-                      Description
+                      Description *
                     </FormLabel>
                     <FormControl>
                       <Textarea
@@ -282,11 +363,11 @@ const DocumentDescriptionForm = () => {
                 rules={typeRules}
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Document type</FormLabel>
+                    <FormLabel>Document type *</FormLabel>
                     <FormControl>
                       <Select
                         onValueChange={field.onChange}
-                        value={field.value} 
+                        value={field.value}
                       >
                         <FormControl>
                           <SelectTrigger>
@@ -309,37 +390,63 @@ const DocumentDescriptionForm = () => {
                   </FormItem>
                 )}
               />
-               {/* Stakeholder */}
+              {/* Stakeholder */}
               <FormField
                 control={form.control}
-                name="stakeholder"
+                name="stakeholders"
                 rules={stakeholderRules}
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Stakeholder</FormLabel>
+                    <FormLabel>Stakeholders *</FormLabel>
                     <FormControl>
-                      <Select
-                        onValueChange={field.onChange}
-                        value={field.value} 
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a stakeholder" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {stakeholders.map((stakeholder) => (
-                            <SelectItem key={stakeholder} value={stakeholder}>
-                              {stakeholder}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <div className="space-y-2 flex flex-wrap">
+                        {stakeholders.map((stakeholder) => (
+                          <div key={stakeholder} className="flex items-center w-1/2 md:w-1/3 lg:w-1/4">
+                            <input
+                              type="checkbox"
+                              id={stakeholder}
+                              value={stakeholder}
+                              checked={field.value.includes(stakeholder)} // Verifica se è selezionato
+                              onChange={(e) => {
+                                const isChecked = e.target.checked;
+                                let updatedStakeholders = [...field.value];
+                                if (isChecked) {
+                                  updatedStakeholders.push(stakeholder); // Aggiungi
+                                } else {
+                                  updatedStakeholders = updatedStakeholders.filter(item => item !== stakeholder); // Rimuovi
+                                }
+                                field.onChange(updatedStakeholders); // Aggiorna il valore del form
+                              }}
+                              className="mr-2"
+                            />
+                            <label htmlFor={stakeholder}>{stakeholder}</label>
+                          </div>
+                        ))}
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+              <div style={{ display: 'flex', justifyContent: 'center', width: '100%', alignItems: 'center' }}>
+                <input
+                  type="text"
+                  value={stakeholderInput}
+                  onChange={(e) => setStakeholderInput(e.target.value)} // Aggiorna lo stato con il valore dell'input
+                  placeholder="Stakeholder name"
+                  style={{ marginRight: '10px', width: '25%', borderBottom: '1px solid black' }} // Margine e larghezza per l'input
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  style={{ width: '25%' }}
+                  onClick={() => handleAddStakeholder(stakeholderInput)} // Passa il valore dell'input alla funzione
+                >
+                  <p style={{ textAlign: 'center' }}>
+                    Add New Stakeholder
+                  </p>
+                </Button>
+              </div>
               {/* Scale */}
               <FormField
                 control={form.control}
@@ -347,7 +454,7 @@ const DocumentDescriptionForm = () => {
                 rules={scaleRules}
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Scale</FormLabel>
+                    <FormLabel>Scale *</FormLabel>
                     <FormControl>
                       <Input
                         {...field}
@@ -366,7 +473,7 @@ const DocumentDescriptionForm = () => {
                 rules={issuanceRules}
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Issuance date</FormLabel>
+                    <FormLabel>Issuance date *</FormLabel>
                     <FormControl>
                       <Input
                         {...field}
@@ -516,7 +623,7 @@ const DocumentDescriptionForm = () => {
               {showPopupMap && (
                 <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
                   <div
-                    className="bg-white p-6 rounded shadow-lg"
+                    className="bg-white p-4 rounded shadow-lg"
                     style={{ textAlign: "center" }}
                   >
                     <CoordsMap
@@ -565,7 +672,7 @@ const DocumentDescriptionForm = () => {
                                 )}
                                 temporaryLinks={temporaryLinks}
                                 setTemporaryLinks={setTemporaryLinks}
-                                // Passa il titolo del documento corrente
+                              // Passa il titolo del documento corrente
                               />
                             </ScrollArea>
                           </div>

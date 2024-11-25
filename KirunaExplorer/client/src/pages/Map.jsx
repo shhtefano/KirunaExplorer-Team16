@@ -5,9 +5,11 @@ import DrawMap from "../components/DrawMap";
 const MapPage = () => {
   return (
     <div className="flex-col h-full w-full items-center justify-center space-y-6">
-      <h1 className="text-center font-semibold text-lg">
-        Kiruna Map
-      </h1>
+      <div className="d-flex justify-content-center" style={{ fontSize: "34px", fontWeight: "bold", marginBottom: '20px', paddingTop: '20px' }}>
+        <h1>
+          Kiruna Map
+        </h1>
+      </div>
 
       <div className="flex p-4 ">
         <DrawMap/>

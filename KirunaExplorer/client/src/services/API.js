@@ -15,6 +15,22 @@ async function getDocuments() {
   return response.json();
 }
 
+async function getStakeholders() {
+  const response = await fetch(`${SERVER_URL}/api/stakeholder`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || "Errore API getDocuments");
+  }
+
+  return response.json();
+}
+
 async function getDocumentsGeo() {
   const response = await fetch(`${SERVER_URL}/api/document/geo/list`, {
     method: "GET",
@@ -33,8 +49,8 @@ async function getDocumentsGeo() {
   return data;
 }
 
-async function updateDocumentCoordinates(document_id, lat, lng){
-  
+async function updateDocumentCoordinates(document_id, lat, lng) {
+
   const response = await fetch(`${SERVER_URL}/api/document/updatePointCoords`, {
     method: "POST",
     headers: {
@@ -57,8 +73,8 @@ async function updateDocumentCoordinates(document_id, lat, lng){
   return data;
 }
 
-async function updateDocumentArea(document_id, area_id){
-  
+async function updateDocumentArea(document_id, area_id) {
+
   const response = await fetch(`${SERVER_URL}/api/document/updateDocumentArea`, {
     method: "PUT",
     headers: {
@@ -69,15 +85,15 @@ async function updateDocumentArea(document_id, area_id){
       area_id
     }),
   });
-  
+
   if (!response.ok) {
-    
+
     const error = await response.json();
     throw new Error(error.message);
   }
 
   const data = await response.json();
-  
+
   return data;
 }
 
@@ -100,9 +116,9 @@ async function linkDocuments(parent_id, children_id, connection_type) {
       // Clone the response to safely read it in multiple ways
       const responseClone = response.clone();
       console.log(response);
-      if(response.status === 403){        
+      if (response.status === 403) {
         return { success: false, message: "Duplicated Link" };
-      }else if(response.status === 500){
+      } else if (response.status === 500) {
         return { success: false, message: "Internal Server Error" };
 
       }
@@ -140,25 +156,95 @@ async function linkDocuments(parent_id, children_id, connection_type) {
   }
 }
 
-/* example
-async function fetchServices() {
-  const response = await fetch(SERVER_URL + "/api/services", {
+
+async function getConnectionsByDocumentTitle(title) {
+  try {
+    const response = await fetch(`${SERVER_URL}/api/document/connections/document`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ title }),
+    });
+
+    // Verifica se la risposta è ok
+    if (!response.ok) {
+      const responseClone = response.clone(); // Clona per leggere in modo sicuro
+      console.error("Errore nella risposta:", responseClone);
+
+      // Gestisce casi specifici di errore
+      if (response.status === 400) {
+        return { success: false, message: "Bad Request: Titolo mancante o non valido." };
+      } else if (response.status === 500) {
+        return { success: false, message: "Internal Server Error." };
+      }
+
+      return { success: false, message: `Errore sconosciuto: ${response.status}` };
+    }
+
+    // Converte la risposta in JSON
+    const data = await response.json();
+
+    // Ritorna i dati se la richiesta è andata a buon fine
+    return { success: true, data: data.data };
+  } catch (error) {
+    console.error("Errore durante la chiamata API:", error);
+    return { success: false, message: "Errore di rete o server non raggiungibile." };
+  }
+}
+
+// Funzione per chiamare l'API e cancellare una connessione
+const deleteConnection = async (doc1_id, doc2_id, connection_type) => {
+  try {
+    const response = await fetch(`${SERVER_URL}/api/document/connections/delete`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ doc1_id, doc2_id, connection_type }),
+    });
+
+    // Verifica se la risposta è ok
+    if (!response.ok) {
+      const responseClone = response.clone();
+      console.error("Errore nella risposta:", responseClone);
+
+      // Gestisce i casi di errore specifici
+      if (response.status === 400) {
+        return { success: false, message: "Bad Request: Parametri mancanti o errati." };
+      } else if (response.status === 500) {
+        return { success: false, message: "Internal Server Error." };
+      }
+
+      return { success: false, message: `Errore sconosciuto: ${response.status}` };
+    }
+
+    // Converte la risposta in JSON
+    const data = await response.json();
+
+    // Ritorna i dati di successo
+    return { success: true, message: data.message };
+  } catch (error) {
+    console.error("Errore durante la chiamata API:", error);
+    return { success: false, message: "Errore di rete o server non raggiungibile." };
+  }
+};
+
+async function getDocumentPosition(document_id) {
+  const response = await fetch(`${SERVER_URL}/api/document/${document_id}/geo`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
     },
-    credentials: "include", // Se necessario per la sessione
   });
 
   if (!response.ok) {
-    throw new Error("Errore API fetchServices");
+    const error = await response.json();
+    throw new Error(error.message || "Errore API getDocuments");
   }
 
-  const services = await response.json();
-  return services;
+  return response.json();
 }
-
-*/
 
 const logIn = async (credentials) => {
   const response = await fetch(SERVER_URL + "/api/sessions", {
@@ -194,10 +280,33 @@ const addDocumentDescription = async (body) => {
   else if (res.status === 422) {
     return { error: "Missing Latitude/Longitude or Municipal area" };
   }
-  else{
-    return { error: "Server error" }; 
+  else {
+    return { error: "Server error" };
   }
 };
+
+const addNewStakeholder = async (body) => {
+  console.log(body);
+  
+  const res = await fetch(SERVER_URL + "/api/stakeholder", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({stakeholder_name: body}),
+  });
+  console.log(res.status);
+  
+  if (res.ok) {
+    return res.status;
+  } else if (res.status === 403) {
+    return { error: "Stakeholder already exists." };
+  }
+  else {
+    return { error: "Server error" };
+  }
+};
+
 
 const getUserInfo = async () => {
   const response = await fetch(SERVER_URL + "/api/sessions/current", {
@@ -221,14 +330,19 @@ const logOut = async () => {
 
 const API = {
   logIn,
-  getUserInfo,
   logOut,
-  linkDocuments,
-  addDocumentDescription,
+  getUserInfo,
   getDocuments,
   getDocumentsGeo,
+  getDocumentPosition,
+  getStakeholders,
   updateDocumentCoordinates,
   updateDocumentArea,
+  addDocumentDescription,
+  addNewStakeholder,
+  linkDocuments,
+  getConnectionsByDocumentTitle,
+  deleteConnection
 };
 
 export default API;

@@ -5,61 +5,128 @@ class DocumentDAO {
   async getDocuments() {
     return new Promise((resolve, reject) => {
       const query = `
-            SELECT *
-            FROM Documents
-        `;
-
-      db.all(query, [], (err, rows) => {
-        if (err) {
-          console.error("Errore durante il recupero dei documenti:", err);
-          return reject(new Error("Errore durante il recupero dei documenti."));
-        }
-
-        // Restituisce l'elenco dei documenti recuperati
-        resolve(rows);
-      });
-    });
-  }
-
-  async getDocumentsGeo() {
-    return new Promise((resolve, reject) => {
-      const query = `
-          SELECT D.document_id, D.document_title, D.stakeholder, D.scale, D.issuance_date,
-                 D.language, D.pages, D.document_type, D.document_description,
-                 G.area_id, G.long, G.lat, G.area_name
-          FROM Documents D
-          JOIN Geolocation_Documents GD ON D.document_id = GD.document_id
-          JOIN Geolocation G ON G.area_id = GD.area_id
+        SELECT 
+          D.document_id,
+          D.document_title,
+          D.scale,
+          D.issuance_date,
+          D.language,
+          D.pages,
+          D.document_type,
+          D.document_description,
+          S.stakeholder_name
+        FROM Documents D
+        JOIN Document_Stakeholder DS ON D.document_id = DS.document_id
+        JOIN Stakeholders S ON DS.stakeholder_id = S.stakeholder_id;
       `;
-
+  
       db.all(query, [], (err, rows) => {
         if (err) {
           console.error("Errore durante il recupero dei documenti:", err);
           return reject(new Error("Errore durante il recupero dei documenti."));
         }
-
-        // Raggruppa i risultati per documento e area_id
+  
+        // Raggruppa i dati
         const documentsMap = {};
-
+  
         rows.forEach(row => {
           const docId = row.document_id;
-
-          // Se il documento non esiste ancora nella mappa, inizializzalo
+  
           if (!documentsMap[docId]) {
+            // Crea un nuovo oggetto per il documento
             documentsMap[docId] = {
               document_id: row.document_id,
               document_title: row.document_title,
-              stakeholder: row.stakeholder,
               scale: row.scale,
               issuance_date: row.issuance_date,
               language: row.language,
               pages: row.pages,
               document_type: row.document_type,
               document_description: row.document_description,
-              geolocations: {}
+              stakeholders: [], // Inizializza un array per gli stakeholder
             };
           }
+  
+          // Aggiungi il nome dello stakeholder all'array del documento
+          documentsMap[docId].stakeholders.push(row.stakeholder_name);
+        });
+  
+        // Converti la mappa in un array
+        const documents = Object.values(documentsMap);
+        console.log(documents);
+        
+        resolve(documents);
+      });
+    });
+  }
 
+  async getStakeholders() {
+    return new Promise((resolve, reject) => {
+      const query = `SELECT stakeholder_name FROM Stakeholders;`;
+  
+      db.all(query, [], (err, rows) => {
+        if (err) {
+          console.error("Errore durante il recupero dei documenti:", err);
+          return reject(new Error("Errore durante il recupero dei documenti."));
+        }
+  
+        console.log(rows);
+        
+        resolve(rows);
+      });
+    });
+  }
+
+  
+  async getDocumentsGeo() {
+    return new Promise((resolve, reject) => {
+      const query = `
+        SELECT 
+          D.document_id, D.document_title, D.scale, D.issuance_date,
+          D.language, D.pages, D.document_type, D.document_description,
+          G.area_id, G.long, G.lat, G.area_name,
+          S.stakeholder_name
+        FROM Documents D
+        JOIN Geolocation_Documents GD ON D.document_id = GD.document_id
+        JOIN Geolocation G ON G.area_id = GD.area_id
+        JOIN Document_Stakeholder DS ON D.document_id = DS.document_id
+        JOIN Stakeholders S ON DS.stakeholder_id = S.stakeholder_id
+      `;
+  
+      db.all(query, [], (err, rows) => {
+        if (err) {
+          console.error("Errore durante il recupero dei documenti:", err);
+          return reject(new Error("Errore durante il recupero dei documenti."));
+        }
+  
+        // Raggruppa i risultati per documento
+        const documentsMap = {};
+  
+        rows.forEach(row => {
+          const docId = row.document_id;
+  
+          // Se il documento non esiste ancora nella mappa, inizializzalo
+          if (!documentsMap[docId]) {
+            documentsMap[docId] = {
+              document_id: row.document_id,
+              document_title: row.document_title,
+              scale: row.scale,
+              issuance_date: row.issuance_date,
+              language: row.language,
+              pages: row.pages,
+              document_type: row.document_type,
+              document_description: row.document_description,
+              stakeholders: [], // Array per gli stakeholder
+              geolocations: {} // Oggetto per le geolocalizzazioni
+            };
+          }
+  
+          // Aggiungi lo stakeholder se non è già presente
+          const stakeholderName = row.stakeholder_name;
+          if (!documentsMap[docId].stakeholders.includes(stakeholderName)) {
+            documentsMap[docId].stakeholders.push(stakeholderName);
+          }
+  
           // Aggiungi le coordinate per l'area_id corrente
           const areaId = row.area_id;
           if (!documentsMap[docId].geolocations[areaId]) {
@@ -68,33 +135,107 @@ class DocumentDAO {
               coordinates: []
             };
           }
-
+  
           // Aggiungi la coordinata corrente
           documentsMap[docId].geolocations[areaId].coordinates.push({
             long: row.long,
             lat: row.lat
           });
         });
-
+  
         // Trasforma la mappa in un array di documenti con geolocalizzazioni
         const documentsArray = Object.values(documentsMap).map(document => {
           document.geolocations = Object.values(document.geolocations);
           return document;
         });
 
+        console.log(documentsArray);
+        
+  
         // Restituisce l'elenco dei documenti strutturato come richiesto
         resolve(documentsArray);
       });
     });
   }
+  
+  async getDocumentPosition(document_id) {
+    return new Promise((resolve, reject) => {
+      // Query SQL per ottenere i dettagli del documento e le coordinate
+      const query = `
+        SELECT 
+          d.document_id,
+          d.document_title,
+          d.scale,
+          d.issuance_date,
+          d.language,
+          d.pages,
+          d.document_type,
+          d.document_description,
+          g.lat,
+          g.long,
+          g.area_name
+        FROM 
+          Documents d
+        LEFT JOIN 
+          Geolocation_Documents gd 
+          ON d.document_id = gd.document_id
+        LEFT JOIN 
+          Geolocation g 
+          ON gd.area_id = g.area_id
+        WHERE 
+          d.document_id = ?
+      `;
+
+      db.all(query, [document_id], (err, rows) => {
+        if (err) {
+          return reject(err); // Gestione errori
+        }
+
+        if (rows.length === 0) {
+          return resolve(null); // Documento non trovato
+        }
+
+        // Estrai informazioni comuni del documento (valori identici in tutte le righe)
+        const documentInfo = {
+          document_id: rows[0].document_id,
+          document_title: rows[0].document_title,
+          scale: rows[0].scale,
+          issuance_date: rows[0].issuance_date,
+          language: rows[0].language,
+          pages: rows[0].pages,
+          document_type: rows[0].document_type,
+          document_description: rows[0].document_description,
+          area_name: rows[0].area_name, // Area associata
+        };
+
+        // Mappa le coordinate in un array
+        const coordinates = rows.map(row => ({
+          lat: row.lat,
+          lng: row.long,
+        }));
+console.log(documentInfo, coordinates);
+
+        // Restituisci il risultato
+        resolve({
+          ...documentInfo,
+          coordinates,
+        });
+      });
+    });
+  }
 
 
-  async insertDocument(document_title, stakeholder, scale, issuance_date, language, pages, document_type, document_description, area_name, coords) {
+  async insertDocument(document_title, stakeholders, scale, issuance_date, language, pages, document_type, document_description, area_name, coords) {
+    //Converting stakeholder names to stakeholderIds
+    let stakeholderIds = [];
+    
+    stakeholderIds= await this.util_getStakeholdersIDs(stakeholders);  
+    
     return new Promise((resolve, reject) => {
       db.serialize(() => {
         let coordinates = [];
         coordinates.push(coords);   //devo mettere le coordinate nell'array perchè sennò da errore la map
-
+        console.log(stakeholderIds);
         db.run('BEGIN TRANSACTION', (err) => {
           if (err) return reject(err);
 
@@ -113,10 +254,10 @@ class DocumentDAO {
 
 
             const insertDocumentQuery = `
-                        INSERT INTO Documents(document_title, stakeholder, scale, issuance_date, language, pages, document_type, document_description) 
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                        INSERT INTO Documents(document_title, scale, issuance_date, language, pages, document_type, document_description) 
+                        VALUES (?, ?, ?, ?, ?, ?, ?)
                     `;
-            db.run(insertDocumentQuery, [document_title, stakeholder, scale, issuance_date, language, pages, document_type, document_description], function (err) {
+            db.run(insertDocumentQuery, [document_title, scale, issuance_date, language, pages, document_type, document_description], function (err) {
               if (err) {
                 console.log(err);
 
@@ -125,6 +266,19 @@ class DocumentDAO {
               }
 
               const document_id = this.lastID;
+
+              const insertDocumentStakeholderQuery = `
+              INSERT INTO Document_Stakeholder (stakeholder_id,document_id) 
+              VALUES (?, ?)
+            `; 
+            stakeholderIds.forEach(stakeholder => {
+              db.run(insertDocumentStakeholderQuery, [stakeholder,document_id], function (err) {
+                if (err) {
+                  db.run('ROLLBACK');
+                  return reject(err);
+                }
+              });
+            });
 
 
               const checkAreaQuery = `SELECT area_id FROM Geolocation WHERE area_name = ?`;
@@ -177,7 +331,7 @@ class DocumentDAO {
 
                     const insertCoordinates = coordinates.map(coord => {
                       return new Promise((resolveCoord, rejectCoord) => {
-                        db.run(insertGeolocationQuery, [newAreaId, coord.long, coord.lat, "Point"], function (err) {
+                        db.run(insertGeolocationQuery, [newAreaId, coord.long, coord.lat, "Point-Based Documents"], function (err) {
                           if (err) return rejectCoord(err);
                           resolveCoord();
                         });
@@ -227,88 +381,151 @@ class DocumentDAO {
             `;
     const sqlQueryConnectionExistence = `
               SELECT * FROM Connections
-              WHERE parent_id = ? AND children_id = ?
+              WHERE parent_id = ? AND children_id = ? AND connection_type = ?
             `;
     const sqlQueryInverseConnectionExistence = `
               SELECT * FROM Connections
-              WHERE parent_id = ? AND children_id = ?
+              WHERE parent_id = ? AND children_id = ? AND connection_type = ?
             `;
     const sqlInsertConnection = `
               INSERT INTO Connections (parent_id, children_id, connection_type)
               VALUES (?, ?, ?)
             `;
-
-
-    // Verify the presence of the parent node with extensive detail
-    const parentNode = await new Promise((resolve, reject) => {
-      db.get(sqlQueryNodeExistence, [parent_id], (err, node) => {
-        if (!node) {
-          reject(new Error("Parent Node not found! Please verify the ID."));
-        } else if (err) {
-          reject(new Error(`Error while retrieving parent node: ${err.message}`));
-        } else {
-          resolve(node);
-        }
-      });
-    });
-
-    // Verify the presence of the child node with extensive error-handling
-    const childNode = await new Promise((resolve, reject) => {
-      db.get(sqlQueryNodeExistence, [children_id], (err, node) => {
-        if (!node) {
-          reject(new Error("Child Node not found! Please double-check the ID."));
-        } else if (err) {
-          reject(new Error(`Error retrieving child node: ${err.message}`));
-        } else {
-          resolve(node);
-        }
-      });
-    });
-
-    // Confirm that the connection does not already exist between these specific nodes
-    await new Promise((resolve, reject) => {
-      db.get(sqlQueryConnectionExistence, [parent_id, children_id], (err, row) => {
-        if (row) {
-          reject("Duplicated link");
-        } else if (err) {
-          reject(new Error(`Error while checking connection existence: ${err.message}`));
-        } else {
-          resolve();
-        }
-      });
-    });
-
-    // Confirm that the inverse connection does not already exist (to prevent duplicate connections in reverse order)
-    await new Promise((resolve, reject) => {
-      db.get(sqlQueryInverseConnectionExistence, [children_id, parent_id], (err, row) => {
-        if (row) {
-          reject("Duplicated link");
-        } else if (err) {
-          reject(new Error(`Error while checking inverse connection existence: ${err.message}`));
-        } else {
-          resolve();
-        }
-      });
-    });
-
-    // Insert the connection if all checks pass, creating a brand-new, unique linkage
-    const connection = await new Promise((resolve, reject) => {
-      db.run(sqlInsertConnection, [parent_id, children_id, connection_type], function (err) {
-        if (err) {
-          reject(new Error(`Failed to insert connection: ${err.message}`));
-        } else {
-          resolve({
-            parent_id: parent_id,
-            children_id: children_id,
-            connection_type: connection_type,
+    
+    
+        // Verify the presence of the parent node with extensive detail
+        const parentNode = await new Promise((resolve, reject) => {
+          db.get(sqlQueryNodeExistence, [parent_id], (err, node) => {
+            if (!node) {
+              reject(new Error("Parent Node not found! Please verify the ID."));
+            } else if (err) {
+              reject(new Error(`Error while retrieving parent node: ${err.message}`));
+            } else {
+              resolve(node);
+            }
           });
-        }
-      });
-    });
+        });
+    
+        // Verify the presence of the child node with extensive error-handling
+        const childNode = await new Promise((resolve, reject) => {
+          db.get(sqlQueryNodeExistence, [children_id], (err, node) => {
+            if (!node) {
+              reject(new Error("Child Node not found! Please double-check the ID."));
+            } else if (err) {
+              reject(new Error(`Error retrieving child node: ${err.message}`));
+            } else {
+              resolve(node);
+            }
+          });
+        });
+    
+        // Confirm that the connection does not already exist between these specific nodes
+        await new Promise((resolve, reject) => {
+          db.get(sqlQueryConnectionExistence, [parent_id, children_id, connection_type], (err, row) => {
+            if (row) {
+              reject(new Error("Duplicated link"));
+            } else if (err) {
+              reject(new Error(`Error while checking connection existence: ${err.message}`));
+            } else {
+              resolve();
+            }
+          });
+        });
+    
+        // Confirm that the inverse connection does not already exist (to prevent duplicate connections in reverse order)
+        await new Promise((resolve, reject) => {
+          db.get(sqlQueryInverseConnectionExistence, [children_id, parent_id, connection_type], (err, row) => {
+            if (row) {
+              reject(new Error("Duplicated link"));
+            } else if (err) {
+              reject(new Error(`Error while checking inverse connection existence: ${err.message}`));
+            } else {
+              resolve();
+            }
+          });
+        });
+    
+        // Insert the connection if all checks pass, creating a brand-new, unique linkage
+        const connection = await new Promise((resolve, reject) => {
+          db.run(sqlInsertConnection, [parent_id, children_id, connection_type], function (err) {
+            if (err) {
+              reject(new Error(`Failed to insert connection: ${err.message}`));
+            } else {
+              resolve({
+                parent_id: parent_id,
+                children_id: children_id,
+                connection_type: connection_type,
+              });
+            }
+          });
+        });
 
     return connection;
   };
 
+
+  async getConnectionsByDocumentTitle(title) {
+    return new Promise((resolve, reject) => {
+      const sqlQueryConnections = `
+        SELECT 
+          parent_id,
+          children_id ,
+          connection_type
+        FROM 
+          Connections
+        WHERE 
+          parent_id = ? OR children_id = ?
+      `;
+  
+      db.all(sqlQueryConnections, [title, title], (err, rows) => {
+        if (err) {
+          console.error("Errore durante il recupero delle connessioni:", err);
+          return reject(new Error("Errore durante il recupero delle connessioni."));
+        }
+        resolve(rows);
+      });
+    });
+  }
+  
+
+  async deleteConnection(doc1_id, doc2_id, connection_type) {
+    return new Promise((resolve, reject) => {
+      const sqlQueryDelete = `
+        DELETE FROM connections
+        WHERE 
+          (parent_id = ? AND children_id = ? AND connection_type = ?)
+          OR (children_id = ? AND parent_id = ? AND connection_type = ?)
+      `;
+  
+      db.run(sqlQueryDelete, [doc1_id, doc2_id, connection_type, doc1_id, doc2_id, connection_type], function(err) {
+        if (err) {
+          console.error("Errore durante la cancellazione delle connessioni:", err);
+          return reject(new Error("Errore durante la cancellazione delle connessioni"));
+        }
+  
+        // Se rows è 0, la connessione non esiste
+        if (this.changes === 0) {
+          console.log("Nessuna connessione trovata con questi parametri.");
+          return reject(new Error("Connessione non trovata"));
+        }
+  
+        resolve("Connessione eliminata con successo.");
+      });
+    });
+  }
+  
+
+
+
+
+
+
+
+
+
+
+  
+  
   async updatePointCoordinates(document_id, long, lat) {
     return new Promise((resolve, reject) => {
       // 1. Trova l'area_id associato al document_id
@@ -348,7 +565,7 @@ class DocumentDAO {
 
 
 
-            db.run(insertGeolocationQuery, [newAreaId, long, lat, "Point"], function (err) {
+            db.run(insertGeolocationQuery, [newAreaId, long, lat, "Point-Based Documents"], function (err) {
               if(err){
                 console.error("Errore durante aggiornamento associazione delle coordinate:", err);
                 return reject(new Error("Errore durante l'aggiornamento associazione delle coordinate."));            
@@ -431,16 +648,83 @@ class DocumentDAO {
 
   };
 
+  async util_getStakeholdersIDs(stakeholders) {
+    return new Promise((resolve, reject) => {
+      console.log('aroorororo', stakeholders);
+      
+      const stakeholderIds = [];
+      let processedCount = 0;
+  
+      const getStakeholderIdQuery = 'SELECT stakeholder_id FROM Stakeholders WHERE stakeholder_name = ?';
+  
+      for (const stakeholderName of stakeholders) {
+        console.log('ziocane: ' + stakeholderName);
+        
+        db.get(getStakeholderIdQuery, [stakeholderName], (err, row) => {
+          if (err) {
+            console.error("Errore durante il recupero dello stakeholder:", err);
+            return reject(err);
+          }
+  
+          if (row) {
+            stakeholderIds.push(row.stakeholder_id);
+          } else {
+            console.log(`Nessun ID trovato per lo stakeholder: ${stakeholderName}`);
+          }
+  
+          processedCount++;
+  
+          // Controlla se tutte le query sono state elaborate
+          if (processedCount === stakeholders.length) {
+            console.log('stakholder ids: ' + stakeholderIds);
+            
+            resolve(stakeholderIds);
+          }
+        });
+      }
+    });
+  }
 
-
-
-
-
-
+  async util_insertStakeholder(stakeholder_name) {
+    return new Promise((resolve, reject) => {
+      const checkStakeholderQuery = `
+        SELECT stakeholder_id FROM Stakeholders
+        WHERE stakeholder_name = ?
+      `;
+  
+      const insertStakeholderQuery = `
+        INSERT INTO Stakeholders (stakeholder_name)
+        VALUES (?)
+      `;
+  
+      db.get(checkStakeholderQuery, [stakeholder_name], (err, row) => {
+        if (err) {
+          console.error("Errore durante la verifica dello stakeholder:", err);
+          return reject(new Error("Errore durante la verifica dello stakeholder."));
+        }
+  
+        if (row) {
+          return resolve({
+            stakeholder_id: row.stakeholder_id,
+            stakeholder_name: stakeholder_name
+          });
+        }
+  
+        db.run(insertStakeholderQuery, [stakeholder_name], function (err) {
+          if (err) {
+            console.error("Errore durante l'inserimento dello stakeholder:", err);
+            return reject(new Error("Errore durante l'inserimento dello stakeholder."));
+          }
+          resolve({
+            stakeholder_id: this.lastID,
+            stakeholder_name: stakeholder_name
+          });
+        });
+      });
+    });
+  }
+  
 }
-
-
-
 
 export default DocumentDAO;
 
