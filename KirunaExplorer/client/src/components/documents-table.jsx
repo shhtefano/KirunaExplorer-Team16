@@ -17,10 +17,13 @@ import DocumentLink from "./document-link.jsx";
 import DocumentMap from "./DocumentMap.jsx"; // Importa il componente mappa
 import { MapIcon } from "lucide-react";
 import { Button } from "react-bootstrap";
+
+
 export default function DocumentsTable() {
   const [documents, setDocuments] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedType, setSelectedType] = useState("");
+  const [selectedLanguage, setSelectedLanguage] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
 
@@ -35,6 +38,11 @@ export default function DocumentsTable() {
     { type: "Conflict" },
     { type: "Consultation" },
   ];
+
+
+  const languages = ["All", "English", "Swedish"];
+
+
   const [selectedMapDocument, setSelectedMapDocument] = useState(null);
 
   const [selectedDocument, setSelectedDocument] = useState(null);
@@ -59,7 +67,9 @@ export default function DocumentsTable() {
     const matchesSearch = doc.document_title.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesType =
       selectedType && selectedType !== "All" ? doc.document_type === selectedType : true;
-    return matchesSearch && matchesType;
+    const matchesLanguage =
+      selectedLanguage && selectedLanguage !== "All" ? doc.language === selectedLanguage : true;
+    return matchesSearch && matchesType && matchesLanguage;
   });
 
   const totalPages = Math.ceil(filteredDocuments.length / itemsPerPage);
@@ -101,6 +111,27 @@ export default function DocumentsTable() {
           </SelectContent>
         </Select>
       </div>
+
+
+      <div className="mb-6 text-gray-700">
+        <p className="font-semibold mb-2">Select Language:</p>
+        <Select onValueChange={setSelectedLanguage} value={selectedLanguage}>
+          <SelectTrigger className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400">
+            <SelectValue placeholder="All" />
+          </SelectTrigger>
+          <SelectContent>
+            {languages.map((lang) => (
+              <SelectItem key={lang} value={lang}>
+                {lang}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+
+
+
 
   <Table className="border rounded table-fixed w-full">
     <TableHeader>
