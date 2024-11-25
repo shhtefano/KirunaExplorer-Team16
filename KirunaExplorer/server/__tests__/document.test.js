@@ -2,7 +2,556 @@ import { describe, test, expect, jest, beforeAll } from "@jest/globals";
 import { db } from "../db/db.mjs";
 import DocumentDAO from "../dao/document-dao.mjs";
 
-jest.mock('../db/db.mjs'); // Mocka il modulo del database
+jest.mock('../db/db.mjs'); 
+
+describe('Suite test for getDocuments function', () => {
+    let documentDAO;
+
+    beforeAll(() => {
+        documentDAO = new DocumentDAO();
+    });
+
+    afterEach(() => {
+        jest.clearAllMocks();
+    });
+
+    test('should retrieve documents successfully', async () => {
+        const mockDocuments = [
+            { id: 1, title: 'Document 1', description: 'Description 1' },
+            { id: 2, title: 'Document 2', description: 'Description 2' }
+        ];
+
+        db.all.mockImplementation((query, params, callback) => {
+            callback(null, mockDocuments);
+        });
+
+        const documents = await documentDAO.getDocuments();
+
+        expect(documents).toEqual(mockDocuments);
+        expect(db.all).toHaveBeenCalledTimes(1); 
+    });
+
+    test('should throw an error if retrieving documents fails', async () => {
+        db.all.mockImplementation((query, params, callback) => {
+            callback(new Error('Errore durante il recupero dei documenti.'), null);
+        });
+
+        await expect(documentDAO.getDocuments()).rejects.toThrow('Errore durante il recupero dei documenti.');
+        expect(db.all).toHaveBeenCalledTimes(1); 
+    });
+
+    test('should return an empty array if no documents are found', async () => {
+        db.all.mockImplementation((query, params, callback) => {
+            callback(null, []); 
+        });
+
+        const documents = await documentDAO.getDocuments();
+        expect(documents).toEqual([]); 
+        expect(db.all).toHaveBeenCalledTimes(1);
+    });
+
+    test('should handle documents with null fields', async () => {
+        const mockDocuments = [
+            { id: 1, title: null, description: 'Description 1' },
+            { id: 2, title: 'Document 2', description: null }
+        ];
+
+        db.all.mockImplementation((query, params, callback) => {
+            callback(null, mockDocuments);
+        });
+
+        const documents = await documentDAO.getDocuments();
+        expect(documents).toEqual(mockDocuments);
+        expect(documents[0].title).toBeNull(); 
+        expect(documents[1].description).toBeNull(); 
+        expect(db.all).toHaveBeenCalledTimes(1);
+    });
+
+    test('should call db.all with the correct query', async () => {
+        const expectedQuery = `
+            SELECT *
+            FROM Documents
+        `;
+
+        db.all.mockImplementation((query, params, callback) => {
+            callback(null, []); 
+        });
+
+        await documentDAO.getDocuments();
+        expect(db.all).toHaveBeenCalledWith(expectedQuery, expect.any(Array), expect.any(Function));
+    });
+
+    test('should return an empty array if no rows are returned by the query', async () => {
+        db.all.mockImplementation((query, params, callback) => {
+            callback(null, undefined); 
+        });
+
+        const documents = await documentDAO.getDocuments();
+        expect(documents).toEqual(undefined); 
+        expect(db.all).toHaveBeenCalledTimes(1);
+    });
+});
+
+describe('Suite test for getDocumentsGeo function', () => {
+    let documentDAO;
+
+    beforeAll(() => {
+        documentDAO = new DocumentDAO();
+
+        jest.spyOn(db, 'all').mockImplementation((query, params, callback) => {
+            const mockData = [
+                {
+                    document_id: 1,
+                    document_title: 'Document Title 1',
+                    stakeholder: 'Stakeholder 1',
+                    scale: 'Scale 1',
+                    issuance_date: '2023-01-01',
+                    language: 'English',
+                    pages: 10,
+                    document_type: 'Type 1',
+                    document_description: 'Description 1',
+                    area_id: 1,
+                    long: 12.34,
+                    lat: 56.78,
+                    area_name: 'Area 1'
+                },
+                {
+                    document_id: 1,
+                    document_title: 'Document Title 1',
+                    stakeholder: 'Stakeholder 1',
+                    scale: 'Scale 1',
+                    issuance_date: '2023-01-01',
+                    language: 'English',
+                    pages: 10,
+                    document_type: 'Type 1',
+                    document_description: 'Description 1',
+                    area_id: 1,
+                    long: 98.76,
+                    lat: 54.32,
+                    area_name: 'Area 1'
+                },
+                {
+                    document_id: 2,
+                    document_title: 'Document Title 2',
+                    stakeholder: 'Stakeholder 2',
+                    scale: 'Scale 2',
+                    issuance_date: '2022-01-01',
+                    language: 'Italian',
+                    pages: 20,
+                    document_type: 'Type 2',
+                    document_description: 'Description 2',
+                    area_id: 2,
+                    long: 13.37,
+                    lat: 57.89,
+                    area_name: 'Area 2'
+                }
+            ];
+
+            callback(null, mockData); 
+        });
+    });
+
+    afterEach(() => {
+        jest.clearAllMocks();
+    });
+
+    test('should correctly group and format documents with geolocations', async () => {
+        const result = await documentDAO.getDocumentsGeo();
+
+        expect(result).toEqual([
+            {
+                document_id: 1,
+                document_title: 'Document Title 1',
+                stakeholder: 'Stakeholder 1',
+                scale: 'Scale 1',
+                issuance_date: '2023-01-01',
+                language: 'English',
+                pages: 10,
+                document_type: 'Type 1',
+                document_description: 'Description 1',
+                geolocations: [
+                    {
+                        area_name: 'Area 1',
+                        coordinates: [
+                            { long: 12.34, lat: 56.78 },
+                            { long: 98.76, lat: 54.32 }
+                        ]
+                    }
+                ]
+            },
+            {
+                document_id: 2,
+                document_title: 'Document Title 2',
+                stakeholder: 'Stakeholder 2',
+                scale: 'Scale 2',
+                issuance_date: '2022-01-01',
+                language: 'Italian',
+                pages: 20,
+                document_type: 'Type 2',
+                document_description: 'Description 2',
+                geolocations: [
+                    {
+                        area_name: 'Area 2',
+                        coordinates: [
+                            { long: 13.37, lat: 57.89 }
+                        ]
+                    }
+                ]
+            }
+        ]);
+
+        expect(db.all).toHaveBeenCalledTimes(1);
+    });
+
+    test('should throw an error if there is an issue retrieving documents', async () => {
+        db.all.mockImplementationOnce((query, params, callback) => {
+            callback(new Error("Errore durante il recupero dei documenti"), null);
+        });
+
+        await expect(documentDAO.getDocumentsGeo()).rejects.toThrow("Errore durante il recupero dei documenti");
+        expect(db.all).toHaveBeenCalledTimes(1);
+    });
+
+    test('should handle multiple documents with the same area and different coordinates', async () => {
+        db.all.mockImplementationOnce((query, params, callback) => {
+            const mockData = [
+                {
+                    document_id: 1,
+                    document_title: 'Document Title 1',
+                    stakeholder: 'Stakeholder 1',
+                    scale: 'Scale 1',
+                    issuance_date: '2023-01-01',
+                    language: 'English',
+                    pages: 10,
+                    document_type: 'Type 1',
+                    document_description: 'Description 1',
+                    area_id: 1,
+                    long: 12.34,
+                    lat: 56.78,
+                    area_name: 'Area 1'
+                },
+                {
+                    document_id: 1,
+                    document_title: 'Document Title 1',
+                    stakeholder: 'Stakeholder 1',
+                    scale: 'Scale 1',
+                    issuance_date: '2023-01-01',
+                    language: 'English',
+                    pages: 10,
+                    document_type: 'Type 1',
+                    document_description: 'Description 1',
+                    area_id: 1,
+                    long: 98.76,
+                    lat: 54.32,
+                    area_name: 'Area 1'
+                },
+                {
+                    document_id: 2,
+                    document_title: 'Document Title 2',
+                    stakeholder: 'Stakeholder 2',
+                    scale: 'Scale 2',
+                    issuance_date: '2022-01-01',
+                    language: 'Italian',
+                    pages: 20,
+                    document_type: 'Type 2',
+                    document_description: 'Description 2',
+                    area_id: 1,
+                    long: 13.37,
+                    lat: 57.89,
+                    area_name: 'Area 1'
+                }
+            ];
+            callback(null, mockData);
+        });
+
+        const result = await documentDAO.getDocumentsGeo();
+
+        expect(result).toEqual([
+            {
+                document_id: 1,
+                document_title: 'Document Title 1',
+                stakeholder: 'Stakeholder 1',
+                scale: 'Scale 1',
+                issuance_date: '2023-01-01',
+                language: 'English',
+                pages: 10,
+                document_type: 'Type 1',
+                document_description: 'Description 1',
+                geolocations: [
+                    {
+                        area_name: 'Area 1',
+                        coordinates: [
+                            { long: 12.34, lat: 56.78 },
+                            { long: 98.76, lat: 54.32 }
+                        ]
+                    }
+                ]
+            },
+            {
+                document_id: 2,
+                document_title: 'Document Title 2',
+                stakeholder: 'Stakeholder 2',
+                scale: 'Scale 2',
+                issuance_date: '2022-01-01',
+                language: 'Italian',
+                pages: 20,
+                document_type: 'Type 2',
+                document_description: 'Description 2',
+                geolocations: [
+                    {
+                        area_name: 'Area 1',
+                        coordinates: [
+                            { long: 13.37, lat: 57.89 }
+                        ]
+                    }
+                ]
+            }
+        ]);
+    });
+
+    test('should return an empty array if no documents are found', async () => {
+        db.all.mockImplementationOnce((query, params, callback) => {
+            callback(null, []); 
+        });
+
+        const result = await documentDAO.getDocumentsGeo();
+
+        expect(result).toEqual([]); 
+        expect(db.all).toHaveBeenCalledTimes(1);
+    });
+
+    test('should correctly handle multiple documents each with a single area', async () => {
+        db.all.mockImplementationOnce((query, params, callback) => {
+            const mockData = [
+                {
+                    document_id: 1,
+                    document_title: 'Document Title 1',
+                    stakeholder: 'Stakeholder 1',
+                    scale: 'Scale 1',
+                    issuance_date: '2023-01-01',
+                    language: 'English',
+                    pages: 10,
+                    document_type: 'Type 1',
+                    document_description: 'Description 1',
+                    area_id: 1,
+                    long: 12.34,
+                    lat: 56.78,
+                    area_name: 'Area 1'
+                },
+                {
+                    document_id: 2,
+                    document_title: 'Document Title 2',
+                    stakeholder: 'Stakeholder 2',
+                    scale: 'Scale 2',
+                    issuance_date: '2022-01-01',
+                    language: 'Italian',
+                    pages: 20,
+                    document_type: 'Type 2',
+                    document_description: 'Description 2',
+                    area_id: 2,
+                    long: 98.76,
+                    lat: 54.32,
+                    area_name: 'Area 2'
+                }
+            ];
+            callback(null, mockData);
+        });
+
+        const result = await documentDAO.getDocumentsGeo();
+
+        expect(result).toEqual([
+            {
+                document_id: 1,
+                document_title: 'Document Title 1',
+                stakeholder: 'Stakeholder 1',
+                scale: 'Scale 1',
+                issuance_date: '2023-01-01',
+                language: 'English',
+                pages: 10,
+                document_type: 'Type 1',
+                document_description: 'Description 1',
+                geolocations: [
+                    {
+                        area_name: 'Area 1',
+                        coordinates: [
+                            { long: 12.34, lat: 56.78 }
+                        ]
+                    }
+                ]
+            },
+            {
+                document_id: 2,
+                document_title: 'Document Title 2',
+                stakeholder: 'Stakeholder 2',
+                scale: 'Scale 2',
+                issuance_date: '2022-01-01',
+                language: 'Italian',
+                pages: 20,
+                document_type: 'Type 2',
+                document_description: 'Description 2',
+                geolocations: [
+                    {
+                        area_name: 'Area 2',
+                        coordinates: [
+                            { long: 98.76, lat: 54.32 }
+                        ]
+                    }
+                ]
+            }
+        ]);
+    });
+
+    test('should correctly group documents with multiple geolocations for each document', async () => {
+        const mockData = [
+            {
+                document_id: 1,
+                document_title: 'Document Title 1',
+                stakeholder: 'Stakeholder 1',
+                scale: 'Scale 1',
+                issuance_date: '2023-01-01',
+                language: 'English',
+                pages: 10,
+                document_type: 'Type 1',
+                document_description: 'Description 1',
+                area_id: 1,
+                long: 12.34,
+                lat: 56.78,
+                area_name: 'Area 1'
+            },
+            {
+                document_id: 1,
+                document_title: 'Document Title 1',
+                stakeholder: 'Stakeholder 1',
+                scale: 'Scale 1',
+                issuance_date: '2023-01-01',
+                language: 'English',
+                pages: 10,
+                document_type: 'Type 1',
+                document_description: 'Description 1',
+                area_id: 2,
+                long: 23.45,
+                lat: 67.89,
+                area_name: 'Area 2'
+            }
+        ];
+    
+        db.all.mockImplementationOnce((query, params, callback) => {
+            callback(null, mockData); 
+        });
+    
+        const result = await documentDAO.getDocumentsGeo();
+    
+        expect(result).toEqual([
+            {
+                document_id: 1,
+                document_title: 'Document Title 1',
+                stakeholder: 'Stakeholder 1',
+                scale: 'Scale 1',
+                issuance_date: '2023-01-01',
+                language: 'English',
+                pages: 10,
+                document_type: 'Type 1',
+                document_description: 'Description 1',
+                geolocations: [
+                    { area_name: 'Area 1', coordinates: [{ long: 12.34, lat: 56.78 }] },
+                    { area_name: 'Area 2', coordinates: [{ long: 23.45, lat: 67.89 }] }
+                ]
+            }
+        ]);
+    });
+
+    test('should return multiple documents correctly', async () => {
+        const mockData = [
+            {
+                document_id: 1,
+                document_title: 'Document Title 1',
+                stakeholder: 'Stakeholder 1',
+                scale: 'Scale 1',
+                issuance_date: '2023-01-01',
+                language: 'English',
+                pages: 10,
+                document_type: 'Type 1',
+                document_description: 'Description 1',
+                area_id: 1,
+                long: 12.34,
+                lat: 56.78,
+                area_name: 'Area 1'
+            },
+            {
+                document_id: 2,
+                document_title: 'Document Title 2',
+                stakeholder: 'Stakeholder 2',
+                scale: 'Scale 2',
+                issuance_date: '2022-01-01',
+                language: 'Italian',
+                pages: 20,
+                document_type: 'Type 2',
+                document_description: 'Description 2',
+                area_id: 2,
+                long: 34.56,
+                lat: 78.90,
+                area_name: 'Area 2'
+            }
+        ];
+    
+        db.all.mockImplementationOnce((query, params, callback) => {
+            callback(null, mockData);
+        });
+    
+        const result = await documentDAO.getDocumentsGeo();
+    
+        expect(result).toEqual([
+            {
+                document_id: 1,
+                document_title: 'Document Title 1',
+                stakeholder: 'Stakeholder 1',
+                scale: 'Scale 1',
+                issuance_date: '2023-01-01',
+                language: 'English',
+                pages: 10,
+                document_type: 'Type 1',
+                document_description: 'Description 1',
+                geolocations: [
+                    { area_name: 'Area 1', coordinates: [{ long: 12.34, lat: 56.78 }] }
+                ]
+            },
+            {
+                document_id: 2,
+                document_title: 'Document Title 2',
+                stakeholder: 'Stakeholder 2',
+                scale: 'Scale 2',
+                issuance_date: '2022-01-01',
+                language: 'Italian',
+                pages: 20,
+                document_type: 'Type 2',
+                document_description: 'Description 2',
+                geolocations: [
+                    { area_name: 'Area 2', coordinates: [{ long: 34.56, lat: 78.90 }] }
+                ]
+            }
+        ]);
+    });
+
+    test('should return an empty array if no documents are found', async () => {
+        db.all.mockImplementationOnce((query, params, callback) => {
+            callback(null, []); 
+        });
+    
+        const result = await documentDAO.getDocumentsGeo();
+    
+        expect(result).toEqual([]); 
+    });
+    test('should throw an error if the database query fails', async () => {
+        db.all.mockImplementationOnce((query, params, callback) => {
+            callback(new Error("Database query failed"), null);
+        });
+    
+        await expect(documentDAO.getDocumentsGeo()).rejects.toThrow("Errore durante il recupero dei documenti");
+    
+        expect(db.all).toHaveBeenCalledTimes(1);
+    });
+    
+});
 
 describe('Suite test for insertDocument function', () => {
     let documentDAO;
@@ -254,7 +803,6 @@ describe("Suite test for linkDocuments function", () => {
         documentDAO = new DocumentDAO();
     });
 
-    describe("Test for linkDocuments", () => {
         test("Successful creation of a link between documents", async () => {
             jest.spyOn(db, "get")
                 .mockImplementationOnce((sql, params, callback) => {
@@ -339,7 +887,7 @@ describe("Suite test for linkDocuments function", () => {
             db.get.mockRestore();
             db.run.mockRestore();
         });
-    });
+    
 
     test("Error retrieving child node", async () => {
         jest.spyOn(db, "get")

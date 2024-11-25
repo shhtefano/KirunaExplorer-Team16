@@ -4,208 +4,390 @@ class DocumentDAO {
 
   async getDocuments() {
     return new Promise((resolve, reject) => {
-        const query = `
-            SELECT *
-            FROM Documents
-        `;
-
-        db.all(query, [], (err, rows) => {
-            if (err) {
-                console.error("Errore durante il recupero dei documenti:", err);
-                return reject(new Error("Errore durante il recupero dei documenti."));
-            }
-            
-            // Restituisce l'elenco dei documenti recuperati
-            resolve(rows);
+      const query = `
+        SELECT 
+          D.document_id,
+          D.document_title,
+          D.scale,
+          D.issuance_date,
+          D.language,
+          D.pages,
+          D.document_type,
+          D.document_description,
+          S.stakeholder_name
+        FROM Documents D
+        JOIN Document_Stakeholder DS ON D.document_id = DS.document_id
+        JOIN Stakeholders S ON DS.stakeholder_id = S.stakeholder_id;
+      `;
+  
+      db.all(query, [], (err, rows) => {
+        if (err) {
+          console.error("Errore durante il recupero dei documenti:", err);
+          return reject(new Error("Errore durante il recupero dei documenti."));
+        }
+  
+        // Raggruppa i dati
+        const documentsMap = {};
+  
+        rows.forEach(row => {
+          const docId = row.document_id;
+  
+          if (!documentsMap[docId]) {
+            // Crea un nuovo oggetto per il documento
+            documentsMap[docId] = {
+              document_id: row.document_id,
+              document_title: row.document_title,
+              scale: row.scale,
+              issuance_date: row.issuance_date,
+              language: row.language,
+              pages: row.pages,
+              document_type: row.document_type,
+              document_description: row.document_description,
+              stakeholders: [], // Inizializza un array per gli stakeholder
+            };
+          }
+  
+          // Aggiungi il nome dello stakeholder all'array del documento
+          documentsMap[docId].stakeholders.push(row.stakeholder_name);
         });
+  
+        // Converti la mappa in un array
+        const documents = Object.values(documentsMap);
+        console.log(documents);
+        
+        resolve(documents);
+      });
     });
-}
+  }
 
-async getDocumentsGeo() {
-  return new Promise((resolve, reject) => {
-      const query = `
-          SELECT *
-          FROM Documents D, Geolocation G, Geolocation_Documents GD
-          WHERE D.document_id = GD.document_id AND G.area_id = GD.area_id
-      `;
-
-      db.all(query, [], (err, rows) => {
-          if (err) {
-              console.error("Errore durante il recupero dei documenti:", err);
-              return reject(new Error("Errore durante il recupero dei documenti."));
-          }
-          
-          // Restituisce l'elenco dei documenti recuperati
-          resolve(rows);
-      });
-  });
-}
-
-async getDocumentsGeo() {
-  return new Promise((resolve, reject) => {
-      const query = `
-          SELECT *
-          FROM Documents D, Geolocation G, Geolocation_Documents GD
-          WHERE D.document_id = GD.document_id AND G.area_id = GD.area_id
-      `;
-
-      db.all(query, [], (err, rows) => {
-          if (err) {
-              console.error("Errore durante il recupero dei documenti:", err);
-              return reject(new Error("Errore durante il recupero dei documenti."));
-          }
-          
-          // Restituisce l'elenco dei documenti recuperati
-          resolve(rows);
-      });
-  });
-}
-
-  async insertDocument(document_title, stakeholder, scale, issuance_date, language, pages, document_type, document_description, area_name, coords) {
+  async getStakeholders() {
     return new Promise((resolve, reject) => {
-        db.serialize(() => {
-            let coordinates = [];
-            coordinates.push(coords);   //devo mettere le coordinate nell'array perchè sennò da errore la map
-           
-            db.run('BEGIN TRANSACTION', (err) => {
-                if (err) return reject(err);
+      const query = `SELECT stakeholder_name FROM Stakeholders;`;
+  
+      db.all(query, [], (err, rows) => {
+        if (err) {
+          console.error("Errore durante il recupero dei documenti:", err);
+          return reject(new Error("Errore durante il recupero dei documenti."));
+        }
+  
+        console.log(rows);
+        
+        resolve(rows);
+      });
+    });
+  }
 
-                
-                const checkDocumentQuery = 'SELECT COUNT(*) AS count FROM Documents WHERE document_title = ?';
-                db.get(checkDocumentQuery, [document_title], (err, row) => {
-                    if (err) {
-                        db.run('ROLLBACK');
-                        return reject(err);
-                    }
+  
+  async getDocumentsGeo() {
+    return new Promise((resolve, reject) => {
+      const query = `
+        SELECT 
+          D.document_id, D.document_title, D.scale, D.issuance_date,
+          D.language, D.pages, D.document_type, D.document_description,
+          G.area_id, G.long, G.lat, G.area_name,
+          S.stakeholder_name
+        FROM Documents D
+        JOIN Geolocation_Documents GD ON D.document_id = GD.document_id
+        JOIN Geolocation G ON G.area_id = GD.area_id
+        JOIN Document_Stakeholder DS ON D.document_id = DS.document_id
+        JOIN Stakeholders S ON DS.stakeholder_id = S.stakeholder_id
+      `;
+  
+      db.all(query, [], (err, rows) => {
+        if (err) {
+          console.error("Errore durante il recupero dei documenti:", err);
+          return reject(new Error("Errore durante il recupero dei documenti."));
+        }
+  
+        // Raggruppa i risultati per documento
+        const documentsMap = {};
+  
+        rows.forEach(row => {
+          const docId = row.document_id;
+  
+          // Se il documento non esiste ancora nella mappa, inizializzalo
+          if (!documentsMap[docId]) {
+            documentsMap[docId] = {
+              document_id: row.document_id,
+              document_title: row.document_title,
+              scale: row.scale,
+              issuance_date: row.issuance_date,
+              language: row.language,
+              pages: row.pages,
+              document_type: row.document_type,
+              document_description: row.document_description,
+              stakeholders: [], // Array per gli stakeholder
+              geolocations: {} // Oggetto per le geolocalizzazioni
+            };
+          }
+  
+          // Aggiungi lo stakeholder se non è già presente
+          const stakeholderName = row.stakeholder_name;
+          if (!documentsMap[docId].stakeholders.includes(stakeholderName)) {
+            documentsMap[docId].stakeholders.push(stakeholderName);
+          }
+  
+          // Aggiungi le coordinate per l'area_id corrente
+          const areaId = row.area_id;
+          if (!documentsMap[docId].geolocations[areaId]) {
+            documentsMap[docId].geolocations[areaId] = {
+              area_name: row.area_name,
+              coordinates: []
+            };
+          }
+  
+          // Aggiungi la coordinata corrente
+          documentsMap[docId].geolocations[areaId].coordinates.push({
+            long: row.long,
+            lat: row.lat
+          });
+        });
+  
+        // Trasforma la mappa in un array di documenti con geolocalizzazioni
+        const documentsArray = Object.values(documentsMap).map(document => {
+          document.geolocations = Object.values(document.geolocations);
+          return document;
+        });
 
-                    if (row.count > 0) {
-                        db.run('ROLLBACK');
-                        return reject(403);
-                    }
+        console.log(documentsArray);
+        
+  
+        // Restituisce l'elenco dei documenti strutturato come richiesto
+        resolve(documentsArray);
+      });
+    });
+  }
+  
+  async getDocumentPosition(document_id) {
+    return new Promise((resolve, reject) => {
+      // Query SQL per ottenere i dettagli del documento e le coordinate
+      const query = `
+        SELECT 
+          d.document_id,
+          d.document_title,
+          d.scale,
+          d.issuance_date,
+          d.language,
+          d.pages,
+          d.document_type,
+          d.document_description,
+          g.lat,
+          g.long,
+          g.area_name
+        FROM 
+          Documents d
+        LEFT JOIN 
+          Geolocation_Documents gd 
+          ON d.document_id = gd.document_id
+        LEFT JOIN 
+          Geolocation g 
+          ON gd.area_id = g.area_id
+        WHERE 
+          d.document_id = ?
+      `;
+
+      db.all(query, [document_id], (err, rows) => {
+        if (err) {
+          return reject(err); // Gestione errori
+        }
+
+        if (rows.length === 0) {
+          return resolve(null); // Documento non trovato
+        }
+
+        // Estrai informazioni comuni del documento (valori identici in tutte le righe)
+        const documentInfo = {
+          document_id: rows[0].document_id,
+          document_title: rows[0].document_title,
+          scale: rows[0].scale,
+          issuance_date: rows[0].issuance_date,
+          language: rows[0].language,
+          pages: rows[0].pages,
+          document_type: rows[0].document_type,
+          document_description: rows[0].document_description,
+          area_name: rows[0].area_name, // Area associata
+        };
+
+        // Mappa le coordinate in un array
+        const coordinates = rows.map(row => ({
+          lat: row.lat,
+          lng: row.long,
+        }));
+console.log(documentInfo, coordinates);
+
+        // Restituisci il risultato
+        resolve({
+          ...documentInfo,
+          coordinates,
+        });
+      });
+    });
+  }
 
 
-                    const insertDocumentQuery = `
-                        INSERT INTO Documents(document_title, stakeholder, scale, issuance_date, language, pages, document_type, document_description) 
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+  async insertDocument(document_title, stakeholders, scale, issuance_date, language, pages, document_type, document_description, area_name, coords) {
+    //Converting stakeholder names to stakeholderIds
+    let stakeholderIds = [];
+    
+    stakeholderIds= await this.util_getStakeholdersIDs(stakeholders);  
+    
+    return new Promise((resolve, reject) => {
+      db.serialize(() => {
+        let coordinates = [];
+        coordinates.push(coords);   //devo mettere le coordinate nell'array perchè sennò da errore la map
+        console.log(stakeholderIds);
+        db.run('BEGIN TRANSACTION', (err) => {
+          if (err) return reject(err);
+
+
+          const checkDocumentQuery = 'SELECT COUNT(*) AS count FROM Documents WHERE document_title = ?';
+          db.get(checkDocumentQuery, [document_title], (err, row) => {
+            if (err) {
+              db.run('ROLLBACK');
+              return reject(err);
+            }
+
+            if (row.count > 0) {
+              db.run('ROLLBACK');
+              return reject(403);
+            }
+
+
+            const insertDocumentQuery = `
+                        INSERT INTO Documents(document_title, scale, issuance_date, language, pages, document_type, document_description) 
+                        VALUES (?, ?, ?, ?, ?, ?, ?)
                     `;
-                    db.run(insertDocumentQuery, [document_title, stakeholder, scale, issuance_date, language, pages, document_type, document_description], function (err) {                     
-                        if (err) {
-                          console.log(err);
+            db.run(insertDocumentQuery, [document_title, scale, issuance_date, language, pages, document_type, document_description], function (err) {
+              if (err) {
+                console.log(err);
 
-                            db.run('ROLLBACK');
-                            return reject(err);
-                        }
-                        
-                        const document_id = this.lastID;
+                db.run('ROLLBACK');
+                return reject(err);
+              }
 
-                       
-                        const checkAreaQuery = `SELECT area_id FROM Geolocation WHERE area_name = ?`;
-                        db.get(checkAreaQuery, [area_name], (err, areaRow) => {
-                            if (err) {
-                                db.run('ROLLBACK');
-                                return reject(err);
-                            }
+              const document_id = this.lastID;
 
-                            if (areaRow) {
-                                const areaId = areaRow.area_id;
+              const insertDocumentStakeholderQuery = `
+              INSERT INTO Document_Stakeholder (stakeholder_id,document_id) 
+              VALUES (?, ?)
+            `; 
+            stakeholderIds.forEach(stakeholder => {
+              db.run(insertDocumentStakeholderQuery, [stakeholder,document_id], function (err) {
+                if (err) {
+                  db.run('ROLLBACK');
+                  return reject(err);
+                }
+              });
+            });
 
-                                const geolocationDocQuery = `
+
+              const checkAreaQuery = `SELECT area_id FROM Geolocation WHERE area_name = ?`;
+              db.get(checkAreaQuery, [area_name], (err, areaRow) => {
+                if (err) {
+                  db.run('ROLLBACK');
+                  return reject(err);
+                }
+
+                if (areaRow && area_name == 'Whole Area') {
+                  const areaId = areaRow.area_id;
+
+                  const geolocationDocQuery = `
                                     INSERT INTO Geolocation_Documents (area_id, document_id) 
                                     VALUES (?, ?)
                                 `;
-                                db.run(geolocationDocQuery, [areaId, document_id], (err) => {
-                                    if (err) {
-                                        db.run('ROLLBACK');
-                                        return reject(err);
-                                    }
-                                    db.run('COMMIT', (err) => {
-                                        if (err) {
-                                            db.run('ROLLBACK');
-                                            return reject(err);
-                                        }
-                                        resolve();
-                                    });
-                                });
-                            } else {
-                                const maxIdQuery = `SELECT MAX(area_id) as maxId FROM Geolocation`;
+                  db.run(geolocationDocQuery, [areaId, document_id], (err) => {
+                    if (err) {
+                      db.run('ROLLBACK');
+                      return reject(err);
+                    }
+                    db.run('COMMIT', (err) => {
+                      if (err) {
+                        db.run('ROLLBACK');
+                        return reject(err);
+                      }
+                      resolve();
+                    });
+                  });
+                } else {
+                  const maxIdQuery = `SELECT MAX(area_id) as maxId FROM Geolocation`;
 
-                                db.get(maxIdQuery, [], (err, row) => {
-                                    if (err) {
-                                        db.run('ROLLBACK');
-                                        return reject(err);
-                                    }
+                  db.get(maxIdQuery, [], (err, row) => {
+                    if (err) {
+                      db.run('ROLLBACK');
+                      return reject(err);
+                    }
 
-                                    const newAreaId = (row.maxId || 0) + 1;
-                                    const insertGeolocationQuery = `
+                    const newAreaId = (row.maxId || 0) + 1;
+                    const insertGeolocationQuery = `
                                         INSERT INTO Geolocation (area_id, long, lat, area_name) 
                                         VALUES (?, ?, ?, ?)
                                     `;
 
-                                    if(coordinates.length !== 1) {
-                                        db.run('ROLLBACK');
-                                        return reject(422);
-                                    }
+                    if (coordinates.length !== 1) {
+                      db.run('ROLLBACK');
+                      return reject(422);
+                    }
 
-                                    
-                                    const insertCoordinates = coordinates.map(coord => {
-                                        return new Promise((resolveCoord, rejectCoord) => {
-                                            db.run(insertGeolocationQuery, [newAreaId, coord.long, coord.lat, "Point"], function(err) {
-                                                if (err) return rejectCoord(err);
-                                                resolveCoord();
-                                            });
-                                        });
-                                    });
 
-                                    Promise.all(insertCoordinates).then(() => {
-                                        const geolocationDocQuery = `
+                    const insertCoordinates = coordinates.map(coord => {
+                      return new Promise((resolveCoord, rejectCoord) => {
+                        db.run(insertGeolocationQuery, [newAreaId, coord.long, coord.lat, "Point-Based Documents"], function (err) {
+                          if (err) return rejectCoord(err);
+                          resolveCoord();
+                        });
+                      });
+                    });
+
+                    Promise.all(insertCoordinates).then(() => {
+                      const geolocationDocQuery = `
                                             INSERT INTO Geolocation_Documents (area_id, document_id) 
                                             VALUES (?, ?)
                                         `;
 
-                                        db.run(geolocationDocQuery, [newAreaId, document_id], (err) => {
-                                            if (err) {
-                                                db.run('ROLLBACK');
-                                                return reject(err);
-                                            }
+                      db.run(geolocationDocQuery, [newAreaId, document_id], (err) => {
+                        if (err) {
+                          db.run('ROLLBACK');
+                          return reject(err);
+                        }
 
-                                            db.run('COMMIT', (err) => {
-                                                if (err) {
-                                                    db.run('ROLLBACK');
-                                                    return reject(err);
-                                                }
-                                                resolve();
-                                            });
-                                        });
-                                    }).catch(err => {
-                                        db.run('ROLLBACK');
-                                        reject(err);
-                                    });
-                                });
-                            }
+                        db.run('COMMIT', (err) => {
+                          if (err) {
+                            db.run('ROLLBACK');
+                            return reject(err);
+                          }
+                          resolve();
                         });
+                      });
+                    }).catch(err => {
+                      db.run('ROLLBACK');
+                      reject(err);
                     });
-                });
+                  });
+                }
+              });
             });
+          });
         });
+      });
     });
-}
+  }
 
-    async linkDocuments(parent_id, children_id, connection_type) {
+  async linkDocuments(parent_id, children_id, connection_type) {
 
-        // SQL queries to retrieve and insert data
-        const sqlQueryNodeExistence = `
+    // SQL queries to retrieve and insert data
+    const sqlQueryNodeExistence = `
               SELECT * FROM Documents
               WHERE document_title = ?
             `;
-        const sqlQueryConnectionExistence = `
+    const sqlQueryConnectionExistence = `
               SELECT * FROM Connections
               WHERE parent_id = ? AND children_id = ? AND connection_type = ?
             `;
-        const sqlQueryInverseConnectionExistence = `
+    const sqlQueryInverseConnectionExistence = `
               SELECT * FROM Connections
               WHERE parent_id = ? AND children_id = ? AND connection_type = ?
             `;
-        const sqlInsertConnection = `
+    const sqlInsertConnection = `
               INSERT INTO Connections (parent_id, children_id, connection_type)
               VALUES (?, ?, ?)
             `;
@@ -278,9 +460,207 @@ async getDocumentsGeo() {
           });
         });
 
-        return connection;
-    };
+    return connection;
+  };
 
+  async updatePointCoordinates(document_id, long, lat) {
+    return new Promise((resolve, reject) => {
+      // 1. Trova l'area_id associato al document_id
+      const findAreaIdQuery = `
+        SELECT GD.area_id 
+        FROM Geolocation_Documents GD
+        WHERE GD.document_id = ?
+      `;
+
+      db.get(findAreaIdQuery, [document_id], (err, row) => {
+        if (err) {
+          console.error("Errore durante il recupero dell'area_id:", err);
+          return reject(new Error("Errore durante il recupero dell'area_id."));
+        }
+
+        if (!row) {
+          // Se non troviamo un'area_id associata al document_id
+          return reject(new Error("Nessun area_id trovato per il document_id fornito."));
+        }
+
+        const areaId = row.area_id;
+        if (areaId == 0) {
+          // 1. Il punto era associato ad un'area
+          const maxIdQuery = `SELECT MAX(area_id) as maxId FROM Geolocation`;
+
+          db.get(maxIdQuery, [], (err, row) => {
+            if (err) {
+              db.run('ROLLBACK');
+              return reject(err);
+            }
+
+            const newAreaId = (row.maxId || 0) + 1;
+            const insertGeolocationQuery = `
+                                INSERT INTO Geolocation (area_id, long, lat, area_name) 
+                                VALUES (?, ?, ?, ?)
+                            `;
+
+
+
+            db.run(insertGeolocationQuery, [newAreaId, long, lat, "Point-Based Documents"], function (err) {
+              if(err){
+                console.error("Errore durante aggiornamento associazione delle coordinate:", err);
+                return reject(new Error("Errore durante l'aggiornamento associazione delle coordinate."));            
+
+              }
+            });
+
+            const updateCoordinatesQuery = `
+              UPDATE Geolocation_Documents
+              SET area_id = ?
+              WHERE document_id = ?
+            `;
+
+            db.run(updateCoordinatesQuery, [newAreaId, document_id], function (err) {
+              if (err) {
+                console.error("Errore durante l'aggiornamento delle coordinate:", err);
+                return reject(new Error("Errore durante l'aggiornamento delle coordinate."));
+              }
+
+              // Restituisce l'area_id e le nuove coordinate
+              resolve({
+                area_id: newAreaId,
+                document_id: document_id
+              });
+            });
+
+          });
+
+        } else {
+
+          // 2. Aggiorna le coordinate nella tabella Geolocation
+          const updateCoordinatesQuery = `
+            UPDATE Geolocation
+            SET long = ?, lat = ?
+            WHERE area_id = ?
+          `;
+
+          db.run(updateCoordinatesQuery, [long, lat, areaId], function (err) {
+            if (err) {
+              console.error("Errore durante l'aggiornamento delle coordinate:", err);
+              return reject(new Error("Errore durante l'aggiornamento delle coordinate."));
+            }
+
+            // Restituisce l'area_id e le nuove coordinate
+            resolve({
+              area_id: areaId,
+              long: long,
+              lat: lat
+            });
+          });
+        }
+      });
+    });
+  }
+
+  async updateDocumentArea(document_id, area_id) {
+    return new Promise((resolve, reject) => {
+
+      const updateCoordinatesQuery = `
+      UPDATE Geolocation_Documents
+      SET area_id = ?
+      WHERE document_id = ?
+    `;
+
+      db.run(updateCoordinatesQuery, [area_id, document_id], function (err) {
+        if (err) {
+          console.error("Errore durante l'aggiornamento delle coordinate:", err);
+          return reject(new Error("Errore durante l'aggiornamento delle coordinate."));
+        }
+        
+        // Restituisce l'area_id e le nuove coordinate
+        resolve({
+          area_id: area_id,
+          document_id: document_id
+        });
+      });
+
+    });
+
+
+  };
+
+  async util_getStakeholdersIDs(stakeholders) {
+    return new Promise((resolve, reject) => {
+      console.log('aroorororo', stakeholders);
+      
+      const stakeholderIds = [];
+      let processedCount = 0;
+  
+      const getStakeholderIdQuery = 'SELECT stakeholder_id FROM Stakeholders WHERE stakeholder_name = ?';
+  
+      for (const stakeholderName of stakeholders) {
+        console.log('ziocane: ' + stakeholderName);
+        
+        db.get(getStakeholderIdQuery, [stakeholderName], (err, row) => {
+          if (err) {
+            console.error("Errore durante il recupero dello stakeholder:", err);
+            return reject(err);
+          }
+  
+          if (row) {
+            stakeholderIds.push(row.stakeholder_id);
+          } else {
+            console.log(`Nessun ID trovato per lo stakeholder: ${stakeholderName}`);
+          }
+  
+          processedCount++;
+  
+          // Controlla se tutte le query sono state elaborate
+          if (processedCount === stakeholders.length) {
+            console.log('stakholder ids: ' + stakeholderIds);
+            
+            resolve(stakeholderIds);
+          }
+        });
+      }
+    });
+  }
+
+  async util_insertStakeholder(stakeholder_name) {
+    return new Promise((resolve, reject) => {
+      const checkStakeholderQuery = `
+        SELECT stakeholder_id FROM Stakeholders
+        WHERE stakeholder_name = ?
+      `;
+  
+      const insertStakeholderQuery = `
+        INSERT INTO Stakeholders (stakeholder_name)
+        VALUES (?)
+      `;
+  
+      db.get(checkStakeholderQuery, [stakeholder_name], (err, row) => {
+        if (err) {
+          console.error("Errore durante la verifica dello stakeholder:", err);
+          return reject(new Error("Errore durante la verifica dello stakeholder."));
+        }
+  
+        if (row) {
+          return resolve({
+            stakeholder_id: row.stakeholder_id,
+            stakeholder_name: stakeholder_name
+          });
+        }
+  
+        db.run(insertStakeholderQuery, [stakeholder_name], function (err) {
+          if (err) {
+            console.error("Errore durante l'inserimento dello stakeholder:", err);
+            return reject(new Error("Errore durante l'inserimento dello stakeholder."));
+          }
+          resolve({
+            stakeholder_id: this.lastID,
+            stakeholder_name: stakeholder_name
+          });
+        });
+      });
+    });
+  }
+  
 }
 
 export default DocumentDAO;

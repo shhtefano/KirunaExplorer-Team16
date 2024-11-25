@@ -26,13 +26,13 @@ export const descriptionRules = {
     message: "Description must be at least 2 characters",
   },
   maxLength: {
-    value: 200,
-    message: "Description must be less than 200 characters",
+    value: 1000,
+    message: "Description must be less than 1000 characters",
   },
 };
 
 export const documentRules = {
-  required: "You have to select a document",
+  required: "A document title is required",
 };
 export const stakeholderRules = {
   requried: "You have to select a stakeholder",

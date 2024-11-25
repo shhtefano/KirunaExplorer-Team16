@@ -1,4 +1,10 @@
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  CardFooter,
+} from "@/components/ui/card";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -42,6 +48,9 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import API from "../services/API";
 import DocumentLinkOnCreation from "./creation-document-link.jsx";
+import Snackbar from "@mui/material/Snackbar";
+import Alert from "@mui/material/Alert";
+import MapIcon from "@mui/icons-material/Map";
 
 const documents = [
   { type: "Design", icon: null },
@@ -54,46 +63,54 @@ const documents = [
   { type: "Consultation", icon: null },
 ];
 
-const stakeholders = [
-  "LKAB",
-  "Municipality",
-  "Regional authority",
-  "Architecture firms",
-  "Citizens",
-  "Others",
-];
+// const stakeholders = [
+//   "LKAB",
+//   "Municipality",
+//   "Regional authority",
+//   "Architecture firms",
+//   "Citizens",
+//   "Others",
+// ];
 
 const DocumentDescriptionForm = () => {
   const [isWholeArea, setIsWholeArea] = useState(false);
   const [isPending, startTransition] = useTransition();
-  const [showPopup, setShowPopup] = useState(false); // New state for the popup
+  const [showPopupMap, setShowPopupMap] = useState(false); // New state for the popup for linking document
+  const [showPopupLink, setShowPopupLink] = useState(false); // New state for the popup for showing map
+  const [stakeholders, setStakeholders] = useState([]); // Stato per gestire gli stakeholder esistenti
+  const [isLoading, setIsLoading] = useState(false); // Stato di caricamento
+  const [stakeholderInput, setStakeholderInput] = useState('');
+
   const [documentId, setDocumentId] = useState(null);
   const [temporaryLinks, setTemporaryLinks] = useState([]);
+  const [toast, setToast] = useState({
+    open: false,
+    message: "",
+    severity: "success",
+  });
 
   const form = useForm({
-    // Initialized for uncontrolled component error
     defaultValues: {
       document_title: "",
       document_description: "",
       document_type: "",
-      stakeholder: "",
+      stakeholders: [],
       scale: "",
       issuance_date: "",
       language: "",
-      pages: 0,
-      latitude: 0,
-      longitude: 0,
-      link: ""
+      pages: "",
+      area_name: "",
+      latitude: "",
+      longitude: "",
     },
   });
 
   const onSaveTemporaryLinks = () => {
-    setShowPopup(false); // Close the dialog after saving links
+    setShowPopupLink(false); // Close the dialog after saving links
   };
 
   const onSubmit = async (values) => {
     startTransition(async () => {
-      console.log(values);
       const body = {
         ...values,
         scale: values.scale.replace(/\s+/g, ""),
@@ -107,8 +124,42 @@ const DocumentDescriptionForm = () => {
       console.log({ ...body });
       // API request
       try {
+        console.log("chiamo documentdescription " + body.coordinates);
+
+        if(body.stakeholders.length === 0){
+          setToast({
+            open: true,
+            message: "Stakeholders missing",
+            severity: "error",
+          });
+          return;
+        }
+
+        if((body.coordinates.lat === "" || body.coordinates.long === "") && body.area_name === ""){
+          
+          setToast({
+            open: true,
+            message: "Geolocation data missing",
+            severity: "error",
+          });
+          return;
+        }else if((body.coordinates.lat === "" || body.coordinates.long === "") && body.area_name === "Whole Area"){
+          console.log('xxx');
+          // return
+        }else if((body.coordinates.lat !== "" || body.coordinates.long !== "") && body.area_name === "Whole Area"){
+          console.log('yyyy');
+          body.coordinates=[];
+          // return
+        }else if((body.coordinates.lat !== "" || body.coordinates.long !== "") && body.area_name !== "Whole Area"){
+          console.log('zzzz');
+          // return
+        }
+
+      
+
+        
         const response = await API.addDocumentDescription(body);
-        toast.success("Document description added");
+        // toast.success("Document description added");
         setDocumentId(response.documentId); // Set the documentId
 
         // Save links only if there are any
@@ -117,16 +168,32 @@ const DocumentDescriptionForm = () => {
         }
 
         form.reset();
+
+        // Check if response contains an error
+        if (response.error) {
+          console.log(response.error);
+          setToast({
+            open: true,
+            message: response.error.toString(),
+            severity: "error",
+          });
+        } else {
+          console.log(response); // Logs the response status (e.g., 200)
+          setToast({
+            open: true,
+            message: "Added document description",
+            severity: "success",
+          });
+          form.reset();
+        }
       } catch (error) {
-        toast.error(error, {
-          description: "",
-        });
+        setToast({ open: true, message: error, severity: "error" });
       }
 
-     /* setTimeout(() => {
+      /* setTimeout(() => {
         window.location.reload();
       }, 1000);*/
-      setTemporaryLinks([])
+      setTemporaryLinks([]);
     });
   };
 
@@ -139,58 +206,109 @@ const DocumentDescriptionForm = () => {
           type: link.type, // Link type
         };
 
-        const response = await API.linkDocuments(payload.from, payload.to, payload.type);
+        const response = await API.linkDocuments(
+          payload.from,
+          payload.to,
+          payload.type
+        );
 
         if (response.error) {
-          toast.error(`Error linking "${link.from}" to "${link.to}": ${response.error}`);
+          //  toast.error(`Error linking "${link.from}" to "${link.to}": ${response.error}`);
         } else {
-          toast.success(`Link saved: "${link.from}" to "${link.to}" (${link.type})`);
+          // toast.success(`Link saved: "${link.from}" to "${link.to}" (${link.type})`);
         }
       } catch (error) {
-        toast.error(`An error occurred while linking "${link.from}" to "${link.to}".`);
+        // toast.error(`An error occurred while linking "${link.from}" to "${link.to}".`);
         console.error(`Error linking "${link.from}" to "${link.to}":`, error);
       }
     }
   };
 
+  const handleCloseToast = () => {
+    setToast((prev) => ({ ...prev, open: false }));
+  };
+
   const onSubmitCoordinates = (lat, long) => {
-    setShowPopup(false);
+    setShowPopupMap(false);
     form.setValue("latitude", parseFloat(lat.toFixed(6)));
     form.setValue("longitude", parseFloat(long.toFixed(6)));
   };
   useEffect(() => {
     const subscription = form.watch((values) => {
       const currentTitle = values.document_title;
-  
+
       setTemporaryLinks((prevLinks) =>
         prevLinks.map((link) =>
-          link.from === currentTitle || link.from === prevLinks.find((l) => l.from)?.from
+          link.from === currentTitle ||
+            link.from === prevLinks.find((l) => l.from)?.from
             ? { ...link, from: currentTitle }
             : link
         )
       );
     });
-  
+
     // Cleanup al dismontaggio del componente
     return () => subscription.unsubscribe();
   }, [form]);
-  
-  
-  // Monitorare i cambiamenti di temporaryLinks e loggare i valori aggiornati
+
   useEffect(() => {
-    console.log("Temporary Links Updated:", temporaryLinks);
-  }, [temporaryLinks]);
-  
-  
+    const fetchStakeholders = async () => {
+      setIsLoading(true);
+      try {
+        const data = await API.getStakeholders();
+        const stakeholders = data.map(stakeholder => stakeholder.stakeholder_name);
+        console.log(stakeholders); // Controlla che la struttura sia quella attesa
+
+        setStakeholders(stakeholders);
+      } catch (error) {
+        console.error('Error fetching stakeholders:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchStakeholders();
+  }, []);
+
+
+  // Aggiungere un nuovo stakeholder
+  const handleAddStakeholder = async (newStakeholderName) => {
+    console.log(newStakeholderName);
+
+    try {
+      if (newStakeholderName.trim() === '') {
+        setToast({
+          open: true,
+          message: 'Stakeholder name cannot be empty',
+          severity: "error",
+        });
+        return;
+      } else {
+
+        const result = await API.addNewStakeholder(newStakeholderName);
+        if(result === 201){
+          setStakeholders((prev) => [...prev, newStakeholderName]);
+          setStakeholderInput('');
+
+        }
+      }
+    } catch (error) {
+      console.error('Error adding stakeholder:', error);
+    }
+  };
+
   return (
     <div>
+      <div className="d-flex justify-content-center" style={{ fontSize: "34px", fontWeight: "bold", marginBottom: '20px' }}>
+        <h1>
+          Add new document        </h1>
+      </div>
       <Card className="min-w-[280px] max-w-[700px]">
-        <CardHeader>
-          <CardTitle>Add document description</CardTitle>
-        </CardHeader>
+
         <CardContent>
-          <div className="text-muted-foreground mb-4">
-            Here you can add a document description and link other documents to it.
+          <div className="text-muted-foreground mt-4 mb-4">
+            Fill out this form to add metadata to a document. Language and pages
+            are not mandatory. Please choose between 'Whole Area' OR a single
+            point with coordinates.
           </div>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -201,12 +319,14 @@ const DocumentDescriptionForm = () => {
                 rules={documentRules}
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Document</FormLabel>
+                    <FormLabel htmlFor="document-title">Document *</FormLabel>
                     <FormControl>
                       <Input
                         {...field}
                         type="text"
                         placeholder="Your document title"
+                        id="document-title"
+                        aria-label="document"
                       />
                     </FormControl>
                     <FormMessage />
@@ -220,9 +340,13 @@ const DocumentDescriptionForm = () => {
                 rules={descriptionRules}
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Description</FormLabel>
+                    <FormLabel htmlFor="document-description">
+                      Description *
+                    </FormLabel>
                     <FormControl>
                       <Textarea
+                        id="document-description"
+                        aria-label="description"
                         placeholder="Your document description"
                         className="resize-none"
                         {...field}
@@ -239,11 +363,11 @@ const DocumentDescriptionForm = () => {
                 rules={typeRules}
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Document type</FormLabel>
+                    <FormLabel>Document type *</FormLabel>
                     <FormControl>
                       <Select
                         onValueChange={field.onChange}
-                        defaultValue={field.value}
+                        value={field.value}
                       >
                         <FormControl>
                           <SelectTrigger>
@@ -269,34 +393,60 @@ const DocumentDescriptionForm = () => {
               {/* Stakeholder */}
               <FormField
                 control={form.control}
-                name="stakeholder"
+                name="stakeholders"
                 rules={stakeholderRules}
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Stakeholder</FormLabel>
+                    <FormLabel>Stakeholders *</FormLabel>
                     <FormControl>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a stakeholder" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {stakeholders.map((stakeholder) => (
-                            <SelectItem key={stakeholder} value={stakeholder}>
-                              {stakeholder}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <div className="space-y-2 flex flex-wrap">
+                        {stakeholders.map((stakeholder) => (
+                          <div key={stakeholder} className="flex items-center w-1/2 md:w-1/3 lg:w-1/4">
+                            <input
+                              type="checkbox"
+                              id={stakeholder}
+                              value={stakeholder}
+                              checked={field.value.includes(stakeholder)} // Verifica se è selezionato
+                              onChange={(e) => {
+                                const isChecked = e.target.checked;
+                                let updatedStakeholders = [...field.value];
+                                if (isChecked) {
+                                  updatedStakeholders.push(stakeholder); // Aggiungi
+                                } else {
+                                  updatedStakeholders = updatedStakeholders.filter(item => item !== stakeholder); // Rimuovi
+                                }
+                                field.onChange(updatedStakeholders); // Aggiorna il valore del form
+                              }}
+                              className="mr-2"
+                            />
+                            <label htmlFor={stakeholder}>{stakeholder}</label>
+                          </div>
+                        ))}
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+              <div style={{ display: 'flex', justifyContent: 'center', width: '100%', alignItems: 'center' }}>
+                <input
+                  type="text"
+                  value={stakeholderInput}
+                  onChange={(e) => setStakeholderInput(e.target.value)} // Aggiorna lo stato con il valore dell'input
+                  placeholder="Stakeholder name"
+                  style={{ marginRight: '10px', width: '25%', borderBottom: '1px solid black' }} // Margine e larghezza per l'input
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  style={{ width: '25%' }}
+                  onClick={() => handleAddStakeholder(stakeholderInput)} // Passa il valore dell'input alla funzione
+                >
+                  <p style={{ textAlign: 'center' }}>
+                    Add New Stakeholder
+                  </p>
+                </Button>
+              </div>
               {/* Scale */}
               <FormField
                 control={form.control}
@@ -304,7 +454,7 @@ const DocumentDescriptionForm = () => {
                 rules={scaleRules}
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Scale</FormLabel>
+                    <FormLabel>Scale *</FormLabel>
                     <FormControl>
                       <Input
                         {...field}
@@ -323,7 +473,7 @@ const DocumentDescriptionForm = () => {
                 rules={issuanceRules}
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Issuance date</FormLabel>
+                    <FormLabel>Issuance date *</FormLabel>
                     <FormControl>
                       <Input
                         {...field}
@@ -370,58 +520,6 @@ const DocumentDescriptionForm = () => {
                       ></Input>
                     </FormControl>
                     <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="link"
-                render={() => (
-                  <FormItem>
-                    <FormControl>
-                      <Dialog open={showPopup} onOpenChange={setShowPopup}>
-                        <DialogTrigger asChild>
-                          <Button variant="">Link documents</Button>
-                        </DialogTrigger>
-                        <DialogContent className="sm:max-w-[825px]">
-                          <DialogHeader>
-                            <DialogTitle>Link documents</DialogTitle>
-                            <DialogDescription>
-                              Link this document with other documents.
-                            </DialogDescription>
-                          </DialogHeader>
-                          <div className="flex p-2 justify-center items-center">
-                            <ScrollArea className="h-[500px] p-2">
-                              <DocumentLinkOnCreation onSave={onSaveTemporaryLinks}                   
-                              initialDocumentTitle={form.watch("document_title")}  temporaryLinks={temporaryLinks} setTemporaryLinks={setTemporaryLinks}
-                              // Passa il titolo del documento corrente
-                              />
-                            </ScrollArea>
-                          </div>
-                       {   /*<DialogFooter>
-                            <Button
-                              type="button"
-                              onClick={() => {
-                               
-                              }}
-                            >
-                              Save links
-                            </Button>
-                          </DialogFooter>*/}
-                        </DialogContent>
-                      </Dialog>
-                    </FormControl>
-                    <FormMessage />
-                    {temporaryLinks.length > 0 && (
-                      <div className="mt-4">
-                        <h3 className="text-sm font-semibold">Temporary Links:</h3>
-                        <ul className="list-disc pl-5 space-y-1">
-                          {temporaryLinks.map((link, index) => (
-                            <li key={index} className="text-sm">{link.from} -- {link.to} ({link.type})</li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
                   </FormItem>
                 )}
               />
@@ -513,37 +611,94 @@ const DocumentDescriptionForm = () => {
                 >
                   <Button
                     type="button"
-                    onClick={() => setShowPopup(true)}
+                    onClick={() => setShowPopupMap(true)}
                     className="ml-2"
+                    variant="outline"
                   >
-                    Open Map
+                    <MapIcon></MapIcon>
                   </Button>
                 </div>
               </div>
               {/* Popup per fornire informazioni su latitudine e longitudine */}
-              {showPopup && (
+              {showPopupMap && (
                 <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
                   <div
-                    className="bg-white p-6 rounded shadow-lg"
+                    className="bg-white p-4 rounded shadow-lg"
                     style={{ textAlign: "center" }}
                   >
                     <CoordsMap
-                      setShowPopup={setShowPopup}
+                      setShowPopupMap={setShowPopupMap}
                       onSubmitCoordinates={onSubmitCoordinates}
                     />
 
-                <Button
+                    <Button
                       type="button"
-                      onClick={() => setShowPopup(false)}
+                      onClick={() => setShowPopupMap(false)}
                       className="mt-4"
+                      variant="outline"
                     >
                       Close Map
                     </Button>
                   </div>
                 </div>
               )}
+
+              <FormField
+                control={form.control}
+                name="link"
+                render={() => (
+                  <FormItem>
+                    <FormControl>
+                      <Dialog
+                        open={showPopupLink}
+                        onOpenChange={setShowPopupLink}
+                      >
+                        <DialogTrigger asChild>
+                          <Button variant="outline">Link documents</Button>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-[825px]">
+                          <DialogHeader>
+                            <DialogTitle>Link documents</DialogTitle>
+                            <DialogDescription>
+                              Link this document with other documents.
+                            </DialogDescription>
+                          </DialogHeader>
+                          <div className="flex p-2 justify-center items-center">
+                            <ScrollArea className="h-[500px] p-2">
+                              <DocumentLinkOnCreation
+                                onSave={onSaveTemporaryLinks}
+                                initialDocumentTitle={form.watch(
+                                  "document_title"
+                                )}
+                                temporaryLinks={temporaryLinks}
+                                setTemporaryLinks={setTemporaryLinks}
+                              // Passa il titolo del documento corrente
+                              />
+                            </ScrollArea>
+                          </div>
+                        </DialogContent>
+                      </Dialog>
+                    </FormControl>
+                    <FormMessage />
+                    {temporaryLinks.length > 0 && (
+                      <div className="mt-4">
+                        <h3 className="text-sm font-semibold">
+                          Temporary Links:
+                        </h3>
+                        <ul className="list-disc pl-5 space-y-1">
+                          {temporaryLinks.map((link, index) => (
+                            <li key={index} className="text-sm">
+                              {link.from} -- {link.to} ({link.type})
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </FormItem>
+                )}
+              />
               <div style={{ textAlign: "center", marginTop: "60px" }}>
-                <Button type="submit" disabled={isPending}>
+                <Button type="submit" disabled={isPending} variant="outline">
                   Add document description
                 </Button>
               </div>
@@ -552,6 +707,22 @@ const DocumentDescriptionForm = () => {
         </CardContent>
         <CardFooter className="flex justify-between"></CardFooter>
       </Card>
+
+      {/* Material UI Snackbar for Toast */}
+      <Snackbar
+        open={toast.open}
+        autoHideDuration={6000}
+        onClose={handleCloseToast}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert
+          onClose={handleCloseToast}
+          severity={toast.severity}
+          sx={{ width: "100%" }}
+        >
+          {toast.message}
+        </Alert>
+      </Snackbar>
     </div>
   );
 };

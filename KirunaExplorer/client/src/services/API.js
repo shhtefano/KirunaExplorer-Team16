@@ -15,26 +15,87 @@ async function getDocuments() {
   return response.json();
 }
 
-// async function linkDocuments(parent_id,children_id, connection_type) {
-//   const response = await fetch(`${SERVER_URL}/api/document/connections`, {
-//     method: "POST",
-//     headers: {
-//       "Content-Type": "application/json",
-//     },
-//     body: JSON.stringify({
-//       parent_id,
-//        children_id,
-//         connection_type
-//     }),
-//   });
+async function getStakeholders() {
+  const response = await fetch(`${SERVER_URL}/api/stakeholder`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
 
-//   if (!response.ok) {
-//     const error = await response.json();
-//     throw new Error(error.message || "Errore API linkDocuments");
-//   }
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || "Errore API getDocuments");
+  }
 
-//   return response.json();
-// }
+  return response.json();
+}
+
+async function getDocumentsGeo() {
+  const response = await fetch(`${SERVER_URL}/api/document/geo/list`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || "Errore API getDocuments");
+  }
+
+  const data = await response.json();
+
+  return data;
+}
+
+async function updateDocumentCoordinates(document_id, lat, lng) {
+
+  const response = await fetch(`${SERVER_URL}/api/document/updatePointCoords`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      document_id,
+      lat,
+      lng,
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || "Errore API getDocuments");
+  }
+
+  const data = await response.json();
+
+  return data;
+}
+
+async function updateDocumentArea(document_id, area_id) {
+
+  const response = await fetch(`${SERVER_URL}/api/document/updateDocumentArea`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      document_id,
+      area_id
+    }),
+  });
+
+  if (!response.ok) {
+
+    const error = await response.json();
+    throw new Error(error.message);
+  }
+
+  const data = await response.json();
+
+  return data;
+}
 
 async function linkDocuments(parent_id, children_id, connection_type) {
   try {
@@ -54,19 +115,25 @@ async function linkDocuments(parent_id, children_id, connection_type) {
     if (!response.ok) {
       // Clone the response to safely read it in multiple ways
       const responseClone = response.clone();
+      console.log(response);
+      if (response.status === 403) {
+        return { success: false, message: "Duplicated Link" };
+      } else if (response.status === 500) {
+        return { success: false, message: "Internal Server Error" };
 
-      // Try to parse the error response as JSON
-      let errorMessage = "An unknown error occurred.";
-      try {
-        const errorData = await response.json();
-        errorMessage = errorData.message || errorMessage;
-      } catch (jsonError) {
-        // If parsing fails, use the cloned response to read text
-        errorMessage = await responseClone.text();
       }
+      // // Try to parse the error response as JSON
+      // let errorMessage = "An unknown error occurred.";
+      // try {
+      //   const errorData = await response.json();
+      //   errorMessage = errorData.message || errorMessage;
+      // } catch (jsonError) {
+      //   // If parsing fails, use the cloned response to read text
+      //   errorMessage = await responseClone.text();
+      // }
 
-      // Return an error response
-      return { success: false, message: errorMessage };
+      // // Return an error response
+      // return { success: false, message: errorMessage };
     }
 
     // Handle successful responses - safely attempt to parse as JSON if content exists
@@ -89,25 +156,21 @@ async function linkDocuments(parent_id, children_id, connection_type) {
   }
 }
 
-/* example
-async function fetchServices() {
-  const response = await fetch(SERVER_URL + "/api/services", {
+async function getDocumentPosition(document_id) {
+  const response = await fetch(`${SERVER_URL}/api/document/${document_id}/geo`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
     },
-    credentials: "include", // Se necessario per la sessione
   });
 
   if (!response.ok) {
-    throw new Error("Errore API fetchServices");
+    const error = await response.json();
+    throw new Error(error.message || "Errore API getDocuments");
   }
 
-  const services = await response.json();
-  return services;
+  return response.json();
 }
-
-*/
 
 const logIn = async (credentials) => {
   const response = await fetch(SERVER_URL + "/api/sessions", {
@@ -143,10 +206,33 @@ const addDocumentDescription = async (body) => {
   else if (res.status === 422) {
     return { error: "Missing Latitude/Longitude or Municipal area" };
   }
-  else{
-    return { error: "Server error" }; 
+  else {
+    return { error: "Server error" };
   }
 };
+
+const addNewStakeholder = async (body) => {
+  console.log(body);
+  
+  const res = await fetch(SERVER_URL + "/api/stakeholder", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({stakeholder_name: body}),
+  });
+  console.log(res.status);
+  
+  if (res.ok) {
+    return res.status;
+  } else if (res.status === 403) {
+    return { error: "Stakeholder already exists." };
+  }
+  else {
+    return { error: "Server error" };
+  }
+};
+
 
 const getUserInfo = async () => {
   const response = await fetch(SERVER_URL + "/api/sessions/current", {
@@ -170,11 +256,17 @@ const logOut = async () => {
 
 const API = {
   logIn,
-  getUserInfo,
   logOut,
-  linkDocuments,
-  addDocumentDescription,
+  getUserInfo,
   getDocuments,
+  getDocumentsGeo,
+  getDocumentPosition,
+  getStakeholders,
+  updateDocumentCoordinates,
+  updateDocumentArea,
+  addDocumentDescription,
+  addNewStakeholder,
+  linkDocuments,
 };
 
 export default API;

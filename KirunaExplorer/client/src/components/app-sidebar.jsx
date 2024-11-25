@@ -62,10 +62,6 @@ const data = {
           url: "/add-document-description",
         },
         {
-          title: "Link documents",
-          url: "/documents/link",
-        },
-        {
           title: "Show documents",
           url: "/documents/list",
         },
