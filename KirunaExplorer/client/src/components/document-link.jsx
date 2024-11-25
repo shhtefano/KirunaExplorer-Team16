@@ -54,31 +54,37 @@ export default function DocumentLink({ initialDocument }) {
         selectedDocument.document_title,
         linkType
       );
-
+  
       if (result.success) {
-        
-        // Aggiungi il documento appena connesso alla lista dei documenti
-        setDocuments((prevDocuments) => [
-          ...prevDocuments,
-          selectedDocument, // Aggiungiamo il documento selezionato alla lista
-        ]);
-        
+        // Verifica se il documento è già presente nella lista
+        setDocuments((prevDocuments) => {
+          const isAlreadyLinked = prevDocuments.some(
+            (doc) => doc.document_title === selectedDocument.document_title
+          );
+  
+          if (isAlreadyLinked) {
+            return prevDocuments; // Evita di aggiungere duplicati
+          }
+  
+          return [...prevDocuments, selectedDocument];
+        });
+  
         // Reset stato
         setSnackbarMsg('Linked successfully');
         setOpenSnackbar(true);
         setErrorSeverity('success');
-
+  
         setSelectedDocument(null);
         setLinkType("");
       } else {
-        console.log(result);
         setSnackbarMsg('Duplicated link');
         setOpenSnackbar(true);
         setErrorSeverity('error');
-        toast.error(result.message);
+        console.log(result.message);
       }
     }
   };
+  
 
   // Filtraggio documenti
   const filteredDocuments = documents.filter(
