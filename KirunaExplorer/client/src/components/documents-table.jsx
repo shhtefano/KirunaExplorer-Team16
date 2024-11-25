@@ -102,26 +102,26 @@ export default function DocumentsTable() {
         </Select>
       </div>
 
-      <Table className="border rounded table-fixed w-full">
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-1/4">Title</TableHead>
-            <TableHead className="w-1/5">Issuance Date</TableHead>
-            <TableHead className="w-1/5">Type</TableHead>
-            <TableHead className="w-1/5">Language</TableHead>
-            <TableHead className="w-1/5">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {paginatedDocuments.length > 0 ? (
-            paginatedDocuments.map((doc) => (
-              <TableRow key={doc.document_title} className="hover:bg-gray-50">
-                <TableCell className="py-2 px-4">{doc.document_title}</TableCell>
-                <TableCell className="py-2 px-4">{doc.issuance_date}</TableCell>
-                <TableCell className="py-2 px-4">{doc.document_type}</TableCell>
-                <TableCell className="py-2 px-4">{doc.language}</TableCell>
-                <TableCell className="py-2 px-4">
-                  <div className="flex items-center space-x-2">
+  <Table className="border rounded table-fixed w-full">
+    <TableHeader>
+      <TableRow>
+        <TableHead className="w-1/4">Title</TableHead>
+        <TableHead className="w-1/5">Issuance Date</TableHead>
+        <TableHead className="w-1/5">Type</TableHead>
+        <TableHead className="w-1/5">Language</TableHead>
+        <TableHead className="w-1/5">Actions</TableHead>
+      </TableRow>
+    </TableHeader>
+    <TableBody>
+      {paginatedDocuments.length > 0 ? (
+        paginatedDocuments.map((doc) => (
+          <TableRow key={doc.document_title} className="hover:bg-gray-50">
+            <TableCell className="py-2 px-4">{doc.document_title}</TableCell>
+            <TableCell className="py-2 px-4">{doc.issuance_date}</TableCell>
+            <TableCell className="py-2 px-4">{doc.document_type}</TableCell>
+            <TableCell className="py-2 px-4">{doc.language}</TableCell>
+            <TableCell className="py-2 px-4">
+              <div className="flex items-center space-x-2">
                     <Dialog>
                       <DialogTrigger asChild>
                         <button
@@ -144,7 +144,7 @@ export default function DocumentsTable() {
                         <DialogTitle className="text-xl font-bold text-gray-800">
                           {selectedDocument?.document_title || "No Document Selected"}
                         </DialogTitle>
-                        <DialogDescription className="mt-3 space-y-3 text-gray-700">
+                        <DialogDescription className="text-gray-700">
 
                           {showLinkInterface ? (
                             <div className="mt-6 border-t pt-4">
@@ -212,19 +212,19 @@ export default function DocumentsTable() {
                     </Dialog>
 
 
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))
-          ) : (
-            <TableRow>
-              <TableCell colSpan={5} className="text-center text-gray-500">
-                No documents found.
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
+              </div>
+            </TableCell>
+          </TableRow>
+        ))
+      ) : (
+        <TableRow>
+          <TableCell colSpan={5} className="text-center text-gray-500">
+            No documents found.
+          </TableCell>
+        </TableRow>
+      )}
+    </TableBody>
+  </Table>
 
       <div className="mt-8 flex justify-center items-center">
         <Pagination>

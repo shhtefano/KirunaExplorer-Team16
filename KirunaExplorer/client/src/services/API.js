@@ -156,6 +156,80 @@ async function linkDocuments(parent_id, children_id, connection_type) {
   }
 }
 
+
+async function getConnectionsByDocumentTitle(title) {
+  try {
+    const response = await fetch(`${SERVER_URL}/api/document/connections/document`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ title }),
+    });
+
+    // Verifica se la risposta è ok
+    if (!response.ok) {
+      const responseClone = response.clone(); // Clona per leggere in modo sicuro
+      console.error("Errore nella risposta:", responseClone);
+
+      // Gestisce casi specifici di errore
+      if (response.status === 400) {
+        return { success: false, message: "Bad Request: Titolo mancante o non valido." };
+      } else if (response.status === 500) {
+        return { success: false, message: "Internal Server Error." };
+      }
+
+      return { success: false, message: `Errore sconosciuto: ${response.status}` };
+    }
+
+    // Converte la risposta in JSON
+    const data = await response.json();
+
+    // Ritorna i dati se la richiesta è andata a buon fine
+    return { success: true, data: data.data };
+  } catch (error) {
+    console.error("Errore durante la chiamata API:", error);
+    return { success: false, message: "Errore di rete o server non raggiungibile." };
+  }
+}
+
+// Funzione per chiamare l'API e cancellare una connessione
+const deleteConnection = async (doc1_id, doc2_id, connection_type) => {
+  try {
+    const response = await fetch(`${SERVER_URL}/api/document/connections/delete`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ doc1_id, doc2_id, connection_type }),
+    });
+
+    // Verifica se la risposta è ok
+    if (!response.ok) {
+      const responseClone = response.clone();
+      console.error("Errore nella risposta:", responseClone);
+
+      // Gestisce i casi di errore specifici
+      if (response.status === 400) {
+        return { success: false, message: "Bad Request: Parametri mancanti o errati." };
+      } else if (response.status === 500) {
+        return { success: false, message: "Internal Server Error." };
+      }
+
+      return { success: false, message: `Errore sconosciuto: ${response.status}` };
+    }
+
+    // Converte la risposta in JSON
+    const data = await response.json();
+
+    // Ritorna i dati di successo
+    return { success: true, message: data.message };
+  } catch (error) {
+    console.error("Errore durante la chiamata API:", error);
+    return { success: false, message: "Errore di rete o server non raggiungibile." };
+  }
+};
+
 async function getDocumentPosition(document_id) {
   const response = await fetch(`${SERVER_URL}/api/document/${document_id}/geo`, {
     method: "GET",
@@ -267,6 +341,8 @@ const API = {
   addDocumentDescription,
   addNewStakeholder,
   linkDocuments,
+  getConnectionsByDocumentTitle,
+  deleteConnection
 };
 
 export default API;

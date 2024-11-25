@@ -463,6 +463,69 @@ console.log(documentInfo, coordinates);
     return connection;
   };
 
+
+  async getConnectionsByDocumentTitle(title) {
+    return new Promise((resolve, reject) => {
+      const sqlQueryConnections = `
+        SELECT 
+          parent_id,
+          children_id ,
+          connection_type
+        FROM 
+          Connections
+        WHERE 
+          parent_id = ? OR children_id = ?
+      `;
+  
+      db.all(sqlQueryConnections, [title, title], (err, rows) => {
+        if (err) {
+          console.error("Errore durante il recupero delle connessioni:", err);
+          return reject(new Error("Errore durante il recupero delle connessioni."));
+        }
+        resolve(rows);
+      });
+    });
+  }
+  
+
+  async deleteConnection(doc1_id, doc2_id, connection_type) {
+    return new Promise((resolve, reject) => {
+      const sqlQueryDelete = `
+        DELETE FROM connections
+        WHERE 
+          (parent_id = ? AND children_id = ? AND connection_type = ?)
+          OR (children_id = ? AND parent_id = ? AND connection_type = ?)
+      `;
+  
+      db.run(sqlQueryDelete, [doc1_id, doc2_id, connection_type, doc1_id, doc2_id, connection_type], function(err) {
+        if (err) {
+          console.error("Errore durante la cancellazione delle connessioni:", err);
+          return reject(new Error("Errore durante la cancellazione delle connessioni"));
+        }
+  
+        // Se rows è 0, la connessione non esiste
+        if (this.changes === 0) {
+          console.log("Nessuna connessione trovata con questi parametri.");
+          return reject(new Error("Connessione non trovata"));
+        }
+  
+        resolve("Connessione eliminata con successo.");
+      });
+    });
+  }
+  
+
+
+
+
+
+
+
+
+
+
+  
+  
   async updatePointCoordinates(document_id, long, lat) {
     return new Promise((resolve, reject) => {
       // 1. Trova l'area_id associato al document_id

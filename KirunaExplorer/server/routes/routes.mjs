@@ -112,6 +112,43 @@ router.post("/api/document/connections", async (req, res) => {
   }
 });
 
+
+// Rotta per ottenere connessioni basate sul titolo del documento
+router.post('/api/document/connections/document', async (req, res) => {
+  const { title } = req.body;
+
+  if (!title) {
+    return res.status(400).json({ success: false, message: "Il titolo del documento è richiesto." });
+  }
+
+  try {
+    // Chiama il DAO per ottenere le connessioni
+    const connections = await documentDAO.getConnectionsByDocumentTitle(title);
+    res.status(200).json({ success: true, data: connections });
+  } catch (error) {
+    console.error("Errore connessioni documento", error.message);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Rotta per cancellare una connessione tra due documenti
+router.delete('/api/document/connections/delete', async (req, res) => {
+  const { doc1_id, doc2_id, connection_type } = req.body;
+
+  if (!doc1_id || !doc2_id || !connection_type) {
+    return res.status(400).json({ success: false, message: "Gli ID dei documenti e il tipo di connessione sono richiesti." });
+  }
+
+  try {
+    // Chiama il DAO per cancellare la connessione
+    const message = await documentDAO.deleteConnection(doc1_id, doc2_id, connection_type);
+    res.status(200).json({ success: true, message });
+  } catch (error) {
+    console.error("Errore durante la cancellazione della connessione:", error.message);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 router.post("/api/document/update/georeference", async (req, res) => {
   const { markerId, lng, lat } = req.body;
   
