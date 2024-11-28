@@ -17,6 +17,9 @@ import DocumentLink from "./document-link.jsx";
 import DocumentMap from "./DocumentMap.jsx"; // Importa il componente mappa
 import { MapIcon } from "lucide-react";
 import { Button } from "react-bootstrap";
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
+
+
 
 
 export default function DocumentsTable() {
@@ -26,6 +29,10 @@ export default function DocumentsTable() {
   const [selectedLanguage, setSelectedLanguage] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
+  const [year, setYear] = useState("");
+  const [month, setMonth] = useState("");
+  const [day, setDay] = useState("");
+  const [dateFilterMode, setDateFilterMode] = useState("year");
 
   const documentTypes = [
     { type: "All" },
@@ -44,7 +51,6 @@ export default function DocumentsTable() {
 
 
   const [selectedMapDocument, setSelectedMapDocument] = useState(null);
-
   const [selectedDocument, setSelectedDocument] = useState(null);
   const [showLinkInterface, setShowLinkInterface] = useState(false);
 
@@ -63,26 +69,83 @@ export default function DocumentsTable() {
     fetchDocuments();
   }, []);
 
-  const filteredDocuments = documents.filter((doc) => {
+
+
+
+
+const filteredDocuments = documents.filter((doc) => {
+
     const matchesSearch = doc.document_title.toLowerCase().includes(searchQuery.toLowerCase());
+    
     const matchesType =
       selectedType && selectedType !== "All" ? doc.document_type === selectedType : true;
+    
     const matchesLanguage =
       selectedLanguage && selectedLanguage !== "All" ? doc.language === selectedLanguage : true;
-    return matchesSearch && matchesType && matchesLanguage;
-  });
+    
+      
+    // const matchesDate = (() => {
+    //   // Skip filtering if no year, month, or day is provided
+    //   if (!year && !month && !day) return true;
+    //   const docDate = new Date(doc.issuance_date);
 
-  const totalPages = Math.ceil(filteredDocuments.length / itemsPerPage);
-  const paginatedDocuments = filteredDocuments.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+    //   if (dateFilterMode === "year" && year) {
+    //     return docDate.getFullYear() === parseInt(year);
+    //   } else if (dateFilterMode === "month" && year && month) {
+    //     return (
+    //       docDate.getFullYear() === parseInt(year) &&
+    //       docDate.getMonth() === parseInt(month) - 1
+    //     ); 
+    //   } else if (dateFilterMode === "exact" && year && month && day) {
+    //     return (
+    //       docDate.getFullYear() === parseInt(year) &&
+    //       docDate.getMonth() === parseInt(month) - 1 &&
+    //       docDate.getDate() === parseInt(day)
+    //     );
+    //   }
+    // })();
+    
 
-  useEffect(() => {
-    if (!selectedDocument) {
-      setShowLinkInterface(false);
-    }
-  }, [selectedDocument]);
+
+    // Filter by year only
+    const matchesDate = (() => {   
+      if (!year) return true; // No year filter applied
+      const docDate = new Date(doc.issuance_date);
+      // console.log(docDate);
+      console.log(doc.issuance_date); 
+      return docDate.getFullYear() === parseInt(year);
+    })();
+  
+    
+    return matchesSearch && matchesType && matchesLanguage && matchesDate;
+
+
+});
+
+
+
+
+
+
+
+
+const totalPages = Math.ceil(filteredDocuments.length / itemsPerPage);
+const paginatedDocuments = filteredDocuments.slice(
+  (currentPage - 1) * itemsPerPage,
+  currentPage * itemsPerPage
+);
+
+
+
+
+
+useEffect(() => {
+  if (!selectedDocument) {
+    setShowLinkInterface(false);
+  }
+}, [selectedDocument]);
+
+
 
   return (
     <div className="max-w-6xl mx-auto p-6 pb-12 bg-white rounded shadow-md overflow-auto">
@@ -130,6 +193,49 @@ export default function DocumentsTable() {
       </div>
 
 
+
+      <div className="mb-6 text-gray-700">
+        <p className="font-semibold mb-2">Select by Issuance Date:</p>
+        <div className="flex items-center gap-4">
+          <Select onValueChange={setDateFilterMode} value={dateFilterMode}>
+            <SelectTrigger className="w-32 p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400">
+              <SelectValue placeholder="Mode" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="year">Year</SelectItem>
+              <SelectItem value="month">Month & Year</SelectItem>
+              <SelectItem value="exact">Exact Date</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Popover>
+              <div className="flex flex-row gap-2">
+                <Input
+                  placeholder="Year"
+                  value={year}
+                  onChange={(e) => setYear(e.target.value)}
+                  className="p-2 border border-gray-300 rounded"
+                />
+                {dateFilterMode !== "year" && (
+                  <Input
+                    placeholder="Month"
+                    value={month}
+                    onChange={(e) => setMonth(e.target.value)}
+                    className="p-2 border border-gray-300 rounded"
+                  />
+                )}
+                {dateFilterMode === "exact" && (
+                  <Input
+                    placeholder="Day"
+                    value={day}
+                    onChange={(e) => setDay(e.target.value)}
+                    className="p-2 border border-gray-300 rounded"
+                  />
+                )}
+              </div>
+          </Popover>
+        </div>
+      </div>
 
 
 
