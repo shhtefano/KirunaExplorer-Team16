@@ -49,6 +49,43 @@ async function getDocumentsGeo() {
   return data;
 }
 
+async function getGeoArea() {
+  const response = await fetch(`${SERVER_URL}/api/document/geo/area`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || "Errore API getDocuments");
+  }
+
+  const data = await response.json();
+
+  return data;
+}
+
+
+async function getAreaCoordinates(area_id){
+  const response = await fetch(`${SERVER_URL}/api/geo/:${area_id}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || "Errore API getAreaCoordinates");
+  }
+
+  const data = await response.json();
+
+  return data;
+}
+
 async function updateDocumentCoordinates(document_id, lat, lng) {
 
   const response = await fetch(`${SERVER_URL}/api/document/updatePointCoords`, {
@@ -334,7 +371,9 @@ const API = {
   getUserInfo,
   getDocuments,
   getDocumentsGeo,
+  getGeoArea,
   getDocumentPosition,
+  getAreaCoordinates,
   getStakeholders,
   updateDocumentCoordinates,
   updateDocumentArea,

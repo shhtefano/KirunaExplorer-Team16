@@ -13,6 +13,7 @@ import ArticleIcon from '@mui/icons-material/Article';
 import { MapIcon } from "lucide-react";
 import CoordsMap from "./CoordsMap";
 import { Snackbar, Alert } from "@mui/material";
+import { WindowSharp } from "@mui/icons-material";
 
 // Configura l'icona di default di Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
@@ -22,25 +23,6 @@ L.Icon.Default.mergeOptions({
   shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.3.1/images/marker-shadow.png",
 });
 
-// Define available areas
-const areas = [
-  {
-    id: -1,
-    name: "Point-Based Documents",
-    latlngs: [],
-  },
-  {
-    id: 0,
-    name: "Whole Area",
-    latlngs: [
-      { lat: 67.864354, lng: 20.198879 },
-      { lat: 67.845556, lng: 20.198879 },
-      { lat: 67.840539, lng: 20.28059 },
-      { lat: 67.864871, lng: 20.304966 },
-    ],
-  },
-  // Add more areas here as needed
-];
 
 const tileLayers = {
   maptiler: {
@@ -58,7 +40,7 @@ const tileLayers = {
 const DrawMap = () => {
   const [center, setCenter] = useState({ lat: 67.85572, lng: 20.22513 });
   const [filteredMarkers, setFilteredMarkers] = useState([]);
-  const [selectedArea, setSelectedArea] = useState(areas[0]);
+  const [selectedArea, setSelectedArea] = useState();
   const [selectedDocument, setSelectedDocument] = useState(null);
   const [filteredDocuments, setFilteredDocuments] = useState([]);
   const [searchQuery, setSearchQuery] = useState(""); // Stato per la ricerca
@@ -75,78 +57,116 @@ const DrawMap = () => {
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
   const [mapType, setMapType] = useState("satellite"); // Tipo di mappa selezionato
+  const [areas, setAreas] = useState([]); // Stato per le aree
+  const [allDocs, setAllDocs] = useState([]);
+  const ZOOM_LEVEL = 7;
+  const WHOLE_AREA_CENTER = { lat: 67.85572, lng: 20.22513 }; // Definisci le coordinate per Kiruna Map
+  const WHOLE_AREA_ZOOM = 12; // Definisci un livello di zoom per Kiruna Map
 
-  const ZOOM_LEVEL = 14;
-  const WHOLE_AREA_CENTER = { lat: 67.85572, lng: 20.22513 }; // Definisci le coordinate per Whole Area
-  const WHOLE_AREA_ZOOM = 12; // Definisci un livello di zoom per Whole Area
+  useEffect(() => {
+    const fetchAreas = async () => {
+      try {
+        const areas = await API.getGeoArea();
+        // console.log(areas);
+        setSelectedArea(areas[0]);
+        setAreas(areas)
+      } catch (error) {
+        console.error("Errore durante il fetch delle aree:", error);
+      }
+    };
+
+    fetchAreas();
+  }, []);
 
   useEffect(() => {
     const fetchDocumentsGeo = async () => {
+      if (!selectedArea) return; // Aggiungi questo controllo
+
       try {
         const response = await API.getDocumentsGeo();
         const documents = Array.isArray(response) ? response : [];
-        console.log(documents);
+        // console.log('ALL DOCUMENTS: ',documents);
 
         if (selectedArea.name === "Point-Based Documents") {
+
           let markers = documents.filter((document) => {
-            return document.geolocations.some((geo) => geo.area_name === "Point-Based Documents" && geo.coordinates.length === 1);
+            return document.geolocations.some((geo) => geo.area_name === "Point-Based Documents");
           });
 
-          const filteredMarkers = markers.map((doc) => ({
-            id: doc.document_id,
-            type: "marker",
-            latlngs: [doc.geolocations[0].coordinates[0].lat, doc.geolocations[0].coordinates[0].long],
-            document: doc,
-          }));
+          if(markers.length === 0){
+            setFilteredDocuments([]); // Inizialmente mostra tutti i documenti
+            setFilteredMarkers([]);
+            setAllDocs([]);
 
-          const allDocs = filteredMarkers.map((doc) => ({
-            id: doc.document.document_id,
-            document_title: doc.document.document_title,
-            description: doc.document.document_description,
-            stakeholder: doc.document.stakeholder,
-            scale: doc.document.scale,
-            issuance_date: doc.document.issuance_date,
-            language: doc.document.language,
-            pages: doc.document.pages,
-            document_type: doc.document.document_type,
-            area_name: doc.document.geolocations[0].area_name,
-            coordinates: doc.document.geolocations[0].coordinates,
-          }));
+          }else{
+  
+            const filteredMarkers = markers.map((doc) => ({
+              id: doc.document_id,
+              type: "marker",
+              latlngs: [doc.geolocations[0].coordinates[0].lat, doc.geolocations[0].coordinates[0].long],
+              document: doc,
+            }));
+  
+            const pointBasedDocuments = filteredMarkers.map((doc) => ({
+              id: doc.document.document_id,
+              document_title: doc.document.document_title,
+              description: doc.document.document_description,
+              stakeholder: doc.document.stakeholder,
+              scale: doc.document.scale,
+              issuance_date: doc.document.issuance_date,
+              language: doc.document.language,
+              pages: doc.document.pages,
+              document_type: doc.document.document_type,
+              area_name: doc.document.geolocations[0].area_name,
+              coordinates: doc.document.geolocations[0].coordinates,
+            }));
+    
+            setFilteredDocuments(pointBasedDocuments); // Inizialmente mostra tutti i documenti
+            setFilteredMarkers(filteredMarkers);
+            setAllDocs(filteredMarkers);
 
-          setFilteredDocuments(allDocs); // Inizialmente mostra tutti i documenti
-          setFilteredMarkers(filteredMarkers);
-        } else if (selectedArea.name === "Whole Area") {
-          // Filter documents for "Whole Area"
+          }
+        } else if (selectedArea.name === "Kiruna Map") {
+          // Filter documents for "Kiruna Map"
           let markers = documents.filter((document) => {
             return document.geolocations.some(
-              (geo) => geo.area_name === "Whole Area"
+              (geo) => geo.area_name === "Kiruna Map"
             );
           });
+          if(markers.length === 0){
+            console.log('non passo piu qui');
+            
+            setFilteredDocuments([]);
+            setFilteredMarkers([]);
+            setAllDocs([]);
 
-          const filteredMarkers = markers.map((doc) => ({
-            id: doc.document_id,
-            type: "marker",
-            latlngs: [doc.geolocations[0].coordinates[0].lat, doc.geolocations[0].coordinates[0].long],
-            document: doc,
-          }));
+          }else{
+            const filteredMarkers = markers.map((doc) => ({
+              id: doc.document_id,
+              type: "marker",
+              latlngs: [doc.geolocations[0].coordinates[0].lat, doc.geolocations[0].coordinates[0].long],
+              document: doc,
+            }));
+  
+            const wholeAreaDocs = filteredMarkers.map((doc) => ({
+              id: doc.document.document_id,
+              document_title: doc.document.document_title,
+              description: doc.document.document_description,
+              stakeholder: doc.document.stakeholder,
+              scale: doc.document.scale,
+              issuance_date: doc.document.issuance_date,
+              language: doc.document.language,
+              pages: doc.document.pages,
+              document_type: doc.document.document_type,
+              area_name: doc.document.geolocations[0].area_name,
+              coordinates: doc.document.geolocations[0].coordinates,
+            }));
+  
+            setFilteredDocuments(wholeAreaDocs); // Set documents for Kiruna Map
+            setFilteredMarkers(filteredMarkers);
+            setAllDocs(filteredMarkers);
 
-          const wholeAreaDocs = filteredMarkers.map((doc) => ({
-            id: doc.document.document_id,
-            document_title: doc.document.document_title,
-            description: doc.document.document_description,
-            stakeholder: doc.document.stakeholder,
-            scale: doc.document.scale,
-            issuance_date: doc.document.issuance_date,
-            language: doc.document.language,
-            pages: doc.document.pages,
-            document_type: doc.document.document_type,
-            area_name: doc.document.geolocations[0].area_name,
-            coordinates: doc.document.geolocations[0].coordinates,
-          }));
-          console.log(wholeAreaDocs);
-
-          setFilteredDocuments(wholeAreaDocs); // Set documents for Whole Area
-          setFilteredMarkers([]);
+          }
         }
       } catch (error) {
         console.error("Error while fetching documents:", error);
@@ -173,8 +193,8 @@ const DrawMap = () => {
       // Use the document's updated coordinates for a Point-Based Documents-based location
       const [lat, lng] = [doc.coordinates[0].lat, doc.coordinates[0].long];
       map.setView([lat, lng], ZOOM_LEVEL);
-    } else if (doc.area_name === "Whole Area") {
-      // If the document is "Whole Area", use predefined coordinates for the entire area
+    } else if (doc.area_name === "Kiruna Map") {
+      // If the document is "Kiruna Map", use predefined coordinates for the entire area
       map.setView([WHOLE_AREA_CENTER.lat, WHOLE_AREA_CENTER.lng], WHOLE_AREA_ZOOM);
     }
 
@@ -205,95 +225,28 @@ const DrawMap = () => {
   const handleSearchChange = (event) => {
     const query = event.target.value;
     setSearchQuery(query);
+    console.log(query);
+    
+    console.log('ALLDOCS', allDocs);
 
     if (query === "") {
       // Se la query è vuota, mostra tutti i documenti
-      setFilteredDocuments(allDocuments);
+      setFilteredDocuments(allDocs.map((doc) => doc.document));
     } else {
+      console.log(filteredMarkers);
+      
       // Altrimenti, filtra i documenti in base al titolo e alla descrizione
-      const filtered = allDocuments.filter((doc) =>
-        doc.document_title.toLowerCase().includes(query.toLowerCase()) ||
-        doc.description.toLowerCase().includes(query.toLowerCase())
+      const filtered = filteredMarkers.filter((doc) =>
+        doc.document.document_title.toLowerCase().includes(query.toLowerCase()) ||
+        doc.document.document_description.toLowerCase().includes(query.toLowerCase())
       );
 
-      setFilteredDocuments(filtered);
+      console.log('QUI: ', filtered);
+      
+      setFilteredDocuments(filtered.map((doc) => doc.document));
     }
   };
 
-  const _onEdited = async (e) => {
-    const currentSelectedArea = selectedAreaRef.current; // Usa il valore aggiornato
-    const editedLayers = e.layers; // Get all edited layers from the event
-
-    const updatedMarkers = [];
-    const updatedDocuments = [];
-
-    editedLayers.eachLayer(async (layer) => {
-      if (layer instanceof L.Marker) {
-        const { lat, lng } = layer.getLatLng();
-
-        const latitude = parseFloat(lat.toFixed(6)); // Trunca alla sesta cifra decimale
-        const longitude = parseFloat(lng.toFixed(6)); // Trunca alla sesta cifra decimale
-
-        // Accedi all'ID personalizzato tramite options.id
-        const markerId = layer.options.customId;
-
-        // Trova il marker aggiornato tramite il markerId
-        const updatedMarker = filteredMarkers.find((marker) => marker.id === markerId);
-
-        if (updatedMarker) {
-          // Aggiorna la posizione del marker
-          updatedMarker.latlngs = [latitude, longitude];
-
-          // Aggiungi il marker aggiornato alla lista
-          updatedMarkers.push({ ...updatedMarker, latlngs: [latitude, longitude] });
-
-          // Trova e aggiorna il documento corrispondente nella lista dei documenti filtrati
-          const updatedDocument = filteredDocuments.find((doc) => doc.id === updatedMarker.id);
-
-          if (updatedDocument) {
-            updatedDocuments.push({
-              ...updatedDocument,
-              coordinates: [{ lat: latitude, long: longitude }],
-            });
-
-            // Chiamata al backend per aggiornare le coordinate (implementa la tua logica backend)
-            try {
-              await API.updateDocumentCoordinates(updatedMarker.id, latitude, longitude);
-              setSnackbarMessage("Document position successfully updated!");
-              setSnackbarSeverity("success");
-              setSnackbarOpen(true);
-            } catch (error) {
-              setSnackbarMessage("Error updating document position.");
-              setSnackbarSeverity("error");
-              setSnackbarOpen(true);
-            }
-
-          }
-        }
-      } else if (layer instanceof L.Polygon) {
-        if (currentSelectedArea.name === "Whole Area") {
-          // Inserire qui codice per cambiare altre aree, questa non dovrebbe essere modificabile.
-          return;
-        }
-      }
-    });
-
-    // Aggiorna lo stato con i documenti aggiornati
-    setFilteredDocuments((prevDocuments) => {
-      return prevDocuments.map((doc) => {
-        const updated = updatedDocuments.find((updatedDoc) => updatedDoc.id === doc.id);
-        return updated || doc; // Aggiorna il documento se è stato modificato, altrimenti mantieni quello originale
-      });
-    });
-
-    // Aggiorna lo stato con i marker aggiornati
-    setFilteredMarkers((prevMarkers) => {
-      return prevMarkers.map((marker) => {
-        const updated = updatedMarkers.find((updatedMarker) => updatedMarker.id === marker.id);
-        return updated || marker; // Aggiorna il marker se è stato modificato, altrimenti mantieni quello originale
-      });
-    });
-  };
 
 
   const changeDocumentPosition = (document) => {
@@ -309,12 +262,14 @@ const DrawMap = () => {
     }));
   }
   const submitNewDocumentPosition = async () => {
+    
     if (selectedDocument) {
       try {
         const { lat, long } = selectedDocument.coordinates[0];
+
         if (isWholeAreaChecked) {
-          await API.updateDocumentArea(selectedDocument.id, 0);
-          setSelectedArea(areas[1]);
+          await API.updateDocumentArea(selectedDocument.id, 1);
+          setSelectedArea(areas[0]);
           // Aggiorna filteredDocuments
           setFilteredDocuments((prevDocuments) =>
             prevDocuments.map((doc) =>
@@ -334,9 +289,9 @@ const DrawMap = () => {
           );
 
           // Sposta la mappa sulla nuova posizione
-          if (mapRef.current) {
-            mapRef.current.setView([lat, long], ZOOM_LEVEL);
-          }
+          // if (mapRef.current) {
+          //   mapRef.current.setView([lat, long], ZOOM_LEVEL);
+          // }
         } else {
           await API.updateDocumentCoordinates(selectedDocument.id, lat, long);
 
@@ -359,11 +314,16 @@ const DrawMap = () => {
           );
 
           // Sposta la mappa sulla nuova posizione
-          if (mapRef.current) {
-            mapRef.current.setView([lat, long], ZOOM_LEVEL);
-          }
+          // if (mapRef.current) {
+          //   mapRef.current.setView([lat, long], ZOOM_LEVEL);
+          // }
+          // console.log(areas.find(area => area.name === 'Point-Based Documents'));
+          if(areas.find(area => area.name === 'Point-Based Documents')){
+            setSelectedArea(areas.find(area => area.name === 'Point-Based Documents'));            
 
-          setSelectedArea(areas[0]);
+          }else{
+            window.location.reload();
+          }
         }
 
         // Chiudi i modali
@@ -385,61 +345,71 @@ const DrawMap = () => {
     }
   };
 
+  const handleAreaChange = (areaId) => {
+    const selected = areas.find((area) => area.id === parseInt(areaId, 10));
+    setSelectedArea(selected);
 
-
+    // Centra la mappa se l'area ha coordinate
+    if (selected.latlngs.length > 0) {
+      const [firstPoint] = selected.latlngs[0];
+      setCenter(firstPoint);
+    }
+  };
 
 
   return (
     <div className="row" style={{ padding: '0px', width: '100%', margin: '0', }}>
 
+      {/* Mappa */}
       <div className="col text-center ">
 
         <MapContainer ref={mapRef} center={center} zoom={ZOOM_LEVEL} style={{ height: "50em", width: "80em" }}>
+    
+            {selectedArea && selectedArea.name === "Kiruna Map" &&
+              selectedArea.latlngs.map((polygon, index) => (
+                <Polygon
+                  key={`polygon-${selectedArea.id}-${index}`}
+                  positions={polygon}
+                  pathOptions={{ color: "blue" }}
+                />
+              ))}
 
-          <FeatureGroup>
-            {user && user.role === "urban_planner" && selectedArea.name !== "Whole Area" && <EditControl
-              position="topright"
-              edit={{
-                remove: false,
-              }}
-              onEdited={_onEdited}
-              // onDeleted={_onDeleted}
-              draw={{
-                rectangle: false,
-                circle: false,
-                circlemarker: false,
-                marker: false,
-                polyline: false,
-                polygon: false,
-              }}
-            />
-            }
-            {selectedArea.name === "Point-Based Documents" && (
-              filteredMarkers.map((marker) => {
-                return (
-                  <Marker
-                    key={`marker-${marker.id}`}
-                    position={marker.latlngs}
-                    icon={getMarkerIcon(marker.id)} // Usa l'icona corretta per il marker
-                    eventHandlers={{
-                      click: () => handleMarkerClick(marker.document),
-                    }}
-                    customId={marker.id} // Qui assegni customId direttamente
+            {selectedArea && selectedArea.name === "Point-Based Documents" &&
+              filteredMarkers.map((marker) => (
+                <Marker
+                  key={`marker-${marker.id}`}
+                  position={marker.latlngs}
+                  icon={getMarkerIcon(marker.id)}
+                  eventHandlers={{
+                    click: () => handleMarkerClick(marker.document),
+                  }}
+                  customId={marker.id}
+                />
+              ))}
 
-                  />
-                );
-              })
-            )}
-            <Polygon key={selectedArea.id} positions={selectedArea.latlngs} />
-          </FeatureGroup>
+{selectedArea && selectedArea.name === "All areas" &&
+              filteredMarkers.map((marker) => (
+                <Marker
+                  key={`marker-${marker.id}`}
+                  position={marker.latlngs}
+                  icon={getMarkerIcon(marker.id)}
+                  eventHandlers={{
+                    click: () => handleMarkerClick(marker.document),
+                  }}
+                  customId={marker.id}
+                />
+              ))}
+
+            {selectedArea && <Polygon key={selectedArea.id} positions={selectedArea.latlngs} />}
           <TileLayer
             url={tileLayers[mapType].url}
             attribution={tileLayers[mapType].attribution}
           />
 
         </MapContainer>
-                {/* Menu per cambiare tipo di mappa */}
-                <div className="mt-3 ">
+
+        {/* Menu per cambiare tipo di mappa */}
+        <div className="mt-3 ">
           <Button
             type="button"
             variant="outline-dark"
@@ -471,12 +441,13 @@ const DrawMap = () => {
             DARK
           </Button>
         </div>
+
       </div>
 
       {/* Sidebar con Dropdown, Search e Lista dei Documenti */}
       <div className="col">
         {/* Dropdown per selezionare l'area */}
-        <Dropdown className="mb-3 d-flex justify-content-center">
+        {/* <Dropdown className="mb-3 d-flex justify-content-center">
           <Dropdown.Toggle variant="outline" id="dropdown-basic">
             <div style={{ fontSize: '20px' }}>
 
@@ -502,7 +473,19 @@ const DrawMap = () => {
               </Dropdown.Item>
             ))}
           </Dropdown.Menu>
+        </Dropdown> */}
+
+        <Dropdown onSelect={(eventKey) => handleAreaChange(eventKey)} className="mb-3">
+          <Dropdown.Toggle variant="primary">{selectedArea ? selectedArea.name : "Select an area"}</Dropdown.Toggle>
+          <Dropdown.Menu>
+            {areas && areas.map((area) => (
+              <Dropdown.Item key={area.id} eventKey={area.id}>
+                {area.name}
+              </Dropdown.Item>
+            ))}
+          </Dropdown.Menu>
         </Dropdown>
+
 
         {/* Barra di ricerca */}
         <Form.Control
@@ -515,7 +498,7 @@ const DrawMap = () => {
 
         {/* Lista dei documenti filtrati */}
         <div style={{ maxHeight: '550px', overflowY: 'auto' }}>
-          {filteredDocuments.map((doc) => (
+          {selectedArea && filteredDocuments.length > 0 ? filteredDocuments.map((doc) => (
             <div key={doc.id}>
               <div
                 style={{
@@ -534,7 +517,7 @@ const DrawMap = () => {
                 }}
                 onMouseEnter={() => setHoveredDocumentId(doc.id)}
                 onMouseLeave={() => setHoveredDocumentId(null)}
-                onClick={doc.area_name === "Whole Area" ? () => handleMarkerClick(doc) : () => changeMapPosition(doc)}
+                onClick={doc.area_name === "Kiruna Map" ? () => handleMarkerClick(doc) : () => changeMapPosition(doc)}
               >
                 <div className="p-2">
                   <h2><strong>{doc.document_title}</strong></h2>
@@ -552,9 +535,13 @@ const DrawMap = () => {
                     </p>
                   )}
                 </div>
+
+                {/* OPEN DOCUMENT AND CHANGE POSITION BUTTON*/}
                 <div>
                   {user && user.role === "urban_planner" && (
                     <Container className="flex flex-row gap-x-4 text-center">
+
+
                       <Button
                         className="mt-4"
                         style={{
@@ -572,6 +559,8 @@ const DrawMap = () => {
                           <ArticleIcon></ArticleIcon>
                         </p>
                       </Button>
+
+
                       <Button
                         className="mt-4"
                         style={{
@@ -594,7 +583,11 @@ const DrawMap = () => {
                 </div>
               </div>
             </div>
-          ))}
+          )) : 
+          <div style={{textAlign:'center'}}>
+            <p>No documents found.</p>
+          </div>
+          }
         </div>
 
       </div>
@@ -714,14 +707,14 @@ const DrawMap = () => {
               <Form.Group controlId="wholeAreaCheckbox" className="text-center">
                 <Form.Check
                   type="checkbox"
-                  label="Set as Whole Area"
+                  label="Set as Kiruna Map"
                   checked={isWholeAreaChecked}
                   onChange={(e) => {
                     const checked = e.target.checked;
                     setIsWholeAreaChecked(checked);
                     setSelectedDocument((prevDoc) => ({
                       ...prevDoc,
-                      area_name: checked ? "Whole Area" : "Point-Based Documents",
+                      area_name: checked ? "Kiruna Map" : "Point-Based Documents",
                     }));
                   }}
                 />
