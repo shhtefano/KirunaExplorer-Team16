@@ -724,7 +724,58 @@ console.log(documentInfo, coordinates);
     });
   }
   
+  async saveArea(name, points) {
+    return new Promise((resolve, reject) => {
+      const maxIdQuery = `SELECT MAX(area_id) as maxId FROM Geolocation`;
+
+      db.get(maxIdQuery, [], (err, row) => {
+        if (err) {
+          db.run('ROLLBACK');
+          return reject(err);}
+          let newAreaId = (row.maxId || 0) + 1;
+        
+        
+      const insertAreaSql = `
+        INSERT INTO Geolocation (area_id, area_name, lat, long)
+        VALUES (?, ?, ?, ?)
+      `;
+  
+      const dbTransaction = db.serialize(() => {
+        db.run("BEGIN TRANSACTION");
+        try {
+          points.forEach((point) => {
+            db.run(insertAreaSql, [newAreaId, name, point.lat, point.long], (err) => {
+              if (err) {
+                console.error("Errore durante l'inserimento del punto:", err);
+                throw new Error("Errore durante l'inserimento dei punti.");
+              }
+            });
+          });
+          db.run("COMMIT");
+          resolve("Area e punti salvati con successo.");
+        } catch (error) {
+          db.run("ROLLBACK");
+          reject(error);
+        }
+      })});
+  
+    });
+  }
+  
+
 }
 
 export default DocumentDAO;
 
+let documentDAO = new DocumentDAO();
+const areaName = "Area Quadrata";
+const points = [
+  { lat: 45.4642, long: 9.1900 },
+  { lat: 45.4643, long: 9.1901 },
+  { lat: 45.4644, long: 9.1902 },
+  { lat: 45.4645, long: 9.1903 }
+];
+
+documentDAO.saveArea(areaName, points)
+  .then((message) => {
+    console.log(message);})
