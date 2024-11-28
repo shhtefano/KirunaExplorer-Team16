@@ -35,6 +35,8 @@ export default function DocumentsTable() {
   const [day, setDay] = useState("");
   const [dateFilterMode, setDateFilterMode] = useState("year");
 
+
+
   const documentTypes = [
     { type: "All" },
     { type: "Design" },
@@ -145,11 +147,22 @@ export default function DocumentsTable() {
 
 
 
+  //Handle the Delete Button Click
+  const handleDeleteDocument = async (id) => {
+    try {
+      await API.deleteDocument(id);
+      console.log("Document deleted successfully");
+      setDocuments((prev) =>
+        prev.filter((doc) => doc.document_id !== id)
+      );
+    } catch (error) {
+      console.error("Error deleting document:", error);
+    }
+  };
+  
 
 
-
-
-
+  //Pagination
   const totalPages = Math.ceil(filteredDocuments.length / itemsPerPage);
   const paginatedDocuments = filteredDocuments.slice(
     (currentPage - 1) * itemsPerPage,
@@ -384,7 +397,7 @@ export default function DocumentsTable() {
                       >
                         <Pencil color="black" className="h-5 w-5 inline-block" />
                       </button>
-                      <button className="px-3" // onClick={() => handleDeleteDocument(doc.document_id)}
+                      <button className="px-3" onClick={() => handleDeleteDocument(doc.document_id)}
                       >
                         <Trash2 color="black" className="h-5 w-5 inline-block" />
                       </button>

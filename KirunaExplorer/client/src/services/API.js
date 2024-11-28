@@ -15,6 +15,24 @@ async function getDocuments() {
   return response.json();
 }
 
+
+
+async function deleteDocument(document_id) {
+  const response = await fetch(`${SERVER_URL}/api/document/${document_id}`, {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || "API error: Document deletion failed");
+  }
+  return response.json();
+}
+
+
+
 async function getStakeholders() {
   const response = await fetch(`${SERVER_URL}/api/stakeholder`, {
     method: "GET",
@@ -342,7 +360,8 @@ const API = {
   addNewStakeholder,
   linkDocuments,
   getConnectionsByDocumentTitle,
-  deleteConnection
+  deleteConnection,
+  deleteDocument
 };
 
 export default API;

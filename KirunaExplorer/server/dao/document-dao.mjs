@@ -60,6 +60,30 @@ class DocumentDAO {
     });
   }
 
+
+
+  async deleteDocument(document_id) {
+    return new Promise((resolve, reject) => {
+      const query = `DELETE FROM Documents WHERE document_id = ?`;
+      db.run(query, [document_id], function (err) {
+        if (err) {
+          console.error("Error deleting document:", err);
+          return reject(new Error("Error deleting the document"));
+        }
+        if (this.changes === 0) {
+          return reject(new Error("Document not found"));
+        }
+        resolve({ message: "Document deleted successfully" });
+      });
+    });
+  }
+
+
+
+
+
+
+
   async getStakeholders() {
     return new Promise((resolve, reject) => {
       const query = `SELECT stakeholder_name FROM Stakeholders;`;
