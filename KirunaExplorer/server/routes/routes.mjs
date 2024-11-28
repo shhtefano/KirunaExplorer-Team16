@@ -49,18 +49,6 @@ router.get("/api/document/geo/list", async (req, res) => {
   }
 });
 
-router.get("/api/stakeholder", async (req, res) => {
-  try {
-    // Recupera tutti i documenti dal database
-    const stakeholders = await documentDAO.getStakeholders();
-    // Risponde con i documenti in formato JSON
-    res.status(200).json(stakeholders);
-  } catch (error) {
-    console.error(error);
-    res.status(500).send("An error occurred while fetching documents.");
-  }
-});
-
 router.get("/api/document/:document_id/geo/", async (req, res) => {
   try {
     // Recupera tutti i documenti dal database
@@ -73,12 +61,45 @@ router.get("/api/document/:document_id/geo/", async (req, res) => {
   }
 });
 
-router.post("/api/stakeholder", async (req, res) => {
-  console.log('salame');
-  
+router.get("/api/document/geo/area", async (req, res) => {
   try {
-    console.log('miaooo',req.body);
-    
+    // Recupera tutti i documenti dal database    
+    const area = await documentDAO.getAreas();
+    // Risponde con i documenti in formato JSON
+    res.status(200).json(area);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("An error occurred while fetching document position.");
+  }
+});
+
+router.get("/api/geo/:areaId", async (req, res) => {
+  try {
+    // Recupera tutti i documenti dal database
+    const coordinates = await documentDAO.getAreaCoordinates(req.params.areaId);
+    // Risponde con i documenti in formato JSON
+    res.status(200).json(coordinates);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("An error occurred while fetching document position.");
+  }
+});
+
+router.get("/api/stakeholder", async (req, res) => {
+  try {
+    // Recupera tutti i documenti dal database
+    const stakeholders = await documentDAO.getStakeholders();
+    // Risponde con i documenti in formato JSON
+    res.status(200).json(stakeholders);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("An error occurred while fetching documents.");
+  }
+});
+
+router.post("/api/stakeholder", async (req, res) => {
+  
+  try {    
     await documentDAO.util_insertStakeholder(req.body.stakeholder_name);
 
     res.status(201).send("Stakeholder successfully inserted");

@@ -15,20 +15,6 @@ const icon = new L.Icon({
   shadowSize: [41, 41],
 });
 
-const areas = [
-  {
-    id: 0,
-    name: "Whole Area",
-    latlngs: [
-      { lat: 67.864354, lng: 20.198879 },
-      { lat: 67.845556, lng: 20.198879 },
-      { lat: 67.840539, lng: 20.28059 },
-      { lat: 67.864871, lng: 20.304966 },
-    ],
-  },
-  // Add more areas here as needed
-];
-
 const tileLayers = {
   maptiler: {
     url: "https://api.maptiler.com/maps/basic/256/{z}/{x}/{y}.png?key=BIzjthaYAgeFFw8kkpi9",
@@ -44,8 +30,8 @@ const tileLayers = {
 const DocumentMap = ({ document_id }) => {
   const [center, setCenter] = useState([67.85572, 20.22513]);
 
-  const [zoomLevel, setZoomLevel] = useState(12);
-  const [coordinates, setCoordinates] = useState([]);
+  const [zoomLevel, setZoomLevel] = useState(7);
+  const [coordinates, setCoordinates] = useState(null);
   const [areaName, setAreaName] = useState(null);
   const [mapType, setMapType] = useState("satellite"); // Tipo di mappa selezionato
 
@@ -54,27 +40,75 @@ const DocumentMap = ({ document_id }) => {
       try {
         const document = await API.getDocumentPosition(document_id);
 
-        if (document && document.coordinates && document.coordinates.length > 0) {
-          if (document.area_name === "Whole Area") {
-            const latitudes = document.coordinates.map((coord) => coord.lat);
-            const longitudes = document.coordinates.map((coord) => coord.lng);
-            const avgLat = latitudes.reduce((a, b) => a + b, 0) / latitudes.length;
-            const avgLng = longitudes.reduce((a, b) => a + b, 0) / longitudes.length;
-            setCenter([67.85572, 20.22513]);
-            // setCenter([avgLat, avgLng]);
-            setCoordinates(areas[0].latlngs);
-            // setCoordinates(document.coordinates);
-            setAreaName(document.area_name);
+        if (document.coordinates && document.coordinates.length > 0) {
+          if (document.area_name === "Kiruna Map") {
+            // Calcolo del centro (opzionale, lo hai già)
+            if (document.coordinates && document.coordinates.length > 0) {
+              let polygonCoordinates = [];
+
+              // Se è un array di array (multipoligono)
+              if (Array.isArray(document.coordinates[0])) {
+                polygonCoordinates = document.coordinates.map((polygon) =>
+                  polygon.map((coord) => [coord.lat, coord.lng])
+                );
+              } else {
+                // Se è un singolo array (poligono semplice)
+                polygonCoordinates = [document.coordinates.map((coord) => [coord.lat, coord.lng])];
+              }
+
+              // Chiudi ogni poligono, se necessario
+              polygonCoordinates = polygonCoordinates.map((polygon) => {
+                if (
+                  polygon.length > 0 &&
+                  (polygon[0][0] !== polygon[polygon.length - 1][0] ||
+                    polygon[0][1] !== polygon[polygon.length - 1][1])
+                ) {
+                  polygon.push(polygon[0]);
+                }
+                return polygon;
+              });
+
+              setCoordinates(polygonCoordinates);
+              setAreaName(document.area_name);
+
+              // Calcola il centro per centrare la mappa
+              const allLatitudes = polygonCoordinates.flat().map((coord) => coord[0]);
+              const allLongitudes = polygonCoordinates.flat().map((coord) => coord[1]);
+              const avgLat = allLatitudes.reduce((a, b) => a + b, 0) / allLatitudes.length;
+              const avgLng = allLongitudes.reduce((a, b) => a + b, 0) / allLongitudes.length;
+
+              setCenter([avgLat, avgLng]);
+            }
+
           } else if (document.area_name === "Point-Based Documents") {
-            setCenter([document.coordinates[0].lat, document.coordinates[0].lng]);
-            setCoordinates([document.coordinates[0].lat, document.coordinates[0].lng]);
-            setAreaName(document.area_name);
-          } else if (document.area_name === "Custom Area"){
-            //TODO
+
+            const coordinates = document.coordinates;
+  
+            // Controlla il formato delle coordinate
+            const firstCoord = Array.isArray(coordinates[0]) ? coordinates[0][0] : coordinates[0];
+          
+            console.log("First Coordinate Object:", firstCoord);
+            
+            const lat = firstCoord?.lat;
+            const lng = firstCoord?.lng;
+          
+            if (lat !== undefined && lng !== undefined) {
+              setCenter([lat, lng]); // Imposta il centro della mappa
+              setCoordinates([lat, lng]); // Imposta direttamente l'array [lat, lng]
+              setAreaName(document.area_name);
+            } else {
+              console.error("Invalid coordinates in Point-Based Documents:", firstCoord);
+            }
+            
+          } else if (document.area_name === "Custom Area") {
+            // TODO: Gestisci le aree personalizzate
             return;
           } else {
-            console.log("error");
+            console.log("Error: Unknown area name");
           }
+        } else {
+          console.log('qui non dovrebbe andarci mai');
+
         }
       } catch (error) {
         console.error("Error fetching document position:", error);
@@ -132,8 +166,12 @@ const DocumentMap = ({ document_id }) => {
           />
         )}
 
-        {(areaName === "Whole Area" || areaName === "Custom Area") &&
-          coordinates.length > 0 && <Polygon positions={coordinates} />}
+        {(areaName === "Kiruna Map" || areaName === "Custom Area") &&
+          coordinates.length > 0 &&
+          coordinates.map((polygon, index) => (
+            <Polygon key={index} positions={polygon} />
+          ))}
+
         <TileLayer
           url={tileLayers[mapType].url}
           attribution={tileLayers[mapType].attribution}

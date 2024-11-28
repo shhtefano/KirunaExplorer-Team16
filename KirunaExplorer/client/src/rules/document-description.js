@@ -11,13 +11,14 @@ export const issuanceRules = {
   minLength: {
     value: 4,
     message:
-      "Please write the date in the correct format: YYYY, YYYY-MM, or YYYY-MM-DD",
+      "Please write the date in the correct format: YYYY, YYYY/MM, or YYYY/MM/DD",
   },
   pattern: {
-    value: /^\d{4}(-(0[1-9]|1[0-2])(-([0-2][0-9]|3[0-1]))?)?$/,
-    message: "Date must be in format YYYY, YYYY-MM, or YYYY-MM-DD",
+    value: /^\d{4}(\/(0[1-9]|1[0-2])(\/([0-2][0-9]|3[0-1]))?)?$/,
+    message: "Date must be in format YYYY, YYYY/MM, or YYYY/MM/DD",
   },
 };
+
 
 export const descriptionRules = {
   required: "A description is required",
