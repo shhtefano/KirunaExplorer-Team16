@@ -196,5 +196,17 @@ router.put("/api/document/updateDocumentArea", async (req, res) => {
   }
 });
 
+router.post("/api/insertArea", async (req, res) => {
+
+  const { area_name, coordinates } = req.body;
+    try {
+    await documentDAO.insertArea(area_name, coordinates);
+
+    res.status(201).send("Area successfully inserted");
+  } catch (error) {
+      res.status(500).send("An error occurred while adding area.");
+  }
+});
+
 
 export default router;

@@ -724,7 +724,7 @@ console.log(documentInfo, coordinates);
     });
   }
   
-  async saveArea(name, points) {
+  async insertArea(name, points) {
     return new Promise((resolve, reject) => {
       const maxIdQuery = `SELECT MAX(area_id) as maxId FROM Geolocation`;
 
@@ -776,6 +776,6 @@ const points = [
   { lat: 45.4645, long: 9.1903 }
 ];
 
-documentDAO.saveArea(areaName, points)
+documentDAO.insertArea(areaName, points)
   .then((message) => {
     console.log(message);})
