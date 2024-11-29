@@ -78,7 +78,7 @@ export function AppSidebar({ ...props }) {
   const navItems =
     user?.role === "urban_planner"
       ? data.navMain // Show all items
-      : data.navMain.filter((item) => item.title === "Map"); // Only show Map
+      : data.navMain.filter((item) => item.title === "Map" | item.title === "Documents"); // Only show Map
 
   return (
     <Sidebar collapsible="icon" {...props}>
