@@ -354,8 +354,9 @@ const addNewStakeholder = async (body) => {
 //Supabase
 
 // Funzione per caricare un file su Supabase
-const uploadFileToSupabase = async (file) => {
-  const fileName = `uploads/resources/${file.name}`; // Path del file nel bucket
+const uploadFileToSupabase = async (file, documentId) => {
+  // Create a path that includes the document ID
+  const fileName = `uploads/resources/${documentId}/${file.name}`; // Path del file nel bucket
 
   const { data, error } = await supabase.storage
     .from('resources') // Nome del bucket
@@ -368,7 +369,21 @@ const uploadFileToSupabase = async (file) => {
   }
 
   const fileUrl = `${supabaseUrl}/storage/v1/object/public/resources/${fileName}`;
-  return fileUrl;
+  return fileUrl; // Return the file URL
+};
+
+// Function to get the list of files from Supabase
+const listFilesInSupabase = async (documentId) => {
+  // List files in the specific folder corresponding to the document ID
+  const { data, error } = await supabase.storage
+    .from('resources') // Specify the bucket name
+    .list(`uploads/resources/${documentId}`); // Fetch the list of files in the document's folder
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data; // Return the list of files
 };
 
 
@@ -410,7 +425,8 @@ const API = {
   getConnectionsByDocumentTitle,
   deleteConnection,
   //STORAGE
-  uploadFileToSupabase
+  uploadFileToSupabase,
+  listFilesInSupabase
 };
 
 export default API;

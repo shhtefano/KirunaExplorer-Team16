@@ -9,6 +9,7 @@ import GraphPage from "./pages/Graph";
 import LoginPage from "./pages/Login";
 import AddDocumentDescPage from "./pages/AddDocumentDesc";
 import ShowDocumentsPage from "./pages/ShowDocuments";
+import AddResources from "./pages/addResources";
 
 function App() {
   return (
@@ -49,6 +50,12 @@ function App() {
               <AuthRoute>
                 <LoginPage />
               </AuthRoute>
+            }
+          />
+           <Route
+            path="/addresources"
+            element={      
+                <AddResources/>
             }
           />
         </Routes>
