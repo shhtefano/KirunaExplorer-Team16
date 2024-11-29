@@ -22,8 +22,8 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
           args: |
-            -Dsonar.projectKey=shhtefano_KirunaExplorer-Team16
-            -Dsonar.organization=shhtefano
+            -Dsonar.projectKey=kiruna-explorer-team-16_kiruna-explorer
+            -Dsonar.organization=kiruna-explorer-team-16
             -Dsonar.verbose=true
             -Dsonar.sources=client,server
             -Dsonar.projectBaseDir=./KirunaExplorer
