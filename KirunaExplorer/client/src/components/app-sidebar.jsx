@@ -4,6 +4,7 @@ import {
   GanttChart,
   Telescope,
   FileText,
+  LandPlot,
   ChevronDown,
 } from "lucide-react";
 import { NavMain } from "@/components/nav-main";
@@ -45,6 +46,11 @@ const data = {
       url: "/map",
       icon: Map,
       isActive: true,
+    },
+    {
+      title: "Areas",
+      url: "/areas",
+      icon: LandPlot,
     },
     {
       title: "Graph",

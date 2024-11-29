@@ -73,6 +73,28 @@ router.get("/api/document/geo/area", async (req, res) => {
   }
 });
 
+router.post("/api/geo/area", async (req, res) => {
+  try {
+    console.log(req.body);
+
+    // Recupera tutti i documenti dal database    
+    await documentDAO.addArea(req.body);
+    // Risponde con i documenti in formato JSON
+    res.status(200).json();
+  } catch (error) {
+    // Gestione specifica dei codici di errore
+    if (error.code === 403) {
+      return res.status(403).json({ message: error.message || "Area name already exists." });
+    } else if (error.code === 422) {
+      return res.status(422).json({ message: error.message || "Invalid data provided." });
+    }
+
+    // Errore generico (500)
+    console.error("Unexpected error:", error);
+    res.status(500).json({ message: "An unexpected error occurred." });
+  }
+});
+
 router.get("/api/geo/:areaId", async (req, res) => {
   try {
     // Recupera tutti i documenti dal database
@@ -98,17 +120,17 @@ router.get("/api/stakeholder", async (req, res) => {
 });
 
 router.post("/api/stakeholder", async (req, res) => {
-  
-  try {    
+
+  try {
     await documentDAO.util_insertStakeholder(req.body.stakeholder_name);
 
     res.status(201).send("Stakeholder successfully inserted");
   } catch (error) {
     console.error(error);
-    if(error === "Duplicated stakeholder"){
+    if (error === "Duplicated stakeholder") {
       res.status(403).send("Duplicated stakeholder"); //CHANGED ERROR MESSAGE
 
-    }else{
+    } else {
 
       res.status(500).send(error.message); //CHANGED ERROR MESSAGE
     }
@@ -123,10 +145,10 @@ router.post("/api/document/connections", async (req, res) => {
     res.status(201).send("Documents successfully linked");
   } catch (error) {
     console.error(error);
-    if(error === "Duplicated link"){
+    if (error === "Duplicated link") {
       res.status(403).send("Duplicated Link"); //CHANGED ERROR MESSAGE
 
-    }else{
+    } else {
 
       res.status(500).send(error.message); //CHANGED ERROR MESSAGE
     }
@@ -172,7 +194,7 @@ router.delete('/api/document/connections/delete', async (req, res) => {
 
 router.post("/api/document/update/georeference", async (req, res) => {
   const { markerId, lng, lat } = req.body;
-  
+
   try {
     await documentDAO.updatePointCoords(markerId, lng, lat);
 
@@ -199,19 +221,19 @@ router.post("/api/document/updatePointCoords", async (req, res) => {
 
 router.put("/api/document/updateDocumentArea", async (req, res) => {
   const { document_id, area_id } = req.body;
-  
-  if (document_id === undefined || area_id === undefined) {    
+
+  if (document_id === undefined || area_id === undefined) {
     return res.status(400).json({ error: 'Missing required parameters.' });
   }
 
   try {
 
     const result = await documentDAO.updateDocumentArea(document_id, area_id);
-    
+
     res.status(200).json({ message: "Document area successfully updated" });
 
   } catch (error) {
-    
+
     console.error(error);
     res.status(500).send("An error occurred while updating the Document area.");
   }

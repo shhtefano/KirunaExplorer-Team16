@@ -2,7 +2,7 @@
 /* eslint-disable jest/expect-expect */
 /* eslint-disable no-undef */
 
-describe("DrawMap Component", () => {
+describe("GeneralMap Component", () => {
   describe("Visitor Access", () => {
     beforeEach(() => {
       cy.visit("/map");
