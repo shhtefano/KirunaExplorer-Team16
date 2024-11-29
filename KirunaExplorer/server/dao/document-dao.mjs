@@ -416,7 +416,7 @@ class DocumentDAO {
                   return reject(err);
                 }
 
-                if (areaRow && area_name == 'Kiruna Map') {
+                if (areaRow) {
                   const areaId = areaRow.area_id;
 
                   const geolocationDocQuery = `

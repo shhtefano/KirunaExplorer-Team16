@@ -296,6 +296,22 @@ const DocumentDescriptionForm = () => {
     }
   };
 
+  const [geoAreas, setGeoAreas] = useState([]); // Per salvare le aree geografiche
+//const [selectedGeoArea, setSelectedGeoArea] = useState(""); // Per tracciare l'area selezionata
+
+useEffect(() => {
+  const fetchGeoAreas = async () => {
+    try {
+      const data = await API.getGeoArea(); // Chiamata alla tua funzione API
+      setGeoAreas(data); // Salva le aree nello stato
+    } catch (error) {
+      console.error("Errore durante il fetch delle aree geografiche:", error);
+    }
+  };
+
+  fetchGeoAreas();
+}, []);
+
   return (
     <div>
       <div className="d-flex justify-content-center" style={{ fontSize: "34px", fontWeight: "bold", marginBottom: '20px' }}>
@@ -526,36 +542,43 @@ const DocumentDescriptionForm = () => {
 
               {/* Map button and other fields */}
               <div className="flex gap-x-4 items-center">
-                <FormField
-                  control={form.control}
-                  name="area_name"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-col items-center space-y-2">
-                      {" "}
-                      {/* Disposizione verticale e centrata */}
-                      <FormLabel
-                        className="text-center"
-                        style={{ paddingBottom: "22px" }}
-                      >
-                        {" "}
-                        {/* Allinea la label al centro */}
-                        Municipal area
-                      </FormLabel>
-                      <FormControl>
-                        <Checkbox
-                          {...field}
-                          checked={field.value === "Kiruna Map"} // Checkbox is checked if value is "Kiruna Map"
-                          onCheckedChange={(checked) => {
-                            const value = checked ? "Kiruna Map" : ""; // Set to "Kiruna Map" if checked, otherwise empty
-                            field.onChange(value); // Update the form's field value
-                            setIsWholeArea(checked); // Optional: Update any additional component state
-                          }}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+              <FormField
+    control={form.control}
+    name="area_name"
+    render={({ field }) => (
+      <FormItem className="flex flex-col items-center space-y-2">
+        {/* Disposizione verticale e centrata */}
+        <FormLabel
+          className="text-center"
+          style={{ paddingBottom: "22px" }}
+        >
+          {/* Allinea la label al centro */}
+          Select Geo Area
+        </FormLabel>
+        <FormControl>
+          <select
+            {...field}
+            onChange={(e) => {
+              const value = e.target.value;
+              field.onChange(value); // Aggiorna il valore nel form
+              form.setValue("latitude", ""); // Reset latitude
+              form.setValue("longitude", ""); // Reset longitude
+              form.setValue("area_name", value); // Aggiorna area_name con il valore selezionato
+              setIsWholeArea(value); // Aggiorna stato isWholeArea se necessario
+            }}
+          >
+            <option value="">Select an area</option>
+            {geoAreas.map((area) => (
+              <option key={area.id} value={area.name}>
+                {area.name}
+              </option>
+            ))}
+          </select>
+        </FormControl>
+        <FormMessage />
+      </FormItem>
+    )}
+  />
                 <div style={{ marginLeft: "30px", marginRight: "30px" }}>
                   OR
                 </div>
@@ -642,6 +665,37 @@ const DocumentDescriptionForm = () => {
                   </div>
                 </div>
               )}
+{/*<FormField
+  control={form.control}
+  name="geo_area"
+  render={({ field }) => (
+    <FormItem>
+      <FormLabel>Select Geo Area</FormLabel>
+      <FormControl>
+        <select
+          {...field}
+          onChange={(e) => {
+            const value = e.target.value;
+            field.onChange(value); // Aggiorna il valore in react-hook-form
+            form.setValue("latitude", ""); // Reset latitude
+            form.setValue("longitude", ""); // Reset longitude
+            form.setValue("area_name", ""); // Reset Municipal Area
+          }}
+          disabled={isWholeArea}
+        >
+          <option value="">Select an area</option>
+          {geoAreas.map((area) => (
+            <option key={area.id} value={area.name}>
+              {area.name}
+            </option>
+          ))}
+        </select>
+      </FormControl>
+      <FormMessage />
+    </FormItem>
+  )}
+/>*/}
+
 
               <FormField
                 control={form.control}
