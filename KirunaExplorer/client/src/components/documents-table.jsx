@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogTrigger, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Dialog, DialogTrigger, DialogContent, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
 import {
   Pagination,
@@ -17,7 +17,7 @@ import DocumentLink from "./document-link.jsx";
 import DocumentMap from "./DocumentMap.jsx"; // Importa il componente mappa
 import { MapIcon, Pencil, Trash2 } from "lucide-react";
 import { Button } from "react-bootstrap";
-import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
+import { Popover } from "@/components/ui/popover";
 
 
 
@@ -34,6 +34,8 @@ export default function DocumentsTable() {
   const [month, setMonth] = useState("");
   const [day, setDay] = useState("");
   const [dateFilterMode, setDateFilterMode] = useState("year");
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);  // To control Dialog for delete confirmation
+  const [documentToDelete, setDocumentToDelete] = useState(null);  // To store the document that needs to be deleted
 
 
 
@@ -90,7 +92,7 @@ export default function DocumentsTable() {
   //   fetchStakeholders();
   // }, []);
 
-  
+
 
 
 
@@ -103,7 +105,7 @@ export default function DocumentsTable() {
 
     const matchesStakeholder =
       selectedStakeholder && selectedStakeholder !== "All" ? (doc.stakeholders || []).includes(selectedStakeholder) : true;
-    
+
     const matchesLanguage =
       selectedLanguage && selectedLanguage !== "All" ? doc.language === selectedLanguage : true;
 
@@ -159,7 +161,7 @@ export default function DocumentsTable() {
       console.error("Error deleting document:", error);
     }
   };
-  
+
 
 
   //Pagination
@@ -373,7 +375,7 @@ export default function DocumentsTable() {
                           <button
                             style={{ backgroundColor: "white", color: "black" }}
                             className="px-4"
-                            onClick={() => {setSelectedMapDocument(doc)}}
+                            onClick={() => { setSelectedMapDocument(doc) }}
                           >
                             <MapIcon color="black" alt="Open Map" label="Open Map"></MapIcon>
                           </button>
@@ -384,25 +386,79 @@ export default function DocumentsTable() {
                           </DialogTitle>
                           <DialogDescription className="mt-4">
                             <DocumentMap
-                              document_id={doc.document_id
-                              }
+                              document_id={doc.document_id}
                             />
                           </DialogDescription>
                         </DialogContent>
                       </Dialog>
                     </div>
-             
+
+
                     <div>
-                      <button className="pl-4" // onClick={() => handleEditDocument(doc)}
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <button
+                            style={{ backgroundColor: "white", color: "black" }}
+                          >
+                            <Pencil color="black" className="h-5 w-5 inline-block" />
+                          </button>
+                        </DialogTrigger>
+                      </Dialog>
+                    </div>
+
+
+
+                    <div>
+                      <Dialog
+                        open={openDeleteDialog} // Controlled by openDeleteDialog state
+                        onOpenChange={setOpenDeleteDialog} // Update state when the dialog is closed via outside click or Cancel
                       >
-                        <Pencil color="black" className="h-5 w-5 inline-block" />
-                      </button>
-                      <button className="px-3" onClick={() => handleDeleteDocument(doc.document_id)}
-                      >
-                        <Trash2 color="black" className="h-5 w-5 inline-block" />
-                      </button>
-                    </div>      
-              
+                        <DialogTrigger asChild>
+                          <button
+                            style={{ backgroundColor: "white", color: "black" }}
+                            className="px-2"
+                            onClick={() => {
+                              setDocumentToDelete(doc); // Set the document to delete
+                              setOpenDeleteDialog(true); // Open the delete confirmation dialog
+                            }}
+                          >
+                            <Trash2 color="black" className="h-5 w-5 inline-block" />
+                          </button>
+                        </DialogTrigger>
+
+                        <DialogContent className="p-4 bg-white rounded-lg shadow-lg">
+                          <DialogTitle className="text-xl font-bold text-gray-800">
+                            Confirm Deletion
+                          </DialogTitle>
+                          <DialogDescription className="text-gray-800 my-1">
+                            Are you sure you want to delete this document?
+                          </DialogDescription>
+                          <DialogFooter>
+                            <button
+                              style={{ backgroundColor: "black", color: "white" }}
+                              className="px-3 pb-1 text-sm text-white rounded"
+                              onClick={() => {
+                                setOpenDeleteDialog(false); // Close dialog
+                              }}
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              style={{ backgroundColor: "red", color: "white" }}
+                              className="px-3 pb-1 text-sm text-white rounded"
+                              onClick={() => {
+                                handleDeleteDocument(documentToDelete.document_id); // Call delete function
+                                setOpenDeleteDialog(false); // Close dialog
+                              }}
+                            >
+                              Yes, Delete
+                            </button>
+                          </DialogFooter>
+                        </DialogContent>
+                      </Dialog>
+                    </div>
+
+
 
                   </div>
                 </TableCell>
