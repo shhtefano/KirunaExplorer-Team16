@@ -1,4 +1,13 @@
-import { Map, GanttChart, Telescope, FileText } from "lucide-react";
+import {
+  Map,
+  Settings2,
+  GanttChart,
+  Telescope,
+  FileText,
+  LandPlot,
+  ChevronDown,
+} from "lucide-react";
+
 import { NavMain } from "@/components/nav-main";
 import { NavUser } from "@/components/nav-user";
 import { TeamSwitcher } from "@/components/team-switcher";
@@ -32,6 +41,11 @@ const data = {
       url: "/map",
       icon: Map,
       isActive: true,
+    },
+    {
+      title: "Areas",
+      url: "/areas",
+      icon: LandPlot,
     },
     {
       title: "Graph",

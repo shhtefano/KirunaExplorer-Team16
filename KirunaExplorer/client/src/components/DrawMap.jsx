@@ -1,753 +1,365 @@
-import React, { useState, useEffect, useRef } from "react";
-import 'bootstrap/dist/css/bootstrap.min.css';
+import React, { useEffect, useRef, useState } from "react";
 import L from "leaflet";
-import { MapContainer, TileLayer, FeatureGroup, Marker, Polygon } from "react-leaflet";
-import { Modal, Button, Dropdown, Form } from "react-bootstrap";
+import { MapContainer, TileLayer, FeatureGroup, Polygon } from "react-leaflet";
+import { EditControl } from "react-leaflet-draw";
 import "leaflet/dist/leaflet.css";
 import "leaflet-draw/dist/leaflet.draw.css";
-import API from "../services/API";
-import { EditControl } from "react-leaflet-draw";
-import { useAuth } from "@/contexts/AuthContext";
-import { Container } from "@mui/material";
-import ArticleIcon from '@mui/icons-material/Article';
-import { MapIcon } from "lucide-react";
-import CoordsMap from "./CoordsMap";
+import { Button, Modal, Form } from "react-bootstrap";
+import { Popup } from "react-leaflet";
+import API from "@/services/API";
 import { Snackbar, Alert } from "@mui/material";
-import { WindowSharp } from "@mui/icons-material";
+import { Marker } from "react-leaflet";
 
 // Configura l'icona di default di Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
+
 L.Icon.Default.mergeOptions({
-  iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.3.1/images/marker-icon.png",
-  iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.3.1/images/marker-icon.png",
-  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.3.1/images/marker-shadow.png",
+    iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.3.1/images/marker-icon.png",
+    iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.3.1/images/marker-icon.png",
+    shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.3.1/images/marker-shadow.png",
 });
 
-
 const tileLayers = {
-  maptiler: {
-    url: "https://api.maptiler.com/maps/basic/256/{z}/{x}/{y}.png?key=BIzjthaYAgeFFw8kkpi9",
-  },
-  satellite: {
-    url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-  },
-  dark: {
-    url: "https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png",
-  },
+    maptiler: {
+        url: "https://api.maptiler.com/maps/basic/256/{z}/{x}/{y}.png?key=BIzjthaYAgeFFw8kkpi9",
+    },
+    satellite: {
+        url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+    },
+    dark: {
+        url: "https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png",
+    },
 };
 
-
 const DrawMap = () => {
-  const [center, setCenter] = useState({ lat: 67.85572, lng: 20.22513 });
-  const [filteredMarkers, setFilteredMarkers] = useState([]);
-  const [selectedArea, setSelectedArea] = useState();
-  const [selectedDocument, setSelectedDocument] = useState(null);
-  const [filteredDocuments, setFilteredDocuments] = useState([]);
-  const [searchQuery, setSearchQuery] = useState(""); // Stato per la ricerca
-  const [showModal, setShowModal] = useState(false);
-  const [showPopup, setShowPopup] = useState(false);
-  const [showEditCoordinatesModal, setShowEditCoordinatesModal] = useState(false);
-  const [hoveredDocumentId, setHoveredDocumentId] = useState(null); // Stato per il documento in hover
-  const [selectedMarkerId, setSelectedMarkerId] = useState(null); // Stato per il marker selezionato
-  const { user } = useAuth();
-  const mapRef = useRef(null); // Riferimento alla mappa
-  const selectedAreaRef = useRef(selectedArea);
-  const [isWholeAreaChecked, setIsWholeAreaChecked] = useState(false); // Stato per la checkbox
-  const [snackbarOpen, setSnackbarOpen] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState("");
-  const [snackbarSeverity, setSnackbarSeverity] = useState("success");
-  const [mapType, setMapType] = useState("satellite"); // Tipo di mappa selezionato
-  const [areas, setAreas] = useState([]); // Stato per le aree
-  const [allDocs, setAllDocs] = useState([]);
-  const ZOOM_LEVEL = 7;
-  const WHOLE_AREA_CENTER = { lat: 67.85572, lng: 20.22513 }; // Definisci le coordinate per Kiruna Map
-  const WHOLE_AREA_ZOOM = 12; // Definisci un livello di zoom per Kiruna Map
+    const [center] = useState({ lat: 67.85572, lng: 20.22513 });
+    const [mapLayers, setMapLayers] = useState([]);
+    const [filteredLayers, setFilteredLayers] = useState([]);
+    const [selectedAreas, setSelectedAreas] = useState([]);
+    const [searchTerm, setSearchTerm] = useState("");
+    const [mapType, setMapType] = useState("satellite");
+    const [showModal, setShowModal] = useState(false);
+    const [currentLayer, setCurrentLayer] = useState(null);
+    const [selectedLayer, setSelectedLayer] = useState(null);
 
-  useEffect(() => {
-    const fetchAreas = async () => {
-      try {
-        const areas = await API.getGeoArea();
-        // console.log(areas);
-        setSelectedArea(areas[0]);
-        setAreas(areas)
-      } catch (error) {
-        console.error("Errore durante il fetch delle aree:", error);
-      }
-    };
+    const [areaName, setAreaName] = useState("");
+    const [viewMode, setViewMode] = useState('polygons');
+    const [openSnackbar, setOpenSnackbar] = useState(false);
+    const [snackbarMsg, setSnackbarMsg] = useState("");
+    const [errorSeverity, setErrorSeverity] = useState("");
+    const featureGroupRef = useRef(); // Riferimento al FeatureGroup
 
-    fetchAreas();
-  }, []);
+    useEffect(() => {
+        const fetchMapLayers = async () => {
+            try {
+                const areas = await API.getGeoArea();
+                const filteredAreas = areas.filter(area => area.name !== 'Point-Based Documents');
+                console.log(filteredAreas);
+                
+                setMapLayers(filteredAreas);
+                setFilteredLayers(filteredAreas); // Inizialmente tutte le aree sono visualizzate
+            } catch (error) {
+                console.error("Errore durante il caricamento:", error);
+            }
+        };
 
-  useEffect(() => {
-    const fetchDocumentsGeo = async () => {
-      if (!selectedArea) return; // Aggiungi questo controllo
+        fetchMapLayers();
+    }, []);
 
-      try {
-        const response = await API.getDocumentsGeo();
-        const documents = Array.isArray(response) ? response : [];
-        // console.log('ALL DOCUMENTS: ',documents);
-
-        if (selectedArea.name === "Point-Based Documents") {
-
-          let markers = documents.filter((document) => {
-            return document.geolocations.some((geo) => geo.area_name === "Point-Based Documents");
-          });
-
-          if(markers.length === 0){
-            setFilteredDocuments([]); // Inizialmente mostra tutti i documenti
-            setFilteredMarkers([]);
-            setAllDocs([]);
-
-          }else{
-  
-            const filteredMarkers = markers.map((doc) => ({
-              id: doc.document_id,
-              type: "marker",
-              latlngs: [doc.geolocations[0].coordinates[0].lat, doc.geolocations[0].coordinates[0].long],
-              document: doc,
-            }));
-  
-            const pointBasedDocuments = filteredMarkers.map((doc) => ({
-              id: doc.document.document_id,
-              document_title: doc.document.document_title,
-              description: doc.document.document_description,
-              stakeholder: doc.document.stakeholder,
-              scale: doc.document.scale,
-              issuance_date: doc.document.issuance_date,
-              language: doc.document.language,
-              pages: doc.document.pages,
-              document_type: doc.document.document_type,
-              area_name: doc.document.geolocations[0].area_name,
-              coordinates: doc.document.geolocations[0].coordinates,
-            }));
-    
-            setFilteredDocuments(pointBasedDocuments); // Inizialmente mostra tutti i documenti
-            setFilteredMarkers(filteredMarkers);
-            setAllDocs(filteredMarkers);
-
-          }
-        } else if (selectedArea.name === "Kiruna Map") {
-          // Filter documents for "Kiruna Map"
-          let markers = documents.filter((document) => {
-            return document.geolocations.some(
-              (geo) => geo.area_name === "Kiruna Map"
-            );
-          });
-          if(markers.length === 0){
-            console.log('non passo piu qui');
-            
-            setFilteredDocuments([]);
-            setFilteredMarkers([]);
-            setAllDocs([]);
-
-          }else{
-            const filteredMarkers = markers.map((doc) => ({
-              id: doc.document_id,
-              type: "marker",
-              latlngs: [doc.geolocations[0].coordinates[0].lat, doc.geolocations[0].coordinates[0].long],
-              document: doc,
-            }));
-  
-            const wholeAreaDocs = filteredMarkers.map((doc) => ({
-              id: doc.document.document_id,
-              document_title: doc.document.document_title,
-              description: doc.document.document_description,
-              stakeholder: doc.document.stakeholder,
-              scale: doc.document.scale,
-              issuance_date: doc.document.issuance_date,
-              language: doc.document.language,
-              pages: doc.document.pages,
-              document_type: doc.document.document_type,
-              area_name: doc.document.geolocations[0].area_name,
-              coordinates: doc.document.geolocations[0].coordinates,
-            }));
-  
-            setFilteredDocuments(wholeAreaDocs); // Set documents for Kiruna Map
-            setFilteredMarkers(filteredMarkers);
-            setAllDocs(filteredMarkers);
-
-          }
-        }
-      } catch (error) {
-        console.error("Error while fetching documents:", error);
-      }
-    };
-    selectedAreaRef.current = selectedArea;
-
-    fetchDocumentsGeo();
-  }, [selectedArea]);
-
-  // Funzione per aprire popup dei documenti
-  const handleMarkerClick = (document) => {
-    setSelectedDocument(document);
-    setShowModal(true);
-  };
-
-  // Funzione per spostare la visuale della mappa in base al tipo di documento
-  const changeMapPosition = (doc) => {
-    const map = mapRef.current;
-    if (!map) return;
-
-    // Check if the document is Point-Based Documents-based
-    if (doc.area_name === "Point-Based Documents") {
-      // Use the document's updated coordinates for a Point-Based Documents-based location
-      const [lat, lng] = [doc.coordinates[0].lat, doc.coordinates[0].long];
-      map.setView([lat, lng], ZOOM_LEVEL);
-    } else if (doc.area_name === "Kiruna Map") {
-      // If the document is "Kiruna Map", use predefined coordinates for the entire area
-      map.setView([WHOLE_AREA_CENTER.lat, WHOLE_AREA_CENTER.lng], WHOLE_AREA_ZOOM);
-    }
-
-    // Update the selected marker ID (after setting map view)
-    setSelectedMarkerId(doc.id);
-  };
-
-  // Funzione per cambiare colore icona
-  const getMarkerIcon = (id) => {
-    return id === selectedMarkerId
-      ? new L.Icon({
-        iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png", // Icona rossa per il marker selezionato
-        iconSize: [25, 41],
-        iconAnchor: [12, 41],
-        popupAnchor: [1, -34],
-        shadowSize: [41, 41],
-      })
-      : new L.Icon({
-        iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.3.1/images/marker-icon-2x.png", // Icona blu per gli altri marker
-        iconSize: [25, 41],
-        iconAnchor: [12, 41],
-        popupAnchor: [1, -34],
-        shadowSize: [41, 41],
-      });
-  };
-
-  // Funzione per gestire la ricerca
-  const handleSearchChange = (event) => {
-    const query = event.target.value;
-    setSearchQuery(query);
-    console.log(query);
-    
-    console.log('ALLDOCS', allDocs);
-
-    if (query === "") {
-      // Se la query è vuota, mostra tutti i documenti
-      setFilteredDocuments(allDocs.map((doc) => doc.document));
-    } else {
-      console.log(filteredMarkers);
-      
-      // Altrimenti, filtra i documenti in base al titolo e alla descrizione
-      const filtered = filteredMarkers.filter((doc) =>
-        doc.document.document_title.toLowerCase().includes(query.toLowerCase()) ||
-        doc.document.document_description.toLowerCase().includes(query.toLowerCase())
-      );
-
-      console.log('QUI: ', filtered);
-      
-      setFilteredDocuments(filtered.map((doc) => doc.document));
-    }
-  };
-
-
-
-  const changeDocumentPosition = (document) => {
-    setSelectedDocument(document);
-    setShowEditCoordinatesModal(true);
-  }
-
-  const onSubmitCoordinates = (lat, long) => {
-    setShowPopup(false);
-    setSelectedDocument((prevDoc) => ({
-      ...prevDoc,
-      coordinates: [{ lat, long }],
-    }));
-  }
-  const submitNewDocumentPosition = async () => {
-    
-    if (selectedDocument) {
-      try {
-        const { lat, long } = selectedDocument.coordinates[0];
-
-        if (isWholeAreaChecked) {
-          await API.updateDocumentArea(selectedDocument.id, 1);
-          setSelectedArea(areas[0]);
-          // Aggiorna filteredDocuments
-          setFilteredDocuments((prevDocuments) =>
-            prevDocuments.map((doc) =>
-              doc.id === selectedDocument.id
-                ? { ...doc, coordinates: [{ lat, long }] }
-                : doc
-            )
-          );
-
-          // Aggiorna filteredMarkers
-          setFilteredMarkers((prevMarkers) =>
-            prevMarkers.map((marker) =>
-              marker.id === selectedDocument.id
-                ? { ...marker, latlngs: [lat, long] }
-                : marker
-            )
-          );
-
-          // Sposta la mappa sulla nuova posizione
-          // if (mapRef.current) {
-          //   mapRef.current.setView([lat, long], ZOOM_LEVEL);
-          // }
+    useEffect(() => {
+        // Aggiorna le aree filtrate in base alla selezione
+        if (selectedAreas.length === 0) {
+            setFilteredLayers(mapLayers); // Mostra tutte le aree
         } else {
-          await API.updateDocumentCoordinates(selectedDocument.id, lat, long);
-
-          // Aggiorna filteredDocuments
-          setFilteredDocuments((prevDocuments) =>
-            prevDocuments.map((doc) =>
-              doc.id === selectedDocument.id
-                ? { ...doc, coordinates: [{ lat, long }] }
-                : doc
-            )
-          );
-
-          // Aggiorna filteredMarkers
-          setFilteredMarkers((prevMarkers) =>
-            prevMarkers.map((marker) =>
-              marker.id === selectedDocument.id
-                ? { ...marker, latlngs: [lat, long] }
-                : marker
-            )
-          );
-
-          // Sposta la mappa sulla nuova posizione
-          // if (mapRef.current) {
-          //   mapRef.current.setView([lat, long], ZOOM_LEVEL);
-          // }
-          // console.log(areas.find(area => area.name === 'Point-Based Documents'));
-          if(areas.find(area => area.name === 'Point-Based Documents')){
-            setSelectedArea(areas.find(area => area.name === 'Point-Based Documents'));            
-
-          }else{
-            window.location.reload();
-          }
+            setFilteredLayers(
+                mapLayers.filter((layer) => selectedAreas.includes(layer.name))
+            );
         }
-
-        // Chiudi i modali
-        setShowEditCoordinatesModal(false);
-        setShowModal(false);
-
-        // Imposta il messaggio di successo per lo Snackbar
-        setSnackbarMessage("Document position successfully updated!");
-        setSnackbarSeverity("success");
-        setSnackbarOpen(true);
-      } catch (error) {
-        console.error("Error updating document position:", error);
-
-        // Imposta il messaggio di errore per lo Snackbar
-        setSnackbarMessage("Error updating document position.");
-        setSnackbarSeverity("error");
-        setSnackbarOpen(true);
-      }
-    }
-  };
-
-  const handleAreaChange = (areaId) => {
-    const selected = areas.find((area) => area.id === parseInt(areaId, 10));
-    setSelectedArea(selected);
-
-    // Centra la mappa se l'area ha coordinate
-    if (selected.latlngs.length > 0) {
-      const [firstPoint] = selected.latlngs[0];
-      setCenter(firstPoint);
-    }
-  };
+    }, [selectedAreas, mapLayers]);
 
 
-  return (
-    <div className="row" style={{ padding: '0px', width: '100%', margin: '0', }}>
+    const saveArea = async () => {
+        if (currentLayer) {
+            const coordinates = currentLayer.getLatLngs()[0];
+            if (!coordinates || coordinates.length === 0) {
+                setSnackbarMsg("Missing coordinates. Please draw a valid area.");
+                setOpenSnackbar(true);
+                setErrorSeverity("error");
+                return;
+            }
 
-      {/* Mappa */}
-      <div className="col text-center ">
+            const dbFormat = coordinates.map((point, index) => ({
+                long: point.lng,
+                lat: point.lat,
+                area_name: areaName,
+                n_order: index + 1,
+                sub_area_id: null,
+            }));
 
-        <MapContainer ref={mapRef} center={center} zoom={ZOOM_LEVEL} style={{ height: "50em", width: "80em" }}>
-    
-            {selectedArea && selectedArea.name === "Kiruna Map" &&
-              selectedArea.latlngs.map((polygon, index) => (
-                <Polygon
-                  key={`polygon-${selectedArea.id}-${index}`}
-                  positions={polygon}
-                  pathOptions={{ color: "blue" }}
-                />
-              ))}
+            try {
+                const res = await API.addArea(dbFormat);
 
-            {selectedArea && selectedArea.name === "Point-Based Documents" &&
-              filteredMarkers.map((marker) => (
-                <Marker
-                  key={`marker-${marker.id}`}
-                  position={marker.latlngs}
-                  icon={getMarkerIcon(marker.id)}
-                  eventHandlers={{
-                    click: () => handleMarkerClick(marker.document),
-                  }}
-                  customId={marker.id}
-                />
-              ))}
+                if (res.success) {
+                    setSnackbarMsg("Area saved successfully.");
+                    setOpenSnackbar(true);
+                    setErrorSeverity("success");
+                    setMapLayers((layers) => [
+                        ...layers,
+                        {
+                            id: currentLayer._leaflet_id,
+                            type: "polygon",
+                            latlngs: coordinates,
+                            name: areaName,
+                        },
+                    ]);
+                    setCurrentLayer(null);
+                    setAreaName("");
+                    setShowModal(false);
 
-{selectedArea && selectedArea.name === "All areas" &&
-              filteredMarkers.map((marker) => (
-                <Marker
-                  key={`marker-${marker.id}`}
-                  position={marker.latlngs}
-                  icon={getMarkerIcon(marker.id)}
-                  eventHandlers={{
-                    click: () => handleMarkerClick(marker.document),
-                  }}
-                  customId={marker.id}
-                />
-              ))}
+                    // Rimuovi il layer blu
+                    if (featureGroupRef.current && currentLayer) {
+                        featureGroupRef.current.removeLayer(currentLayer);
+                    }
+                } else {
+                    handleError(res.status);
+                }
+            } catch (error) {
+                console.error("Error saving area:", error);
+                setSnackbarMsg("Unable to save area due to a server error.");
+                setOpenSnackbar(true);
+                setErrorSeverity("error");
+            }
+        }
+    };
 
-            {selectedArea && <Polygon key={selectedArea.id} positions={selectedArea.latlngs} />}
-          <TileLayer
-            url={tileLayers[mapType].url}
-            attribution={tileLayers[mapType].attribution}
-          />
+    const handleError = (status) => {
+        switch (status) {
+            case 403:
+                setSnackbarMsg("Area name already exists.");
+                break;
+            case 422:
+                setSnackbarMsg("Missing area name.");
+                break;
+            default:
+                setSnackbarMsg("An unexpected error occurred.");
+        }
+        setOpenSnackbar(true);
+        setErrorSeverity("error");
+    };
 
-        </MapContainer>
+    const handleSearchChange = (e) => {
+        setSearchTerm(e.target.value);
+    };
 
-        {/* Menu per cambiare tipo di mappa */}
-        <div className="mt-3 ">
-          <Button
-            type="button"
-            variant="outline-dark"
-            className={`btn ${mapType === "maptiler" ? "btn-dark" : "btn-outline-primary"} rounded-pill`}
-            style={{ color: `${mapType === "maptiler" ? "white" : "black"}`, fontSize: "12px" }}
-            onClick={() => setMapType("maptiler")}
-          >
+    const toggleAreaSelection = (areaName) => {
+        setSelectedAreas((prev) =>
+            prev.includes(areaName)
+                ? prev.filter((name) => name !== areaName)
+                : [...prev, areaName]
+        );
+    };
 
-            MAPTILER
-          </Button>
-          <Button
-            type="button"
-            variant="outline-dark"
+    const toggleSelectAll = () => {
+        if (selectedAreas.length === 0) {
+            setSelectedAreas(mapLayers.map((layer) => layer.name)); // Seleziona tutte
+        } else {
+            setSelectedAreas([]); // Deseleziona tutte
+        }
+    };
 
-            className={`ml-3 btn ${mapType === "satellite" ? "btn-dark" : "btn-outline-primary"} rounded-pill`}
-            style={{ color: `${mapType === "satellite" ? "white" : "black"}`, fontSize: "12px" }}
-            onClick={() => setMapType("satellite")}
-          >
-            SATELLITE
-          </Button>
-          <Button
-            type="button"
-            variant="outline-dark"
+    const handleCloseSnackbar = (event, reason) => {
+        if (reason === "clickaway") {
+            return;
+        }
+        setOpenSnackbar(false);
+    };
 
-            className={`ml-3 btn ${mapType === "dark" ? "btn-dark" : "btn-outline-primary"} rounded-pill`}
-            style={{ color: `${mapType === "dark" ? "white" : "black"}`, fontSize: "12px" }}
-            onClick={() => setMapType("dark")}
-          >
-            DARK
-          </Button>
-        </div>
+    return (
+        <div className="row" style={{ height: "600px", width: "100%", maxHeight: "600px" }}>
+            {/* Colonna sinistra: mappa */}
+            <div className="col-md-9 text-center">
+                <MapContainer center={center} zoom={7} style={{ height: "100%", width: "100%", maxHeight: "600px" }}>
+                    <FeatureGroup ref={featureGroupRef}>
+                        <EditControl
+                            position="topright"
+                            onCreated={(e) => {
+                                const { layerType, layer } = e;
+                                if (layerType === "polygon") {
+                                    setCurrentLayer(layer);
+                                    setShowModal(true);
+                                }
+                            }}
+                            onDelete={(e) => {
+                                const { layerType, layer } = e;
+                                if (layerType === "polygon") {
+                                    
+                                    
+                                    // IMPLEMENT DELETE OF AREA
+                                }
+                            }}
+                            draw={{
+                                rectangle: false,
+                                circle: false,
+                                circlemarker: false,
+                                marker: false,
+                                polyline: false,
+                            }}
+                            edit={{edit:false}} 
+                        />
+                        {/* Visualizza i poligoni quando in modalità 'polygons' */}
+                        {filteredLayers.map((layer) =>
+                            layer.latlngs ? (
+                                <React.Fragment key={layer.id}>
+                                    {selectedAreas.length > 0 && selectedAreas.includes(layer.name) && viewMode === 'polygons' && (
+                                        <Polygon positions={layer.latlngs}>
+                                            <Popup>{layer.name}</Popup>
+                                        </Polygon>
+                                    )}
+                                    {/* Visualizza i marker quando in modalità 'markers' */}
+                                    {selectedAreas.length > 0 && selectedAreas.includes(layer.name) && viewMode === 'markers' && (
+                                        <Marker
+                                            position={L.polygon(layer.latlngs).getBounds().getCenter()}
+                                            icon={L.icon({ iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.3.1/images/marker-icon.png" })}
+                                            eventHandlers={{
+                                                click: () => {
+                                                    // Toggle the selection of the layer and show the polygon when the marker is clicked
+                                                    setSelectedLayer(prevLayer => {
+                                                        // If the same layer is clicked again, deselect it, otherwise select it
+                                                        if (prevLayer === layer.id) {
+                                                            return null; // Deselect
+                                                        } else {
+                                                            return layer.id; // Select the new layer
+                                                        }
+                                                    });
+                                                },
+                                            }}
+                                        >
+                                            <Popup>{layer.name}</Popup>
+                                        </Marker>
+                                    )}
+                                    {/* Mostra il poligono quando un marker è selezionato */}
+                                    {selectedLayer === layer.id && viewMode === 'markers' && (
+                                        <Polygon positions={layer.latlngs}>
+                                            <Popup>{layer.name}</Popup>
+                                        </Polygon>
+                                    )}
+                                </React.Fragment>
+                            ) : null
+                        )}
+                    </FeatureGroup>
 
-      </div>
-
-      {/* Sidebar con Dropdown, Search e Lista dei Documenti */}
-      <div className="col">
-        {/* Dropdown per selezionare l'area */}
-        {/* <Dropdown className="mb-3 d-flex justify-content-center">
-          <Dropdown.Toggle variant="outline" id="dropdown-basic">
-            <div style={{ fontSize: '20px' }}>
-
-              <h3><strong>
-                {selectedArea.name}
-
-              </strong></h3>
-            </div>
-          </Dropdown.Toggle>
-          <Dropdown.Menu>
-            {areas.map((area) => (
-              <Dropdown.Item
-                key={area.id}
-                onClick={() => setSelectedArea(area)}
-              >
-                <div style={{ fontSize: '16px' }}>
-
-                  <h3><strong>
-                    {area.name}
-
-                  </strong></h3>
-                </div>
-              </Dropdown.Item>
-            ))}
-          </Dropdown.Menu>
-        </Dropdown> */}
-
-        <Dropdown onSelect={(eventKey) => handleAreaChange(eventKey)} className="mb-3">
-          <Dropdown.Toggle variant="primary">{selectedArea ? selectedArea.name : "Select an area"}</Dropdown.Toggle>
-          <Dropdown.Menu>
-            {areas && areas.map((area) => (
-              <Dropdown.Item key={area.id} eventKey={area.id}>
-                {area.name}
-              </Dropdown.Item>
-            ))}
-          </Dropdown.Menu>
-        </Dropdown>
-
-
-        {/* Barra di ricerca */}
-        <Form.Control
-          type="text"
-          placeholder="Search..."
-          value={searchQuery}
-          onChange={handleSearchChange}
-          className="mb-3"
-        />
-
-        {/* Lista dei documenti filtrati */}
-        <div style={{ maxHeight: '550px', overflowY: 'auto' }}>
-          {selectedArea && filteredDocuments.length > 0 ? filteredDocuments.map((doc) => (
-            <div key={doc.id}>
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  border: '1px solid #ddd',
-                  borderRadius: '8px',
-                  padding: '10px',
-                  marginBottom: '20px',
-                  marginLeft: '5px',
-                  marginRight: '5px',
-                  cursor: 'Point-Based Documents',
-                  backgroundColor: hoveredDocumentId === doc.id ? '#cfcfcf' : 'white',
-                  color: 'black',
-                  fontSize: '14px',
-                }}
-                onMouseEnter={() => setHoveredDocumentId(doc.id)}
-                onMouseLeave={() => setHoveredDocumentId(null)}
-                onClick={doc.area_name === "Kiruna Map" ? () => handleMarkerClick(doc) : () => changeMapPosition(doc)}
-              >
-                <div className="p-2">
-                  <h2><strong>{doc.document_title}</strong></h2>
-                  <p className="mt-3"><strong>Type:</strong> {doc.document_type}</p>
-                  <p className="mt-1"><strong>Date:</strong> {doc.issuance_date}</p>
-                  {/* <p className="mt-1"><strong>Area:</strong> {doc.area_name === "Point-Based Documents" ? "Point-Based Documents" : doc.area_name}</p> */}
-                  {/* Mostra le coordinate */}
-                  {doc.coordinates && doc.coordinates.length > 0 && doc.area_name === "Point-Based Documents" && (
-                    <p className="mt-1">
-                      {doc.coordinates.map((coord, index) => (
-                        <span className="" key={index}>
-                          <strong>LAT:</strong> {coord.lat.toFixed(6)}  <strong>LONG:</strong> {coord.long.toFixed(6)}
-                        </span>
-                      ))}
-                    </p>
-                  )}
-                </div>
-
-                {/* OPEN DOCUMENT AND CHANGE POSITION BUTTON*/}
-                <div>
-                  {user && user.role === "urban_planner" && (
-                    <Container className="flex flex-row gap-x-4 text-center">
-
-
-                      <Button
-                        className="mt-4"
-                        style={{
-                          width: "70%",
-                          border: "1px solid #ddd",
-                          borderRadius: "8px",
-                          padding: "8px",
-                          backgroundColor: hoveredDocumentId === doc.id ? '#3e3b40' : 'white',
-                          color: hoveredDocumentId === doc.id ? 'white' : 'black',
-                        }}
-                        variant="outline"
-                        onClick={() => handleMarkerClick(doc)}
-                      >
-                        <p style={{ fontSize: "12px" }}>
-                          <ArticleIcon></ArticleIcon>
-                        </p>
-                      </Button>
-
-
-                      <Button
-                        className="mt-4"
-                        style={{
-                          width: "70%",
-                          border: "1px solid #ddd",
-                          borderRadius: "8px",
-                          padding: "8px",
-                          backgroundColor: hoveredDocumentId === doc.id ? '#3e3b40' : 'white',
-                          color: hoveredDocumentId === doc.id ? 'white' : 'black',
-                        }}
-                        variant="outline"
-                        onClick={() => changeDocumentPosition(doc)}
-                      >
-                        <p style={{ fontSize: "12px" }}>
-                          <MapIcon alt="Open Map" label="Open Map"></MapIcon>
-                        </p>
-                      </Button>
-                    </Container>
-                  )}
-                </div>
-              </div>
-            </div>
-          )) : 
-          <div style={{textAlign:'center'}}>
-            <p>No documents found.</p>
-          </div>
-          }
-        </div>
-
-      </div>
-
-      {/* Modal per visualizzare i dettagli del documento */}
-      {selectedDocument && showModal && (
-        <Modal style={{ marginTop: '8%' }} show={showModal} onHide={() => setShowModal(false)}>
-          <Modal.Header closeButton>
-            <Modal.Title>Document info</Modal.Title>
-          </Modal.Header>
-          <Modal.Body>
-            <p><strong>Name:</strong> {selectedDocument.document_title}</p>
-            <p><strong>Document Type:</strong> {selectedDocument.document_type}</p>
-            <p><strong>Stakeholder:</strong> {selectedDocument.stakeholder}</p>
-            <p><strong>Date:</strong> {selectedDocument.issuance_date}</p>
-            <p><strong>Description:</strong> {selectedDocument.description}</p>
-            <p><strong>Scale:</strong> {selectedDocument.scale}</p>
-            <>
-              {selectedDocument.language && <p><strong>Language:</strong> {selectedDocument.language}</p>}
-              {selectedDocument.pages && <p><strong>Pages:</strong> {selectedDocument.pages}</p>}
-            </>
-          </Modal.Body>
-          <Modal.Footer>
-            <Button variant="dark" onClick={() => setShowModal(false)}>
-              Close
-            </Button>
-          </Modal.Footer>
-        </Modal>
-      )}
-
-      {/* Modal to change document position */}
-      {selectedDocument && showEditCoordinatesModal && (
-        <Modal
-          style={{ marginTop: '8%' }}
-          show={showEditCoordinatesModal}
-          onHide={() => setShowEditCoordinatesModal(false)}
-        >
-          <Modal.Header closeButton>
-            <Modal.Title>Change Document Position</Modal.Title>
-          </Modal.Header>
-          <Modal.Body className="text-center">
-            {/* Campi per modificare latitudine e longitudine */}
-            <Form className="d-flex flex-column align-items-center justify-content-center" style={{ height: "100%" }}>
-              <div className="row mb-4" style={{ width: "100%", maxWidth: "500px" }}>
-                <div className="col">
-                  <Form.Group controlId="latitude">
-                    <Form.Label className="text-center w-100">Latitude</Form.Label>
-                    <Form.Control
-                      className="text-center"
-                      type="number"
-                      value={selectedDocument.coordinates[0]?.lat || ""}
-                      onChange={(e) => {
-                        const newLat = parseFloat(e.target.value);
-                        setSelectedDocument((prevDoc) => ({
-                          ...prevDoc,
-                          coordinates: [{ ...prevDoc.coordinates[0], lat: newLat }],
-                        }));
-                      }}
-                      disabled={isWholeAreaChecked}
+                    <TileLayer
+                        url={tileLayers[mapType].url}
+                        attribution={tileLayers[mapType].attribution}
                     />
-                  </Form.Group>
-                </div>
-                <div className="col">
-                  <Form.Group controlId="longitude">
-                    <Form.Label className="text-center w-100">Longitude</Form.Label>
-                    <Form.Control
-                      className="text-center"
-                      type="number"
-                      value={selectedDocument.coordinates[0]?.long || ""}
-                      onChange={(e) => {
-                        const newLng = parseFloat(e.target.value);
-                        setSelectedDocument((prevDoc) => ({
-                          ...prevDoc,
-                          coordinates: [{ ...prevDoc.coordinates[0], long: newLng }],
-                        }));
-                      }}
-                      disabled={isWholeAreaChecked}
-                    />
-                  </Form.Group>
-                </div>
-              </div>
-              <div style={{ textAlign: "center", width: "100%", marginTop: "10px" }}>
-                <Button
-                  type="button"
-                  onClick={() => setShowPopup(true)}
-                  className="ml-2"
-                  variant="outline"
-                >
-                  <MapIcon></MapIcon>
-                </Button>
+                </MapContainer>
 
-              </div>
-              {showPopup && (
-                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-                  <div className="bg-white p-6 rounded shadow-lg" style={{ textAlign: "center" }}>
-                    <CoordsMap
-                      setShowPopup={setShowPopup}
-                      onSubmitCoordinates={onSubmitCoordinates}
-                    />
+                {/* Modal per inserire il nome dell'area */}
+                <Modal show={showModal} onHide={() => setShowModal(false)}>
+                    <Modal.Header closeButton>
+                        <Modal.Title>Insert area name</Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>
+                        <Form>
+                            <Form.Group>
+                                {/* <Form.Label>Area name</Form.Label> */}
+                                <Form.Control
+                                    type="text"
+                                    value={areaName}
+                                    onChange={(e) => setAreaName(e.target.value)}
+                                    placeholder="Area name..."
+                                />
+                            </Form.Group>
+                        </Form>
+                    </Modal.Body>
+                    <Modal.Footer>
+                        <Button type="button" variant="secondary" onClick={() => setShowModal(false)}>
+                            Delete
+                        </Button>
+                        <Button type="button" variant="primary" onClick={saveArea}>
+                            Save
+                        </Button>
+                    </Modal.Footer>
+                </Modal>
 
+                {/* Menu per cambiare tipo di mappa */}
+                <div className="mt-3">
                     <Button
-                      type="button"
-                      onClick={() => setShowPopup(false)}
-                      className="mt-4"
-                      variant="outline"
-
+                        type="button"
+                        variant={mapType === "maptiler" ? "dark" : "outline-dark"}
+                        onClick={() => setMapType("maptiler")}
                     >
-                      Close Map
+                        MAPTILER
                     </Button>
-                  </div>
+                    <Button
+                        type="button"
+                        variant={mapType === "satellite" ? "dark" : "outline-dark"}
+                        className="ml-3"
+                        onClick={() => setMapType("satellite")}
+                    >
+                        SATELLITE
+                    </Button>
+                    <Button
+                        type="button"
+                        variant={mapType === "dark" ? "dark" : "outline-dark"}
+                        className="ml-3"
+                        onClick={() => setMapType("dark")}
+                    >
+                        DARK
+                    </Button>
                 </div>
-              )}
-              <div className="my-4 text-center">
-                <span style={{ fontWeight: "bold", fontSize: "1.2rem" }}>OR</span>
-              </div>
 
-              <Form.Group controlId="wholeAreaCheckbox" className="text-center">
-                <Form.Check
-                  type="checkbox"
-                  label="Set as Kiruna Map"
-                  checked={isWholeAreaChecked}
-                  onChange={(e) => {
-                    const checked = e.target.checked;
-                    setIsWholeAreaChecked(checked);
-                    setSelectedDocument((prevDoc) => ({
-                      ...prevDoc,
-                      area_name: checked ? "Kiruna Map" : "Point-Based Documents",
-                    }));
-                  }}
+            </div>
+
+            {/* Colonna destra: lista delle aree */}
+            <div className="col-md-3 bg-light p-3" style={{ maxHeight: "600px" }}>
+                <div className="d-flex justify-content-center mb-4">
+                    <Button type="button" variant="dark" onClick={viewMode === 'polygons' ? () => setViewMode('markers') : () => setViewMode('polygons')}>
+                        Switch View Mode: {viewMode === 'polygons' ? 'Markers' : 'Polygons'}
+                    </Button>
+                    
+                </div>
+                {/* <h5>Select areas</h5> */}
+                <Form.Control
+                    type="text"
+                    placeholder="Search areas by name"
+                    value={searchTerm}
+                    onChange={handleSearchChange}
                 />
-              </Form.Group>
-            </Form>
+                <Form.Check
+                    className="mt-3"
+                    type="checkbox"
+                    label="Select all"
+                    checked={selectedAreas.length === mapLayers.length}
+                    onChange={toggleSelectAll}
+                />
+                <div className="mt-3" style={{ maxHeight: "80%", overflowY: "scroll" }}>
+                    {mapLayers
+                        .filter((layer) => layer.name.toLowerCase().includes(searchTerm.toLowerCase()))
+                        .map((layer) => (
+                            <Form.Check
+                                key={layer.id}
+                                type="checkbox"
+                                label={layer.name}
+                                checked={selectedAreas.includes(layer.name)}
+                                onChange={() => toggleAreaSelection(layer.name)}
+                            />
+                        ))}
+                </div>
+            </div>
 
-          </Modal.Body>
-          <Modal.Footer className="display-flex justify-content-center">
-            <Button
-              variant="dark"
-              onClick={() => {
-                submitNewDocumentPosition();
-              }}
+            <Snackbar
+                open={openSnackbar}
+                autoHideDuration={2000}
+                onClose={handleCloseSnackbar}
+                anchorOrigin={{ vertical: "top", horizontal: "center" }}
             >
-              Save
-            </Button>
-          </Modal.Footer>
-        </Modal>
-
-      )}
-      <Snackbar
-        open={snackbarOpen}
-        autoHideDuration={3000}
-        onClose={() => setSnackbarOpen(false)}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-      >
-        <Alert onClose={() => setSnackbarOpen(false)} severity={snackbarSeverity} sx={{ width: '100%' }}>
-          {snackbarMessage}
-        </Alert>
-      </Snackbar>
-
-    </div>
-  );
+                <Alert onClose={handleCloseSnackbar} severity={errorSeverity} sx={{ width: "100%" }}>
+                    {snackbarMsg}
+                </Alert>
+            </Snackbar>
+        </div>
+    );
 };
 
 export default DrawMap;

@@ -6,7 +6,7 @@ import {
   CardFooter,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Map, GanttChart, User } from "lucide-react";
+import { Map, GanttChart, User, Files, FileText, LandPlot } from "lucide-react";
 import LoginForm from "@/components/login-form";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -46,7 +46,7 @@ const HomePage = () => {
   return (
     <div
       className="relative min-h-screen w-full overflow-hidden"
-      // style={{ height: "40vh" }} // Assicura l'altezza dello schermo
+    // style={{ height: "40vh" }} // Assicura l'altezza dello schermo
     >
       {/* Background Image with Overlay */}
       <div
@@ -74,6 +74,26 @@ const HomePage = () => {
           </CardContent>
           <CardFooter className="flex justify-center">
             <div className="flex gap-x-2 justify-center items-center">
+
+            <Button
+                    variant="outline"
+                    className="mr-2"
+                    onClick={(e) => navigate("/documents/list")}
+                  >
+                    See docs
+                    <Files />
+                  </Button>
+
+
+                  <Button
+                    variant="outline"
+                    className="mr-2"
+                    onClick={() => navigate("/map")}
+                  >
+                    See Map
+                    <Map />
+                  </Button>
+
               {user?.role === "urban_planner" && (
                 <>
                   <Button
@@ -84,16 +104,22 @@ const HomePage = () => {
                     }
                   >
                     Add doc
-                    <Map data-testid="map-icon" />
+                    <FileText />
                   </Button>
+
+
+
+
                   <Button
                     variant="outline"
                     className="mr-2"
-                    onClick={(e) => handleRestrictedAction(e, "/documents/list")}
+                    onClick={() => navigate("/areas")}
                   >
-                    See docs
-                    <Map />
+                    Edit Areas
+                    <LandPlot />
                   </Button>
+
+
                   <Button
                     variant="outline"
                     className="mr-2"
@@ -104,14 +130,7 @@ const HomePage = () => {
                   </Button>
                 </>
               )}
-              <Button
-                variant="outline"
-                className="mr-2"
-                onClick={() => navigate("/map")}
-              >
-                See Map
-                <Map />
-              </Button>
+
             </div>
           </CardFooter>
         </Card>

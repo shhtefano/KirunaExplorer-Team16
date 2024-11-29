@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 
-import DrawMap from "../components/DrawMap";
+import GeneralMap from "../components/GeneralMap";
 
 const MapPage = () => {
   return (
@@ -11,8 +11,8 @@ const MapPage = () => {
         </h1>
       </div>
 
-      <div className="flex p-4 ">
-        <DrawMap/>
+      <div className="flex pt-2 ">
+        <GeneralMap/>
       
       </div>
       <div className="flex items-center justify-center align-center">

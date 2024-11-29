@@ -322,6 +322,37 @@ const addDocumentDescription = async (body) => {
   }
 };
 
+const addArea = async (body) => {
+  try {
+      const res = await fetch(SERVER_URL + "/api/geo/area", {
+          method: "POST",
+          headers: {
+              "Content-Type": "application/json",
+          },
+          body: JSON.stringify(body),
+      });
+
+      if (res.ok) {
+          return { success: true, status: res.status, message: "Area added successfully." };
+      }
+
+      const errorData = await res.json(); // Estrarre il messaggio di errore dal server
+      switch (res.status) {
+          case 403:
+              return { success: false, status: 403, error: "Area name already exists." };
+          case 422:
+              return { success: false, status: 422, error: "Missing or invalid latitude/longitude or area name." };
+          case 500:
+              return { success: false, status: 500, error: errorData.message || "Server error." };
+          default:
+              return { success: false, status: res.status, error: "Unexpected error." };
+      }
+  } catch (error) {
+      return { success: false, status: 500, error: "Failed to connect to the server." };
+  }
+};
+
+
 const addNewStakeholder = async (body) => {
   console.log(body);
   
@@ -368,6 +399,7 @@ const logOut = async () => {
 const API = {
   logIn,
   logOut,
+  addArea,
   getUserInfo,
   getDocuments,
   getDocumentsGeo,
