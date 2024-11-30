@@ -328,6 +328,38 @@ const logOut = async () => {
   if (response.ok) return null;
 };
 
+async function addDocumentType(typeName) {
+  const response = await fetch(`${SERVER_URL}/api/types`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ type_name: typeName }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || "Errore API addDocumentType");
+  }
+
+  return response.json(); // Restituisce il nuovo tipo di documento creato
+}
+
+ const getDocumentTypes =  async () => {
+  const response = await fetch(`${SERVER_URL}/api/types`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || "Errore API getDocumentTypes");
+  }
+
+  return response.json();
+}
 const API = {
   logIn,
   logOut,
@@ -342,7 +374,9 @@ const API = {
   addNewStakeholder,
   linkDocuments,
   getConnectionsByDocumentTitle,
-  deleteConnection
+  deleteConnection,
+  getDocumentTypes,
+  addDocumentType
 };
 
 export default API;

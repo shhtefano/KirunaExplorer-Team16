@@ -52,16 +52,6 @@ import Snackbar from "@mui/material/Snackbar";
 import Alert from "@mui/material/Alert";
 import MapIcon from "@mui/icons-material/Map";
 
-const documents = [
-  { type: "Design", icon: null },
-  { type: "Informative", icon: null },
-  { type: "Technical", icon: null },
-  { type: "Prescriptive", icon: null },
-  { type: "Material Effects", icon: null },
-  { type: "Agreement", icon: null },
-  { type: "Conflict", icon: null },
-  { type: "Consultation", icon: null },
-];
 
 // const stakeholders = [
 //   "LKAB",
@@ -73,6 +63,7 @@ const documents = [
 // ];
 
 const DocumentDescriptionForm = () => {
+  const [types, setTypes] = useState([]);
   const [isWholeArea, setIsWholeArea] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [showPopupMap, setShowPopupMap] = useState(false); // New state for the popup for linking document
@@ -80,6 +71,7 @@ const DocumentDescriptionForm = () => {
   const [stakeholders, setStakeholders] = useState([]); // Stato per gestire gli stakeholder esistenti
   const [isLoading, setIsLoading] = useState(false); // Stato di caricamento
   const [stakeholderInput, setStakeholderInput] = useState('');
+  const [newDocumentType, setNewDocumentType] = useState(""); //stato per tipo documento
 
   const [documentId, setDocumentId] = useState(null);
   const [temporaryLinks, setTemporaryLinks] = useState([]);
@@ -103,8 +95,42 @@ const DocumentDescriptionForm = () => {
       latitude: "",
       longitude: "",
     },
-  });
-
+  });// Aggiungere un nuovo tipo di documento
+  const handleAddDocumentType = async () => {
+    const trimmedType = newDocumentType.trim();
+    try {
+      // Try to add the document type through the API
+      const result = await API.addDocumentType(trimmedType);
+  
+      if (trimmedType && !types.some((doc) => doc.type === trimmedType)) {
+        console.log(result?.data.type_name, 'aaaaa')
+        setTypes((prev) => [...prev, { type: result?.data.type_name }]);
+        setNewDocumentType("");
+        setToast({
+          open: true,
+          severity: "success",
+          message: "Document type added successfully.",
+        });
+      } else {
+        setToast({
+          open: true,
+          severity: "error",
+          message: "Type already exists or is invalid.",
+        });
+      }
+    } catch (error) {
+      // Handle errors from the API or other issues
+      console.error("Error adding document type:", error);
+  
+      setToast({
+        open: true,
+        severity: "error",
+        message: error.message || "An error occurred while adding the document type.",
+      });
+    }
+  };
+  
+  
   const onSaveTemporaryLinks = () => {
     setShowPopupLink(false); // Close the dialog after saving links
   };
@@ -197,6 +223,23 @@ const DocumentDescriptionForm = () => {
     });
   };
 
+
+  useEffect(() => {
+    const fetchDocumentTypes = async () => {
+      try {
+        const documentTypesResponse = await API.getDocumentTypes();
+        const types = documentTypesResponse.map((type) => ({
+          type: type.type_name,
+        }));
+        setTypes(types); // Aggiorna lo stato con i tipi di documento recuperati
+      } catch (error) {
+        console.error("Errore durante il recupero dei tipi di documento:", error);
+      }
+    };
+  
+    fetchDocumentTypes();
+  }, []);
+  
   const onSaveLinks = async (docId) => {
     for (const link of temporaryLinks) {
       try {
@@ -268,7 +311,7 @@ const DocumentDescriptionForm = () => {
     };
     fetchStakeholders();
   }, []);
-
+  
 
   // Aggiungere un nuovo stakeholder
   const handleAddStakeholder = async (newStakeholderName) => {
@@ -358,38 +401,52 @@ const DocumentDescriptionForm = () => {
               />
               {/* Document Type */}
               <FormField
-                control={form.control}
-                name="document_type"
-                rules={typeRules}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Document type *</FormLabel>
-                    <FormControl>
-                      <Select
-                        onValueChange={field.onChange}
-                        value={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a document type" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {documents.map((document) => (
-                            <SelectItem
-                              key={document.type}
-                              value={document.type}
+                    control={form.control}
+                    name="document_type"
+                    rules={typeRules}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Document Type *</FormLabel>
+                        <div className="flex items-center space-x-4">
+                          <FormControl>
+                            <Select onValueChange={field.onChange} value={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select a document type" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {types.map((document) => (
+                                  <SelectItem key={document.type} value={document.type}>
+                                    {document.type}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </FormControl>
+                          <div className="flex space-x-2 items-center">
+                            <Input
+                              type="text"
+                              value={newDocumentType}
+                              onChange={(e) => setNewDocumentType(e.target.value)}
+                              placeholder="New type"
+                              className="w-40"
+                            />
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={handleAddDocumentType}
                             >
-                              {document.type}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                              Add
+                            </Button>
+                          </div>
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+
               {/* Stakeholder */}
               <FormField
                 control={form.control}
@@ -428,25 +485,23 @@ const DocumentDescriptionForm = () => {
                   </FormItem>
                 )}
               />
-              <div style={{ display: 'flex', justifyContent: 'center', width: '100%', alignItems: 'center' }}>
-                <input
-                  type="text"
-                  value={stakeholderInput}
-                  onChange={(e) => setStakeholderInput(e.target.value)} // Aggiorna lo stato con il valore dell'input
-                  placeholder="Stakeholder name"
-                  style={{ marginRight: '10px', width: '25%', borderBottom: '1px solid black' }} // Margine e larghezza per l'input
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  style={{ width: '25%' }}
-                  onClick={() => handleAddStakeholder(stakeholderInput)} // Passa il valore dell'input alla funzione
-                >
-                  <p style={{ textAlign: 'center' }}>
-                    Add New Stakeholder
-                  </p>
-                </Button>
-              </div>
+              <div className="flex space-x-2 items-center">
+                      <Input
+                        type="text"
+                        value={stakeholderInput}
+                        onChange={(e) => setStakeholderInput(e.target.value)}
+                        placeholder="New Stakeholder"
+                        className="w-40" // Aggiungi questa classe
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => handleAddStakeholder(stakeholderInput)}
+                      >
+                        <p style={{ textAlign: 'center' }}>Add</p>
+                      </Button>
+                    </div>
+
               {/* Scale */}
               <FormField
                 control={form.control}

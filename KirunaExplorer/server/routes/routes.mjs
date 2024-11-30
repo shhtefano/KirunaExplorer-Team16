@@ -195,6 +195,45 @@ router.put("/api/document/updateDocumentArea", async (req, res) => {
     res.status(500).send("An error occurred while updating the Document area.");
   }
 });
+// Rotta per ottenere tutti i tipi di documenti
+router.get("/api/types", async (req, res) => {
+  try {
+    const types = await documentDAO.getDocumentTypes();
+    res.status(200).json(types);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("An error occurred while fetching document types.");
+  }
+});
 
+// Rotta per aggiungere un nuovo tipo di documento
+router.post("/api/types", async (req, res) => {
+  const { type_name } = req.body;
+  console.log(type_name )
+
+  if (!type_name || type_name.trim() === "") {
+    console.log(type_name )
+    return res.status(422).send("Missing type name.");
+  }
+
+  try {
+    // Inserisci il nuovo tipo di documento
+    const result = await documentDAO.addDocumentType(type_name.trim());
+    
+    if (result === "Document type already exists") {
+      return res.status(403).json({ message:"Document type already exists"});
+    }
+
+
+    res.status(201).json({ message: "Document type successfully added." , data: result,});
+  } catch (error) {
+    console.error(error , "+++");
+    // Send the error message along with the stack trace (optional, for debugging)
+    res.status(500).json({
+      message: error.message,
+      error: error.message,  // You can include the error message or stack if needed
+    });
+  }
+});
 
 export default router;
