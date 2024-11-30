@@ -948,7 +948,46 @@ class DocumentDAO {
     });
   }
 
+  async deleteArea(areaName) {
+    return new Promise((resolve, reject) => {
+      const findAreaQuery = `SELECT area_id FROM Geolocation WHERE area_name = ?`;
+      const updateDocumentsQuery = `
+        UPDATE Geolocation_Documents
+        SET area_id = (SELECT area_id FROM Geolocation WHERE area_name = 'Kiruna Map')
+        WHERE area_id = ?
+      `;
+      const deleteAreaQuery = `DELETE FROM Geolocation WHERE area_id = ?`;
+  
+      db.get(findAreaQuery, [areaName], (err, row) => {
+        if (err) {
+          console.error("Errore durante la ricerca dell'area:", err);
+          return reject(new Error("Errore durante la ricerca dell'area"));
+        }
+  
+        const areaId = row.area_id;
+  
+        db.run(updateDocumentsQuery, [areaId], function (err) {
+          if (err) {
+            console.error("Errore durante l'aggiornamento dei documenti:", err);
+            return reject(new Error("Errore durante l'aggiornamento dei documenti"));
+          }
+  
+          db.run(deleteAreaQuery, [areaId], function (err) {
+            if (err) {
+              console.error("Errore durante la cancellazione dell'area:", err);
+              return reject(new Error("Errore durante la cancellazione dell'area"));
+            }
+  
+            resolve("Area eliminata con successo.");
+          });
+        });
+      });
+    });
+  }
+  
+
 }
+
 
 export default DocumentDAO;
 

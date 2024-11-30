@@ -239,5 +239,16 @@ router.put("/api/document/updateDocumentArea", async (req, res) => {
   }
 });
 
+router.delete("/api/geo/:areaName", async (req, res) => {
+  const { areaName } = req.params;
+
+  try {
+    const result = await documentDAO.deleteArea(areaName);
+    res.status(200).json({ message: result });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: error.message });
+  }
+});
 
 export default router;
