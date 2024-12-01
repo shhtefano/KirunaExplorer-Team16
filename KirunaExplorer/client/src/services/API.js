@@ -1,4 +1,11 @@
+import { createClient } from '@supabase/supabase-js';
 const SERVER_URL = "http://localhost:3001";
+
+// Configura Supabase
+const supabaseUrl = 'https://htbtahvbjarpdpzgzxug.supabase.co'; 
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh0YnRhaHZiamFycGRwemd6eHVnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzI5MTM0MDUsImV4cCI6MjA0ODQ4OTQwNX0.Vnj0lJX4pd-cplV1m3K6sVBqTkPOkQgWNrPmnrh1VLE'; // La chiave anonima
+const supabase = createClient(supabaseUrl, supabaseKey);
+
 async function getDocuments() {
   const response = await fetch(`${SERVER_URL}/api/document/list`, {
     method: "GET",
@@ -375,6 +382,57 @@ const addNewStakeholder = async (body) => {
   }
 };
 
+//Supabase
+
+const uploadFileToSupabase = async (file, documentId) => {
+  const fileName = `uploads/resources/${documentId}/${file.name}`; 
+  const { data, error } = await supabase.storage
+    .from('resources') 
+    .upload(fileName, file, {
+      contentType: file.type, 
+    });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  const fileUrl = `${supabaseUrl}/storage/v1/object/public/resources/${fileName}`;
+  return fileUrl; 
+};
+
+const downloadFileFromSupabase = async (documentId, fileName) => {
+  const fileUrl = `${supabaseUrl}/storage/v1/object/public/resources/uploads/resources/${documentId}/${fileName}`;
+  return fileUrl; 
+};
+
+const deleteFileFromSupabase = async (documentId, fileName) => {
+  const filePath = `uploads/resources/${documentId}/${fileName}`;
+
+  try {
+    const { error } = await supabase.storage
+      .from('resources')
+      .remove([filePath]); 
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    console.log(`File "${fileName}" successfully deleted from Supabase storage.`);
+  } catch (error) {
+    console.error('Error deleting file:', error.message);
+  }
+};
+
+const listFilesInSupabase = async (documentId) => {
+  const { data, error } = await supabase.storage
+    .from('resources') 
+    .list(`uploads/resources/${documentId}`); 
+
+  if (error) {
+    throw new Error(error.message);
+  }
+  return data; 
+};
+
 
 const getUserInfo = async () => {
   const response = await fetch(SERVER_URL + "/api/sessions/current", {
@@ -413,7 +471,12 @@ const API = {
   addNewStakeholder,
   linkDocuments,
   getConnectionsByDocumentTitle,
-  deleteConnection
+  deleteConnection,
+  //STORAGE
+  uploadFileToSupabase,
+  downloadFileFromSupabase,
+  deleteFileFromSupabase,
+  listFilesInSupabase
 };
 
 export default API;

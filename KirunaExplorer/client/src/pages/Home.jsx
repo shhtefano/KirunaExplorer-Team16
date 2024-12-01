@@ -6,7 +6,7 @@ import {
   CardFooter,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Map, GanttChart, User, Files, FileText, LandPlot } from "lucide-react";
+import { Map, GanttChart, User, Folder, Files, FileText, LandPlot } from "lucide-react";
 import LoginForm from "@/components/login-form";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -128,9 +128,25 @@ const HomePage = () => {
                     See graph
                     <GanttChart data-testid="gantt-chart-icon" />
                   </Button>
+                  <Button
+                    variant="outline"
+                    className="mr-2"
+                    onClick={(e) => handleRestrictedAction(e, "/addResources")}
+                  >
+                    See Resources
+                    <Folder data-testid="resources-icon" />
+                  </Button>
                 </>
               )}
 
+              <Button
+                variant="outline"
+                className="mr-2"
+                onClick={() => navigate("/map")}
+              >
+                See Map
+                <Map />
+              </Button>
             </div>
           </CardFooter>
         </Card>
