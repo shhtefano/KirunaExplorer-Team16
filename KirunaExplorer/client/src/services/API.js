@@ -372,6 +372,13 @@ const uploadFileToSupabase = async (file, documentId) => {
   return fileUrl; // Return the file URL
 };
 
+// Function to download a file from Supabase
+const downloadFileFromSupabase = async (documentId, fileName) => {
+  // Construct the file URL
+  const fileUrl = `${supabaseUrl}/storage/v1/object/public/resources/uploads/resources/${documentId}/${fileName}`;
+  return fileUrl; // Return the file URL for downloading
+};
+
 // Function to get the list of files from Supabase
 const listFilesInSupabase = async (documentId) => {
   // List files in the specific folder corresponding to the document ID
@@ -426,6 +433,7 @@ const API = {
   deleteConnection,
   //STORAGE
   uploadFileToSupabase,
+  downloadFileFromSupabase,
   listFilesInSupabase
 };
 

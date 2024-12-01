@@ -10,6 +10,7 @@ import LoginPage from "./pages/Login";
 import AddDocumentDescPage from "./pages/AddDocumentDesc";
 import ShowDocumentsPage from "./pages/ShowDocuments";
 import AddResources from "./pages/addResources";
+import FileUpload from "./pages/FileUpload";
 
 function App() {
   return (
@@ -55,7 +56,7 @@ function App() {
            <Route
             path="/addresources"
             element={      
-                <AddResources/>
+                <FileUpload/>
             }
           />
         </Routes>
