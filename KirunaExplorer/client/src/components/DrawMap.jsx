@@ -177,27 +177,34 @@ const DrawMap = () => {
     const deleteArea = async (area_name) => {
         try {
             console.log(area_name);
-
+    
             const res = await API.deleteArea(area_name);
-            console.log(res);
-
-            if (res.success) {
+    
+            if (res) {
                 setSnackbarMsg("Area deleted successfully.");
                 setOpenSnackbar(true);
                 setErrorSeverity("success");
-                setMapLayers((layers) =>
-                    layers.filter((layer) => layer.id !== area_name)
+    
+                setMapLayers((prevLayers) => {
+                    const updatedLayers = prevLayers.filter((layer) => layer.name !== area_name);
+                    setFilteredLayers(updatedLayers); 
+                    return updatedLayers;
+                });
+    
+                setSelectedAreas((prevSelected) =>
+                    prevSelected.filter((name) => name !== area_name)
                 );
             } else {
                 handleError(res.status);
             }
         } catch (error) {
             console.error("Error deleting area:", error);
-            setSnackbarMsg("Unable to delete area due to a server error.");
+            setSnackbarMsg("Unable to delete Kiruna Map");
             setOpenSnackbar(true);
             setErrorSeverity("error");
         }
     };
+    
 
     return (
         <div className="row" style={{ height: "600px", width: "100%", maxHeight: "600px" }}>
