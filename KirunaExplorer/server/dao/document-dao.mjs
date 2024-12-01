@@ -950,6 +950,9 @@ class DocumentDAO {
 
   async deleteArea(areaName) {
     return new Promise((resolve, reject) => {
+      if(areaName === 'Kiruna Map') {
+        return reject (new Error("Cannot delete Kiruna Map"));
+      }
       const findAreaQuery = `SELECT area_id FROM Geolocation WHERE area_name = ?`;
       const updateDocumentsQuery = `
         UPDATE Geolocation_Documents

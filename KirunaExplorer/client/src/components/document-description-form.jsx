@@ -560,19 +560,21 @@ useEffect(() => {
             {...field}
             onChange={(e) => {
               const value = e.target.value;
-              field.onChange(value); // Aggiorna il valore nel form
-              form.setValue("latitude", ""); // Reset latitude
-              form.setValue("longitude", ""); // Reset longitude
-              form.setValue("area_name", value); // Aggiorna area_name con il valore selezionato
-              setIsWholeArea(value); // Aggiorna stato isWholeArea se necessario
+              field.onChange(value); 
+              form.setValue("latitude", "");
+              form.setValue("longitude", ""); 
+              form.setValue("area_name", value); 
+              setIsWholeArea(value); 
             }}
           >
             <option value="">Select an area</option>
-            {geoAreas.map((area) => (
+              {geoAreas
+            .filter((area) => area.name !== "Point-Based Documents") 
+            .map((area) => (
               <option key={area.id} value={area.name}>
                 {area.name}
               </option>
-            ))}
+              ))}
           </select>
         </FormControl>
         <FormMessage />
@@ -665,38 +667,6 @@ useEffect(() => {
                   </div>
                 </div>
               )}
-{/*<FormField
-  control={form.control}
-  name="geo_area"
-  render={({ field }) => (
-    <FormItem>
-      <FormLabel>Select Geo Area</FormLabel>
-      <FormControl>
-        <select
-          {...field}
-          onChange={(e) => {
-            const value = e.target.value;
-            field.onChange(value); // Aggiorna il valore in react-hook-form
-            form.setValue("latitude", ""); // Reset latitude
-            form.setValue("longitude", ""); // Reset longitude
-            form.setValue("area_name", ""); // Reset Municipal Area
-          }}
-          disabled={isWholeArea}
-        >
-          <option value="">Select an area</option>
-          {geoAreas.map((area) => (
-            <option key={area.id} value={area.name}>
-              {area.name}
-            </option>
-          ))}
-        </select>
-      </FormControl>
-      <FormMessage />
-    </FormItem>
-  )}
-/>*/}
-
-
               <FormField
                 control={form.control}
                 name="link"
