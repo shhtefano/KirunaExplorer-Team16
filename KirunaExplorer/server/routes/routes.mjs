@@ -239,8 +239,8 @@ router.put("/api/document/updateDocumentArea", async (req, res) => {
   }
 });
 
-router.delete("/api/geo/:areaName", async (req, res) => {
-  const { areaName } = req.params;
+router.delete("/api/geo/area", async (req, res) => {
+  const { areaName } = req.body;
 
   try {
     const result = await documentDAO.deleteArea(areaName);

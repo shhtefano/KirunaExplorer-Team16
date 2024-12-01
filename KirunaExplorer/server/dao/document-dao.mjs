@@ -301,57 +301,56 @@ class DocumentDAO {
 
   async addArea(area) {
     return new Promise((resolve, reject) => {
-        // Controlla che le coordinate siano valide
-        if (!area || area.length === 0 || !area.every(coord => coord.long && coord.lat)) {
-            return reject({ code: 422, message: "Missing or invalid latitude/longitude." });
+      // Controlla che le coordinate siano valide
+      if (!area || area.length === 0 || !area.every(coord => coord.long && coord.lat)) {
+        return reject({ code: 422, message: "Missing or invalid latitude/longitude." });
+      }
+
+      const areaName = area[0]?.area_name;
+      if (!areaName) {
+        return reject({ code: 422, message: "Missing area name." });
+      }
+
+      // Controlla se il nome dell'area esiste già
+      db.get("SELECT 1 FROM Geolocation WHERE area_name = ?", [areaName], (err, row) => {
+        if (err) {
+          return reject({ code: 500, message: `Database error: ${err.message}` });
         }
 
-        const areaName = area[0]?.area_name;
-        if (!areaName) {
-            return reject({ code: 422, message: "Missing area name." });
+        if (row) {
+          return reject({ code: 403, message: "Area name already exists." });
         }
 
-        // Controlla se il nome dell'area esiste già
-        db.get("SELECT 1 FROM Geolocation WHERE area_name = ?", [areaName], (err, row) => {
-            if (err) {
-                return reject({ code: 500, message: `Database error: ${err.message}` });
-            }
+        // Trova l'area_id massimo
+        db.get("SELECT MAX(area_id) as maxAreaId FROM Geolocation", (err, row) => {
+          if (err) {
+            return reject({ code: 500, message: `Database error: ${err.message}` });
+          }
 
-            if (row) {
-                return reject({ code: 403, message: "Area name already exists." });
-            }
+          const newAreaId = (row && row.maxAreaId !== null) ? row.maxAreaId + 1 : 1;
 
-            // Trova l'area_id massimo
-            db.get("SELECT MAX(area_id) as maxAreaId FROM Geolocation", (err, row) => {
-                if (err) {
-                    return reject({ code: 500, message: `Database error: ${err.message}` });
-                }
-
-                const newAreaId = (row && row.maxAreaId !== null) ? row.maxAreaId + 1 : 1;
-
-                // Prepara i dati per l'inserimento
-                const placeholders = area.map(() => "(?, ?, ?, ?, ?, ?)").join(", ");
-                const query = `
+          // Prepara i dati per l'inserimento
+          const placeholders = area.map(() => "(?, ?, ?, ?, ?, ?)").join(", ");
+          const query = `
                     INSERT INTO Geolocation (area_id, long, lat, area_name, n_order, sub_area_id)
                     VALUES ${placeholders}
                 `;
 
-                const values = area.flatMap(({ long, lat, area_name, n_order, sub_area_id }) => [
-                    newAreaId, long, lat, area_name, n_order, sub_area_id
-                ]);
+          const values = area.flatMap(({ long, lat, area_name, n_order, sub_area_id }) => [
+            newAreaId, long, lat, area_name, n_order, sub_area_id
+          ]);
 
-                // Esegui l'inserimento
-                db.run(query, values, function (err) {
-                    if (err) {
-                        return reject({ code: 500, message: `Database error: ${err.message}` });
-                    }
-                    resolve({ message: "Area added successfully.", area_id: newAreaId });
-                });
-            });
+          // Esegui l'inserimento
+          db.run(query, values, function (err) {
+            if (err) {
+              return reject({ code: 500, message: `Database error: ${err.message}` });
+            }
+            resolve({ message: "Area added successfully.", area_id: newAreaId });
+          });
         });
+      });
     });
-}
-
+  }
 
   async insertDocument(document_title, stakeholders, scale, issuance_date, language, pages, document_type, document_description, area_name, coords) {
     //Converting stakeholder names to stakeholderIds
@@ -642,7 +641,7 @@ class DocumentDAO {
 
   async getAreas() {
     return new Promise((resolve, reject) => {
-        const sqlQuery = `
+      const sqlQuery = `
             SELECT DISTINCT
                 area_id AS id,
                 area_name AS name,
@@ -658,67 +657,67 @@ class DocumentDAO {
                 area_id, sub_area_id, n_order
         `;
 
-        db.all(sqlQuery, (err, rows) => {
-            if (err) {
-                console.error("Errore durante il recupero delle aree:", err);
-                return reject(new Error("Errore durante il recupero delle aree."));
+      db.all(sqlQuery, (err, rows) => {
+        if (err) {
+          console.error("Errore durante il recupero delle aree:", err);
+          return reject(new Error("Errore durante il recupero delle aree."));
+        }
+
+        // Mappa per organizzare le aree per id e sub_area_id
+        const areasMap = new Map();
+
+        rows.forEach(row => {
+          if (!areasMap.has(row.id)) {
+            areasMap.set(row.id, {
+              id: row.id,
+              name: row.name,
+              latlngs: row.sub_area_id === null ? [] : {}, // Usa un array per poligoni semplici, oggetto per multipoligoni
+            });
+          }
+
+          const area = areasMap.get(row.id);
+
+          if (row.latitude !== null && row.longitude !== null) {
+            if (row.sub_area_id === null) {
+              // Poligono semplice
+              area.latlngs.push({ lat: row.latitude, lng: row.longitude });
+            } else {
+              // Multipoligono
+              if (!area.latlngs[row.sub_area_id]) {
+                area.latlngs[row.sub_area_id] = [];
+              }
+              area.latlngs[row.sub_area_id].push({ lat: row.latitude, lng: row.longitude });
             }
-
-            // Mappa per organizzare le aree per id e sub_area_id
-            const areasMap = new Map();
-
-            rows.forEach(row => {
-                if (!areasMap.has(row.id)) {
-                    areasMap.set(row.id, {
-                        id: row.id,
-                        name: row.name,
-                        latlngs: row.sub_area_id === null ? [] : {}, // Usa un array per poligoni semplici, oggetto per multipoligoni
-                    });
-                }
-
-                const area = areasMap.get(row.id);
-
-                if (row.latitude !== null && row.longitude !== null) {
-                    if (row.sub_area_id === null) {
-                        // Poligono semplice
-                        area.latlngs.push({ lat: row.latitude, lng: row.longitude });
-                    } else {
-                        // Multipoligono
-                        if (!area.latlngs[row.sub_area_id]) {
-                            area.latlngs[row.sub_area_id] = [];
-                        }
-                        area.latlngs[row.sub_area_id].push({ lat: row.latitude, lng: row.longitude });
-                    }
-                }
-            });
-
-            // Converti la mappa in un array
-            let areas = Array.from(areasMap.values()).map(area => {
-                // Per i multipoligoni, converti latlngs (oggetto) in un array
-                if (typeof area.latlngs === 'object' && !Array.isArray(area.latlngs)) {
-                    area.latlngs = Object.values(area.latlngs).filter(Boolean); // Rimuove eventuali "buchi"
-                }
-                return area;
-            });
-
-            // Rimuovi duplicati basati sul nome dell'area
-            const seenNames = new Set();
-            areas = areas.filter(area => {
-                if (seenNames.has(area.name)) {
-                    return false; // Escludi area se il nome è già visto
-                }
-                seenNames.add(area.name);
-                return true;
-            });
-
-            areas.push({ id: 0, name: "Point-Based Documents", latlngs: [] });
-
-            // console.log("Aree recuperate:", areas);
-
-            resolve(areas);
+          }
         });
+
+        // Converti la mappa in un array
+        let areas = Array.from(areasMap.values()).map(area => {
+          // Per i multipoligoni, converti latlngs (oggetto) in un array
+          if (typeof area.latlngs === 'object' && !Array.isArray(area.latlngs)) {
+            area.latlngs = Object.values(area.latlngs).filter(Boolean); // Rimuove eventuali "buchi"
+          }
+          return area;
+        });
+
+        // Rimuovi duplicati basati sul nome dell'area
+        const seenNames = new Set();
+        areas = areas.filter(area => {
+          if (seenNames.has(area.name)) {
+            return false; // Escludi area se il nome è già visto
+          }
+          seenNames.add(area.name);
+          return true;
+        });
+
+        areas.push({ id: 0, name: "Point-Based Documents", latlngs: [] });
+
+        // console.log("Aree recuperate:", areas);
+
+        resolve(areas);
+      });
     });
-}
+  }
 
 
   async updatePointCoordinates(document_id, long, lat) {
@@ -960,34 +959,34 @@ class DocumentDAO {
         WHERE area_id = ?
       `;
       const deleteAreaQuery = `DELETE FROM Geolocation WHERE area_id = ?`;
-  
+
       db.get(findAreaQuery, [areaName], (err, row) => {
         if (err) {
           console.error("Errore durante la ricerca dell'area:", err);
           return reject(new Error("Errore durante la ricerca dell'area"));
         }
-  
+
         const areaId = row.area_id;
-  
+
         db.run(updateDocumentsQuery, [areaId], function (err) {
           if (err) {
             console.error("Errore durante l'aggiornamento dei documenti:", err);
             return reject(new Error("Errore durante l'aggiornamento dei documenti"));
           }
-  
+
           db.run(deleteAreaQuery, [areaId], function (err) {
             if (err) {
               console.error("Errore durante la cancellazione dell'area:", err);
               return reject(new Error("Errore durante la cancellazione dell'area"));
             }
-  
+
             resolve("Area eliminata con successo.");
           });
         });
       });
     });
   }
-  
+
 
 }
 

@@ -55,7 +55,7 @@ const DrawMap = () => {
                 const areas = await API.getGeoArea();
                 const filteredAreas = areas.filter(area => area.name !== 'Point-Based Documents');
                 console.log(filteredAreas);
-                
+
                 setMapLayers(filteredAreas);
                 setFilteredLayers(filteredAreas); // Inizialmente tutte le aree sono visualizzate
             } catch (error) {
@@ -174,6 +174,31 @@ const DrawMap = () => {
         setOpenSnackbar(false);
     };
 
+    const deleteArea = async (area_name) => {
+        try {
+            console.log(area_name);
+
+            const res = await API.deleteArea(area_name);
+            console.log(res);
+
+            if (res.success) {
+                setSnackbarMsg("Area deleted successfully.");
+                setOpenSnackbar(true);
+                setErrorSeverity("success");
+                setMapLayers((layers) =>
+                    layers.filter((layer) => layer.id !== area_name)
+                );
+            } else {
+                handleError(res.status);
+            }
+        } catch (error) {
+            console.error("Error deleting area:", error);
+            setSnackbarMsg("Unable to delete area due to a server error.");
+            setOpenSnackbar(true);
+            setErrorSeverity("error");
+        }
+    };
+
     return (
         <div className="row" style={{ height: "600px", width: "100%", maxHeight: "600px" }}>
             {/* Colonna sinistra: mappa */}
@@ -192,8 +217,8 @@ const DrawMap = () => {
                             onDelete={(e) => {
                                 const { layerType, layer } = e;
                                 if (layerType === "polygon") {
-                                    
-                                    
+
+
                                     // IMPLEMENT DELETE OF AREA
                                 }
                             }}
@@ -204,7 +229,7 @@ const DrawMap = () => {
                                 marker: false,
                                 polyline: false,
                             }}
-                            edit={{edit:false}} 
+                            edit={{ edit: false }}
                         />
                         {/* Visualizza i poligoni quando in modalità 'polygons' */}
                         {filteredLayers.map((layer) =>
@@ -317,7 +342,7 @@ const DrawMap = () => {
                     <Button type="button" variant="dark" onClick={viewMode === 'polygons' ? () => setViewMode('markers') : () => setViewMode('polygons')}>
                         Switch View Mode: {viewMode === 'polygons' ? 'Markers' : 'Polygons'}
                     </Button>
-                    
+
                 </div>
                 {/* <h5>Select areas</h5> */}
                 <Form.Control
@@ -337,13 +362,29 @@ const DrawMap = () => {
                     {mapLayers
                         .filter((layer) => layer.name.toLowerCase().includes(searchTerm.toLowerCase()))
                         .map((layer) => (
-                            <Form.Check
-                                key={layer.id}
-                                type="checkbox"
-                                label={layer.name}
-                                checked={selectedAreas.includes(layer.name)}
-                                onChange={() => toggleAreaSelection(layer.name)}
-                            />
+                            <div style={{ display: 'flex' }}>
+                                <Form.Check
+                                    key={layer.id}
+                                    type="checkbox"
+                                    label={layer.name}
+                                    checked={selectedAreas.includes(layer.name)}
+                                    onChange={() => toggleAreaSelection(layer.name)}
+                                />
+                                <Button
+                                    type="button"
+                                    variant="dark"
+                                    onClick={() => deleteArea(layer.name)}
+                                    style={{
+                                        fontSize: "12px", // Per renderlo più piccolo
+                                        padding: "4px 8px", // Regola il padding per adattarlo
+                                        color: "red", // Scritta rossa
+                                        backgroundColor: "transparent", // Sfondo trasparente
+                                        border: "none", // Rimuovi il bordo
+                                    }}
+                                >
+                                    X
+                                </Button>
+                            </div>
                         ))}
                 </div>
             </div>
