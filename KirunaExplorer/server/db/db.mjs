@@ -77,6 +77,7 @@ db.serialize(() => {
     );
   `);
 
+
   // Attachments Table
   db.run(`
     CREATE TABLE IF NOT EXISTS Attachments (

@@ -724,7 +724,58 @@ console.log(documentInfo, coordinates);
     });
   }
   
+
+
+
+
+  async getDocumentTypes() {
+  return new Promise((resolve, reject) => {
+    const query = `SELECT type_id, type_name FROM Type;`;
+
+    db.all(query, [], (err, rows) => {
+      if (err) {
+        console.error("Errore durante il recupero dei tipi di documento:", err);
+        return reject(new Error("Errore durante il recupero dei tipi di documento."));
+      }
+
+      resolve(rows); // Risolve con i dati dei tipi di documento
+    });
+  });
 }
+async  addDocumentType(typeName) {
+  return new Promise((resolve, reject) => {
+    // Check if the document type already exists
+    const checkQuery = `SELECT * FROM Type WHERE type_name = ?`;
+
+    db.get(checkQuery, [typeName], (err, row) => {
+      if (err) {
+        console.error("Error checking document type:", err);
+        return reject(new Error("Error checking document type."));
+      }
+
+      if (row) {
+        // Reject the promise if the type already exists
+        return reject(new Error("Document type already exists"));
+      }
+
+      // Insert the new document type
+      const query = `INSERT INTO Type (type_name) VALUES (?);`;
+
+      db.run(query, [typeName], function (err) {
+        if (err) {
+          console.error("Error adding document type:", err);
+          return reject(new Error("Error adding document type."));
+        }
+
+        // Resolve with the newly added document type
+        resolve({ type_id: this.lastID, type_name: typeName });
+      });
+    });
+  });
+}
+
+}
+
 
 export default DocumentDAO;
 
