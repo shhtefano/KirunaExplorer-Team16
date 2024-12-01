@@ -379,6 +379,27 @@ const downloadFileFromSupabase = async (documentId, fileName) => {
   return fileUrl; // Return the file URL for downloading
 };
 
+const deleteFileFromSupabase = async (documentId, fileName) => {
+  // Construct the full file path within the "resources" bucket
+  const filePath = `uploads/resources/${documentId}/${fileName}`;
+
+  try {
+    const { error } = await supabase.storage
+      .from('resources')
+      .remove([filePath]); // Array containing the file path
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    console.log(`File "${fileName}" successfully deleted from Supabase storage.`);
+  } catch (error) {
+    console.error('Error deleting file:', error.message);
+    // Handle errors appropriately, e.g., display an error message to the user
+  }
+};
+
+
 // Function to get the list of files from Supabase
 const listFilesInSupabase = async (documentId) => {
   // List files in the specific folder corresponding to the document ID
@@ -434,6 +455,7 @@ const API = {
   //STORAGE
   uploadFileToSupabase,
   downloadFileFromSupabase,
+  deleteFileFromSupabase,
   listFilesInSupabase
 };
 

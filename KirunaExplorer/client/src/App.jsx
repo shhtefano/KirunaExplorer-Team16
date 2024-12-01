@@ -9,8 +9,7 @@ import GraphPage from "./pages/Graph";
 import LoginPage from "./pages/Login";
 import AddDocumentDescPage from "./pages/AddDocumentDesc";
 import ShowDocumentsPage from "./pages/ShowDocuments";
-import AddResources from "./pages/addResources";
-import FileUpload from "./pages/FileUpload";
+import Resources from "./pages/Resources";
 
 function App() {
   return (
@@ -56,7 +55,7 @@ function App() {
            <Route
             path="/addresources"
             element={      
-                <FileUpload/>
+                <Resources/>
             }
           />
         </Routes>
