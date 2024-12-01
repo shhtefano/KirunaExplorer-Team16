@@ -138,15 +138,6 @@ const HomePage = () => {
                   </Button>
                 </>
               )}
-
-              <Button
-                variant="outline"
-                className="mr-2"
-                onClick={() => navigate("/map")}
-              >
-                See Map
-                <Map />
-              </Button>
             </div>
           </CardFooter>
         </Card>
