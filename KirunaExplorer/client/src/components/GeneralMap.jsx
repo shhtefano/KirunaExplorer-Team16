@@ -61,6 +61,24 @@ const GeneralMap = () => {
   const WHOLE_AREA_CENTER = { lat: 67.85572, lng: 20.22513 }; // Definisci le coordinate per Kiruna Map
   const WHOLE_AREA_ZOOM = 12; // Definisci un livello di zoom per Kiruna Map
 
+  const [geoAreas, setGeoAreas] = useState([]);
+  const [selectedGeoArea, setSelectedGeoArea] = useState("");
+
+  useEffect(() => {
+    // Funzione per ottenere i dati dall'API
+    const fetchGeoAreas = async () => {
+      try {
+        const newArea = await API.getGeoArea();
+        setGeoAreas(newArea); // Presupponendo che areas sia un array di stringhe o oggetti
+        //setSelectedGeoArea(newArea[0]?.name || ""); // Imposta il valore predefinito
+      } catch (error) {
+        console.error("Errore durante il caricamento delle aree:", error);
+      } 
+    };
+
+    fetchGeoAreas();
+  }, []);
+
   useEffect(() => {
     const fetchAreas = async () => {
       try {
@@ -266,7 +284,7 @@ const GeneralMap = () => {
         const { lat, long } = selectedDocument.coordinates[0];
 
         if (isWholeAreaChecked) {
-          await API.updateDocumentArea(selectedDocument.id, 1);
+          await API.updateDocumentArea(selectedDocument.id, selectedGeoArea)
           setSelectedArea(areas[0]);
           // Aggiorna filteredDocuments
           setFilteredDocuments((prevDocuments) =>
@@ -676,20 +694,43 @@ const GeneralMap = () => {
               </div>
 
               <Form.Group controlId="wholeAreaCheckbox" className="text-center">
-                <Form.Check
-                  type="checkbox"
-                  label="Set as Kiruna Map"
-                  checked={isWholeAreaChecked}
-                  onChange={(e) => {
-                    const checked = e.target.checked;
-                    setIsWholeAreaChecked(checked);
-                    setSelectedDocument((prevDoc) => ({
-                      ...prevDoc,
-                      area_name: checked ? "Kiruna Map" : "Point-Based Documents",
-                    }));
-                  }}
-                />
-              </Form.Group>
+  <Form.Check
+    type="checkbox"
+    label="Set a new Geo Area"
+    checked={isWholeAreaChecked}
+    onChange={(e) => {
+      const checked = e.target.checked;
+      setIsWholeAreaChecked(checked);  
+      if (!checked) {
+        setSelectedGeoArea("");  
+      }
+      setSelectedDocument((prevDoc) => ({
+        ...prevDoc,
+        area_name: checked ? "Kiruna Map" : "Point-Based Documents", 
+      }));
+    }}
+  />
+</Form.Group>
+
+{isWholeAreaChecked && (
+  <Form.Group controlId="geoAreaDropdown" className="text-center">
+    <Form.Label>Select Geo Area</Form.Label>
+    <Form.Select
+      value={selectedGeoArea}
+      onChange={(e) => {
+        const selectedValue = e.target.value;  
+        setSelectedGeoArea(selectedValue);  
+      }}
+    >
+      {geoAreas.map((area) => (
+        <option key={area.id} value={area.id}>
+          {area.name}
+        </option>
+      ))}
+    </Form.Select>
+  </Form.Group>
+)}
+
             </Form>
 
           </Modal.Body>
