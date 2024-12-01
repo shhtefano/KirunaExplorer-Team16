@@ -102,6 +102,14 @@ const HomePage = () => {
                     See graph
                     <GanttChart data-testid="gantt-chart-icon" />
                   </Button>
+                  <Button
+                    variant="outline"
+                    className="mr-2"
+                    onClick={(e) => handleRestrictedAction(e, "/addResources")}
+                  >
+                    See Resources
+                    <Folder data-testid="resources-icon" />
+                  </Button>
                 </>
               )}
 
@@ -112,14 +120,6 @@ const HomePage = () => {
               >
                 See Map
                 <Map />
-              </Button>
-              <Button
-                variant="outline"
-                className="mr-2"
-                onClick={(e) => handleRestrictedAction(e, "/addResources")}
-              >
-                See Resources
-                <Folder data-testid="resources-icon" /> 
               </Button>
             </div>
           </CardFooter>
