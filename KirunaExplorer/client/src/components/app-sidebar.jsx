@@ -65,6 +65,10 @@ const data = {
           title: "Show documents",
           url: "/documents/list",
         },
+        {
+          title: "Resources Management",
+          url: "/addResources",
+        },
       ],
     },
   ],

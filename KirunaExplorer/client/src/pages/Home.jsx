@@ -6,7 +6,7 @@ import {
   CardFooter,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Map, GanttChart, User } from "lucide-react";
+import { Map, GanttChart, User, Folder } from "lucide-react";
 import LoginForm from "@/components/login-form";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -46,7 +46,7 @@ const HomePage = () => {
   return (
     <div
       className="relative min-h-screen w-full overflow-hidden"
-      // style={{ height: "40vh" }} // Assicura l'altezza dello schermo
+    // style={{ height: "40vh" }} // Assicura l'altezza dello schermo
     >
       {/* Background Image with Overlay */}
       <div
@@ -104,6 +104,7 @@ const HomePage = () => {
                   </Button>
                 </>
               )}
+
               <Button
                 variant="outline"
                 className="mr-2"
@@ -111,6 +112,14 @@ const HomePage = () => {
               >
                 See Map
                 <Map />
+              </Button>
+              <Button
+                variant="outline"
+                className="mr-2"
+                onClick={(e) => handleRestrictedAction(e, "/addResources")}
+              >
+                See Resources
+                <Folder data-testid="resources-icon" /> 
               </Button>
             </div>
           </CardFooter>

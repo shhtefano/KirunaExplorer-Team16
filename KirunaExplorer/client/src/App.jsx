@@ -54,8 +54,10 @@ function App() {
           />
            <Route
             path="/addresources"
-            element={      
+            element={  
+              <ProtectedRoute>  
                 <Resources/>
+              </ProtectedRoute>  
             }
           />
         </Routes>

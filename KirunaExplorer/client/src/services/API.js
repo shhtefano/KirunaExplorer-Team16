@@ -353,15 +353,12 @@ const addNewStakeholder = async (body) => {
 
 //Supabase
 
-// Funzione per caricare un file su Supabase
 const uploadFileToSupabase = async (file, documentId) => {
-  // Create a path that includes the document ID
-  const fileName = `uploads/resources/${documentId}/${file.name}`; // Path del file nel bucket
-
+  const fileName = `uploads/resources/${documentId}/${file.name}`; 
   const { data, error } = await supabase.storage
-    .from('resources') // Nome del bucket
+    .from('resources') 
     .upload(fileName, file, {
-      contentType: file.type, // Usa il MIME type del file
+      contentType: file.type, 
     });
 
   if (error) {
@@ -369,25 +366,21 @@ const uploadFileToSupabase = async (file, documentId) => {
   }
 
   const fileUrl = `${supabaseUrl}/storage/v1/object/public/resources/${fileName}`;
-  return fileUrl; // Return the file URL
+  return fileUrl; 
 };
 
-// Function to download a file from Supabase
 const downloadFileFromSupabase = async (documentId, fileName) => {
-  // Construct the file URL
   const fileUrl = `${supabaseUrl}/storage/v1/object/public/resources/uploads/resources/${documentId}/${fileName}`;
-  return fileUrl; // Return the file URL for downloading
+  return fileUrl; 
 };
 
 const deleteFileFromSupabase = async (documentId, fileName) => {
-  // Construct the full file path within the "resources" bucket
   const filePath = `uploads/resources/${documentId}/${fileName}`;
 
   try {
     const { error } = await supabase.storage
       .from('resources')
-      .remove([filePath]); // Array containing the file path
-
+      .remove([filePath]); 
     if (error) {
       throw new Error(error.message);
     }
@@ -395,23 +388,18 @@ const deleteFileFromSupabase = async (documentId, fileName) => {
     console.log(`File "${fileName}" successfully deleted from Supabase storage.`);
   } catch (error) {
     console.error('Error deleting file:', error.message);
-    // Handle errors appropriately, e.g., display an error message to the user
   }
 };
 
-
-// Function to get the list of files from Supabase
 const listFilesInSupabase = async (documentId) => {
-  // List files in the specific folder corresponding to the document ID
   const { data, error } = await supabase.storage
-    .from('resources') // Specify the bucket name
-    .list(`uploads/resources/${documentId}`); // Fetch the list of files in the document's folder
+    .from('resources') 
+    .list(`uploads/resources/${documentId}`); 
 
   if (error) {
     throw new Error(error.message);
   }
-
-  return data; // Return the list of files
+  return data; 
 };
 
 

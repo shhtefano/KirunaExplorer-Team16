@@ -164,49 +164,47 @@ const FileUpload = () => {
           </Select>
 
           <div
-  className={`border-2 border-dashed rounded-lg p-8 text-center ${
-    dragActive ? "border-blue-500 bg-blue-50" : "border-gray-300"
-  }`}
-  onDragEnter={handleDrag}
-  onDragOver={handleDrag}
-  onDragLeave={handleDrag}
-  onDrop={handleDrop}
->
-  <Upload className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-  <p className="text-sm text-gray-600">Drag and drop your files here, or</p>
-  <div className="flex justify-center items-center space-x-4 mt-2">
-    <Button variant="outline" onClick={() => document.getElementById("file-upload").click()}>
-      Browse Files
-    </Button>
-  </div>
-  <input
-    id="file-upload"
-    type="file"
-    multiple
-    className="hidden"
-    onChange={handleFileSelect}
-  />
-</div>
-{/* File preview section */}
-<div className="mt-4">
-  {files.length > 0 && (
-    <div className="space-y-1">
-      {files.map((file, index) => (
-        <div key={index} className="flex items-center">
-          <File className="w-4 h-4 text-gray-500 mr-2" />
-          <span className="text-sm text-gray-700">{file.name} ({file.type})</span>
-        </div>
-      ))}
-    </div>
-  )}
-</div>
+            className={`border-2 border-dashed rounded-lg p-8 text-center ${dragActive ? "border-blue-500 bg-blue-50" : "border-gray-300"
+              }`}
+            onDragEnter={handleDrag}
+            onDragOver={handleDrag}
+            onDragLeave={handleDrag}
+            onDrop={handleDrop}
+          >
+            <Upload className="w-12 h-12 mx-auto mb-4 text-gray-400" />
+            <p className="text-sm text-gray-600">Drag and drop your files here, or</p>
+            <div className="flex justify-center items-center space-x-4 mt-2">
+              <Button variant="outline" onClick={() => document.getElementById("file-upload").click()}>
+                Browse Files
+              </Button>
+            </div>
+            <input
+              id="file-upload"
+              type="file"
+              multiple
+              className="hidden"
+              onChange={handleFileSelect}
+            />
+          </div>
+          {/* File preview section */}
+          <div className="mt-4">
+            {files.length > 0 && (
+              <div className="space-y-1">
+                {files.map((file, index) => (
+                  <div key={index} className="flex items-center">
+                    <File className="w-4 h-4 text-gray-500 mr-2" />
+                    <span className="text-sm text-gray-700">{file.name} ({file.type})</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
 
-{/* Move the Upload button here, outside the dashed border */}
-<div className="flex justify-center mt-4">
-  <Button onClick={handleSubmit} disabled={loading || files.length === 0}>
-    {loading ? "Uploading..." : "Upload Files"}
-  </Button>
-</div>
+          <div className="flex justify-center mt-4">
+            <Button onClick={handleSubmit} disabled={loading || files.length === 0}>
+              {loading ? "Uploading..." : "Upload Files"}
+            </Button>
+          </div>
 
           {selectedDocument && existingFiles.length > 0 && (
             <>
@@ -230,10 +228,10 @@ const FileUpload = () => {
             </>
           )}
           <Alert>
-          <AlertDescription>
-            Select a document and upload files like maps, text documents, and other resources. These will be associated with the selected document.
-          </AlertDescription>
-        </Alert>
+            <AlertDescription>
+              Select a document and upload files like maps, text documents, and other resources. These will be associated with the selected document.
+            </AlertDescription>
+          </Alert>
         </CardContent>
       </Card>
 
@@ -241,7 +239,7 @@ const FileUpload = () => {
         open={toast.open}
         autoHideDuration={6000}
         onClose={handleCloseToast}
-        anchorOrigin={{ vertical: "bottom", horizontal: "right" }} // Cambia "right" in "center" per posizione centrale
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }} 
       >
         <Alert severity={toast.severity} onClose={handleCloseToast}>
           {toast.message}
