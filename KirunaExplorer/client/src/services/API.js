@@ -74,8 +74,26 @@ async function getGeoArea() {
   return data;
 }
 
+async function deleteArea(areaName) {
+  const response = await fetch(`${SERVER_URL}/api/geo/area`, {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      areaName
+    }),
+  });
 
-async function getAreaCoordinates(area_id){
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || "Errore API getDocuments");
+  } else {
+    return true;
+  }
+}
+
+async function getAreaCoordinates(area_id) {
   const response = await fetch(`${SERVER_URL}/api/geo/:${area_id}`, {
     method: "GET",
     headers: {
@@ -159,7 +177,6 @@ async function linkDocuments(parent_id, children_id, connection_type) {
     if (!response.ok) {
       // Clone the response to safely read it in multiple ways
       const responseClone = response.clone();
-      console.log(response);
       if (response.status === 403) {
         return { success: false, message: "Duplicated Link" };
       } else if (response.status === 500) {
@@ -331,47 +348,45 @@ const addDocumentDescription = async (body) => {
 
 const addArea = async (body) => {
   try {
-      const res = await fetch(SERVER_URL + "/api/geo/area", {
-          method: "POST",
-          headers: {
-              "Content-Type": "application/json",
-          },
-          body: JSON.stringify(body),
-      });
+    const res = await fetch(SERVER_URL + "/api/geo/area", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    });
 
-      if (res.ok) {
-          return { success: true, status: res.status, message: "Area added successfully." };
-      }
+    if (res.ok) {
+      return { success: true, status: res.status, message: "Area added successfully." };
+    }
 
-      const errorData = await res.json(); // Estrarre il messaggio di errore dal server
-      switch (res.status) {
-          case 403:
-              return { success: false, status: 403, error: "Area name already exists." };
-          case 422:
-              return { success: false, status: 422, error: "Missing or invalid latitude/longitude or area name." };
-          case 500:
-              return { success: false, status: 500, error: errorData.message || "Server error." };
-          default:
-              return { success: false, status: res.status, error: "Unexpected error." };
-      }
+    const errorData = await res.json(); // Estrarre il messaggio di errore dal server
+    switch (res.status) {
+      case 403:
+        return { success: false, status: 403, error: "Area name already exists." };
+      case 422:
+        return { success: false, status: 422, error: "Missing or invalid latitude/longitude or area name." };
+      case 500:
+        return { success: false, status: 500, error: errorData.message || "Server error." };
+      default:
+        return { success: false, status: res.status, error: "Unexpected error." };
+    }
   } catch (error) {
-      return { success: false, status: 500, error: "Failed to connect to the server." };
+    return { success: false, status: 500, error: "Failed to connect to the server." };
   }
 };
 
 
 const addNewStakeholder = async (body) => {
-  console.log(body);
-  
+
   const res = await fetch(SERVER_URL + "/api/stakeholder", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({stakeholder_name: body}),
+    body: JSON.stringify({ stakeholder_name: body }),
   });
-  console.log(res.status);
-  
+
   if (res.ok) {
     return res.status;
   } else if (res.status === 403) {
@@ -499,6 +514,7 @@ const API = {
   getStakeholders,
   updateDocumentCoordinates,
   updateDocumentArea,
+  deleteArea,
   addDocumentDescription,
   addNewStakeholder,
   linkDocuments,

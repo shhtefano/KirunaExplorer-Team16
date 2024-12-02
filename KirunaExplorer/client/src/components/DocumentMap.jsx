@@ -8,7 +8,7 @@ import { Button } from "react-bootstrap";
 
 // Configura l'icona di default di Leaflet
 const icon = new L.Icon({
-  iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png", // Icona blu per gli altri marker
+  iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png", // Icona blu per gli altri marker
   iconSize: [25, 41],
   iconAnchor: [12, 41],
   popupAnchor: [1, -34],
@@ -41,7 +41,7 @@ const DocumentMap = ({ document_id }) => {
         const document = await API.getDocumentPosition(document_id);
 
         if (document.coordinates && document.coordinates.length > 0) {
-          if (document.area_name === "Kiruna Map") {
+          if (document.area_name !== "Point-Based Documents") {
             // Calcolo del centro (opzionale, lo hai già)
             if (document.coordinates && document.coordinates.length > 0) {
               let polygonCoordinates = [];
@@ -83,15 +83,14 @@ const DocumentMap = ({ document_id }) => {
           } else if (document.area_name === "Point-Based Documents") {
 
             const coordinates = document.coordinates;
-  
+
             // Controlla il formato delle coordinate
             const firstCoord = Array.isArray(coordinates[0]) ? coordinates[0][0] : coordinates[0];
-          
-            console.log("First Coordinate Object:", firstCoord);
-            
+
+
             const lat = firstCoord?.lat;
             const lng = firstCoord?.lng;
-          
+
             if (lat !== undefined && lng !== undefined) {
               setCenter([lat, lng]); // Imposta il centro della mappa
               setCoordinates([lat, lng]); // Imposta direttamente l'array [lat, lng]
@@ -99,16 +98,13 @@ const DocumentMap = ({ document_id }) => {
             } else {
               console.error("Invalid coordinates in Point-Based Documents:", firstCoord);
             }
-            
+
           } else if (document.area_name === "Custom Area") {
             // TODO: Gestisci le aree personalizzate
             return;
           } else {
             console.log("Error: Unknown area name");
           }
-        } else {
-          console.log('qui non dovrebbe andarci mai');
-
         }
       } catch (error) {
         console.error("Error fetching document position:", error);
@@ -159,19 +155,22 @@ const DocumentMap = ({ document_id }) => {
         zoom={zoomLevel}
         style={{ height: "500px", width: "100%" }}
       >
-        {areaName === "Point-Based Documents" && coordinates.length > 0 && (
-          <Marker
-            position={coordinates}
-            icon={icon} // Usa l'icona corretta per il marker
-          />
-        )}
+        {coordinates && coordinates.length > 0 && areaName === "Point-Based Documents" && (
+  <Marker
+    position={coordinates}
+    icon={icon} // Usa l'icona corretta per il marker
+  />
+)}
 
-        {(areaName === "Kiruna Map" || areaName === "Custom Area") &&
-          coordinates.length > 0 &&
-          coordinates.map((polygon, index) => (
-            <Polygon key={index} positions={polygon} />
-          ))}
+{coordinates && coordinates.length > 0 && areaName === "Kiruna Map" &&
+  coordinates.map((polygon, index) => (
+    <Polygon key={index} positions={polygon} />
+  ))}
 
+{coordinates && coordinates.length > 0 && areaName !== "Kiruna Map" && areaName !== "Point-Based Documents" &&
+  coordinates.map((polygon, index) => (
+    <Polygon key={index} positions={polygon} />
+  ))}
         <TileLayer
           url={tileLayers[mapType].url}
           attribution={tileLayers[mapType].attribution}

@@ -147,12 +147,10 @@ const DocumentDescriptionForm = () => {
       };
       delete body.latitude;
       delete body.longitude;
-      console.log({ ...body });
       // API request
       try {
-        console.log("chiamo documentdescription " + body.coordinates);
 
-        if(body.stakeholders.length === 0){
+        if (body.stakeholders.length === 0) {
           setToast({
             open: true,
             message: "Stakeholders missing",
@@ -161,29 +159,26 @@ const DocumentDescriptionForm = () => {
           return;
         }
 
-        if((body.coordinates.lat === "" || body.coordinates.long === "") && body.area_name === ""){
-          
+        if ((body.coordinates.lat === "" || body.coordinates.long === "") && body.area_name === "") {
+
           setToast({
             open: true,
             message: "Geolocation data missing",
             severity: "error",
           });
           return;
-        }else if((body.coordinates.lat === "" || body.coordinates.long === "") && body.area_name === "Kiruna Map"){
-          console.log('xxx');
+        } else if ((body.coordinates.lat === "" || body.coordinates.long === "") && body.area_name === "Kiruna Map") {
           // return
-        }else if((body.coordinates.lat !== "" || body.coordinates.long !== "") && body.area_name === "Kiruna Map"){
-          console.log('yyyy');
-          body.coordinates=[];
+        } else if ((body.coordinates.lat !== "" || body.coordinates.long !== "") && body.area_name === "Kiruna Map") {
+          body.coordinates = [];
           // return
-        }else if((body.coordinates.lat !== "" || body.coordinates.long !== "") && body.area_name !== "Kiruna Map"){
-          console.log('zzzz');
+        } else if ((body.coordinates.lat !== "" || body.coordinates.long !== "") && body.area_name !== "Kiruna Map") {
           // return
         }
 
-      
 
-        
+
+
         const response = await API.addDocumentDescription(body);
         // toast.success("Document description added");
         setDocumentId(response.documentId); // Set the documentId
@@ -197,14 +192,12 @@ const DocumentDescriptionForm = () => {
 
         // Check if response contains an error
         if (response.error) {
-          console.log(response.error);
           setToast({
             open: true,
             message: response.error.toString(),
             severity: "error",
           });
         } else {
-          console.log(response); // Logs the response status (e.g., 200)
           setToast({
             open: true,
             message: "Added document description",
@@ -300,7 +293,6 @@ const DocumentDescriptionForm = () => {
       try {
         const data = await API.getStakeholders();
         const stakeholders = data.map(stakeholder => stakeholder.stakeholder_name);
-        console.log(stakeholders); // Controlla che la struttura sia quella attesa
 
         setStakeholders(stakeholders);
       } catch (error) {
@@ -315,7 +307,6 @@ const DocumentDescriptionForm = () => {
 
   // Aggiungere un nuovo stakeholder
   const handleAddStakeholder = async (newStakeholderName) => {
-    console.log(newStakeholderName);
 
     try {
       if (newStakeholderName.trim() === '') {
@@ -328,7 +319,7 @@ const DocumentDescriptionForm = () => {
       } else {
 
         const result = await API.addNewStakeholder(newStakeholderName);
-        if(result === 201){
+        if (result === 201) {
           setStakeholders((prev) => [...prev, newStakeholderName]);
           setStakeholderInput('');
 
@@ -338,6 +329,22 @@ const DocumentDescriptionForm = () => {
       console.error('Error adding stakeholder:', error);
     }
   };
+
+  const [geoAreas, setGeoAreas] = useState([]); // Per salvare le aree geografiche
+  //const [selectedGeoArea, setSelectedGeoArea] = useState(""); // Per tracciare l'area selezionata
+
+  useEffect(() => {
+    const fetchGeoAreas = async () => {
+      try {
+        const data = await API.getGeoArea(); // Chiamata alla tua funzione API
+        setGeoAreas(data); // Salva le aree nello stato
+      } catch (error) {
+        console.error("Errore durante il fetch delle aree geografiche:", error);
+      }
+    };
+
+    fetchGeoAreas();
+  }, []);
 
   return (
     <div>
@@ -580,40 +587,51 @@ const DocumentDescriptionForm = () => {
               />
 
               {/* Map button and other fields */}
-              <div className="flex gap-x-4 items-center">
+              <div className="flex gap-x-2 items-center" style={{ marginTop: "50px" }}>
                 <FormField
                   control={form.control}
                   name="area_name"
                   render={({ field }) => (
-                    <FormItem className="flex flex-col items-center space-y-2">
-                      {" "}
+                    <FormItem style={{ marginBottom: "10px", marginLeft: "30px" }} className="flex flex-col gap-y-2 items-center">
                       {/* Disposizione verticale e centrata */}
                       <FormLabel
                         className="text-center"
-                        style={{ paddingBottom: "22px" }}
+
                       >
-                        {" "}
                         {/* Allinea la label al centro */}
-                        Municipal area
+                        Select Area
                       </FormLabel>
                       <FormControl>
-                        <Checkbox
+                        <select
                           {...field}
-                          checked={field.value === "Kiruna Map"} // Checkbox is checked if value is "Kiruna Map"
-                          onCheckedChange={(checked) => {
-                            const value = checked ? "Kiruna Map" : ""; // Set to "Kiruna Map" if checked, otherwise empty
-                            field.onChange(value); // Update the form's field value
-                            setIsWholeArea(checked); // Optional: Update any additional component state
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            field.onChange(value);
+                            form.setValue("latitude", "");
+                            form.setValue("longitude", "");
+                            form.setValue("area_name", value);
+                            setIsWholeArea(value);
                           }}
-                        />
+                        >
+                          <option value="">Point-Based Documents</option>
+                          {geoAreas
+                            .filter((area) => area.name !== "Point-Based Documents")
+                            .map((area) => (
+                              <option key={area.id} value={area.name}>
+                                {area.name}
+                              </option>
+                            ))}
+                        </select>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-                <div style={{ marginLeft: "30px", marginRight: "30px" }}>
+
+                <div style={{ marginLeft: "30px", marginRight: "40px" }}>
                   OR
                 </div>
+
                 <FormField
                   control={form.control}
                   name="latitude"
@@ -698,64 +716,66 @@ const DocumentDescriptionForm = () => {
                 </div>
               )}
 
-              <FormField
-                control={form.control}
-                name="link"
-                render={() => (
-                  <FormItem>
-                    <FormControl>
-                      <Dialog
-                        open={showPopupLink}
-                        onOpenChange={setShowPopupLink}
-                      >
-                        <DialogTrigger asChild>
-                          <Button variant="outline">Link documents</Button>
-                        </DialogTrigger>
-                        <DialogContent className="sm:max-w-[825px]">
-                          <DialogHeader>
-                            <DialogTitle>Link documents</DialogTitle>
-                            <DialogDescription>
-                              Link this document with other documents.
-                            </DialogDescription>
-                          </DialogHeader>
-                          <div className="flex p-2 justify-center items-center">
-                            <ScrollArea className="h-[500px] p-2">
-                              <DocumentLinkOnCreation
-                                onSave={onSaveTemporaryLinks}
-                                initialDocumentTitle={form.watch(
-                                  "document_title"
-                                )}
-                                temporaryLinks={temporaryLinks}
-                                setTemporaryLinks={setTemporaryLinks}
-                              // Passa il titolo del documento corrente
-                              />
-                            </ScrollArea>
+              <div className="flex gap-x-2 items-center justify-center" style={{ marginTop: "40px" }}>
+
+                <div>
+
+                  <FormField
+                    control={form.control}
+                    name="link"
+                    render={() => (
+                      <FormItem>
+                        <FormControl>
+                          <Dialog
+                            open={showPopupLink}
+                            onOpenChange={setShowPopupLink}
+                            style={{ border: "none" }}
+                          >
+                            <DialogTrigger asChild>
+                              <Button variant="outline">Link documents</Button>
+                            </DialogTrigger>
+                            <DialogContent className="sm:max-w-[605px] flex text-center items-center justify-center " style={{ border: "none" }}>
+                              <div className="flex p-2 justify-center items-center text-center">
+                                <ScrollArea className="h-[700px] p-2" style={{ width: "100%", border: "none" }}>
+                                  <DocumentLinkOnCreation
+                                    onSave={onSaveTemporaryLinks}
+                                    initialDocumentTitle={form.watch(
+                                      "document_title"
+                                    )}
+                                    temporaryLinks={temporaryLinks}
+                                    setTemporaryLinks={setTemporaryLinks}
+                                  // Passa il titolo del documento corrente
+                                  />
+                                </ScrollArea>
+                              </div>
+                            </DialogContent>
+                          </Dialog>
+                        </FormControl>
+                        <FormMessage />
+                        {temporaryLinks.length > 0 && (
+                          <div className="mt-4">
+                            <h3 className="text-sm font-semibold">
+                              Temporary Links:
+                            </h3>
+                            <ul className="list-disc pl-5 space-y-1">
+                              {temporaryLinks.map((link, index) => (
+                                <li key={index} className="text-sm">
+                                  {link.from} -- {link.to} ({link.type})
+                                </li>
+                              ))}
+                            </ul>
                           </div>
-                        </DialogContent>
-                      </Dialog>
-                    </FormControl>
-                    <FormMessage />
-                    {temporaryLinks.length > 0 && (
-                      <div className="mt-4">
-                        <h3 className="text-sm font-semibold">
-                          Temporary Links:
-                        </h3>
-                        <ul className="list-disc pl-5 space-y-1">
-                          {temporaryLinks.map((link, index) => (
-                            <li key={index} className="text-sm">
-                              {link.from} -- {link.to} ({link.type})
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
+                        )}
+                      </FormItem>
                     )}
-                  </FormItem>
-                )}
-              />
-              <div style={{ textAlign: "center", marginTop: "60px" }}>
-                <Button type="submit" disabled={isPending} variant="outline">
-                  Add document description
-                </Button>
+                  />
+                </div>
+                <div style={{ textAlign: "center" }}>
+                  <Button type="submit" disabled={isPending} variant="outline" style={{ color: "white", backgroundColor: "black" }}>
+                    Add document description
+                  </Button>
+                </div>
+
               </div>
             </form>
           </Form>
