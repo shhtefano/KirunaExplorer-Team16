@@ -2,7 +2,7 @@
 /* eslint-disable jest/expect-expect */
 /* eslint-disable no-undef */
 
-describe("DrawMap Component", () => {
+describe("GeneralMap Component", () => {
   describe("Visitor Access", () => {
     beforeEach(() => {
       cy.visit("/map");
@@ -35,10 +35,10 @@ describe("DrawMap Component", () => {
       cy.get(".leaflet-draw").should("be.visible");
     });
 
-    it("can toggle between point and whole area view", () => {
+    it("can toggle between point and Kiruna Map view", () => {
       cy.get("#dropdown-basic").click();
-      cy.contains("Whole Area").click();
-      cy.get("#dropdown-basic").should("contain", "Whole Area");
+      cy.contains("Kiruna Map").click();
+      cy.get("#dropdown-basic").should("contain", "Kiruna Map");
 
       cy.get("#dropdown-basic").click();
       cy.contains("Point-Based Documents").click();
@@ -57,7 +57,7 @@ describe("DrawMap Component", () => {
       cy.get('input[type="number"]').first().clear().type("67.8558");
       cy.get('input[type="number"]').last().clear().type("20.2253");
 
-      // Test whole area checkbox
+      // Test Kiruna Map checkbox
       cy.get('input[type="checkbox"]').click();
       cy.get('input[type="number"]').should("be.disabled");
     });

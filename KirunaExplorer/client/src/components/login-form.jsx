@@ -87,11 +87,11 @@ export default function LoginForm() {
             )}
           </Button>
         </form>
-        <Link to="/">
+        {/* <Link to="/">
           <Button variant="outline" className="w-full mt-12">
             Home page
           </Button>
-        </Link>
+        </Link> */}
       </CardContent>
     </Card>
   );

@@ -4,26 +4,22 @@ import {
   GanttChart,
   Telescope,
   FileText,
+  LandPlot,
   ChevronDown,
 } from "lucide-react";
+
 import { NavMain } from "@/components/nav-main";
 import { NavUser } from "@/components/nav-user";
 import { TeamSwitcher } from "@/components/team-switcher";
-import {
-  Collapsible,
-  CollapsibleTrigger,
-  CollapsibleContent,
-} from "@/components/ui/collapsible";
+import {} from "@/components/ui/collapsible";
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
   SidebarRail,
-  SidebarGroup,
-  SidebarGroupLabel,
-  SidebarGroupContent,
 } from "@/components/ui/sidebar";
+import { useAuth } from "@/contexts/AuthContext";
 
 // This is sample data.
 const data = {
@@ -47,6 +43,11 @@ const data = {
       isActive: true,
     },
     {
+      title: "Areas",
+      url: "/areas",
+      icon: LandPlot,
+    },
+    {
       title: "Graph",
       url: "/graph",
       icon: GanttChart,
@@ -65,19 +66,31 @@ const data = {
           title: "Show documents",
           url: "/documents/list",
         },
+        {
+          title: "Resources Management",
+          url: "/addResources",
+        },
       ],
     },
   ],
 };
 
 export function AppSidebar({ ...props }) {
+  const { user } = useAuth();
+
+  // Keep all menu items for urban_planner, only show Map for others
+  const navItems =
+    user?.role === "urban_planner"
+      ? data.navMain // Show all items
+      : data.navMain.filter((item) => item.title === "Map" | item.title === "Documents"); // Only show Map
+
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
         <TeamSwitcher teams={data.teams} />
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
+        <NavMain items={navItems} />
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={data.user} />

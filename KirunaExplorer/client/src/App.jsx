@@ -9,6 +9,8 @@ import GraphPage from "./pages/Graph";
 import LoginPage from "./pages/Login";
 import AddDocumentDescPage from "./pages/AddDocumentDesc";
 import ShowDocumentsPage from "./pages/ShowDocuments";
+import AreaMap from "./pages/AreaMap";
+import Resources from "./pages/Resources";
 
 function App() {
   return (
@@ -33,13 +35,22 @@ function App() {
               </ProtectedRoute>
             }
           />
-         
+
           <Route
             path="/documents/list"
             element={
-              <ProtectedRoute>
-                <ShowDocumentsPage />
-              </ProtectedRoute>
+              // <ProtectedRoute>
+              <ShowDocumentsPage />
+              // </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/areas"
+            element={
+              // <ProtectedRoute>
+              <AreaMap />
+              // </ProtectedRoute>
             }
           />
 
@@ -49,6 +60,14 @@ function App() {
               <AuthRoute>
                 <LoginPage />
               </AuthRoute>
+            }
+          />
+           <Route
+            path="/addresources"
+            element={  
+              <ProtectedRoute>  
+                <Resources/>
+              </ProtectedRoute>  
             }
           />
         </Routes>
