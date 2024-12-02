@@ -184,7 +184,6 @@ async function getConnectionsByDocumentTitle(title) {
 
     // Converte la risposta in JSON
     const data = await response.json();
-    console.log(data, 'API')
     // Ritorna i dati se la richiesta è andata a buon fine
     return { success: true, data: data.data };
     

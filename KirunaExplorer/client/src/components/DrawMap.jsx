@@ -14,8 +14,8 @@ import { MapIcon } from "lucide-react";
 import CoordsMap from "./CoordsMap";
 import { Snackbar, Alert } from "@mui/material";
 import LinkIcon from "@mui/icons-material/Link";
-import DocumentLinksModal from "./list-list";
-
+import DocumentLinksModal from "./link-list";
+import DocumentLink from "./document-link";
 
 // Configura l'icona di default di Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
@@ -79,7 +79,13 @@ const DrawMap = () => {
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
   const [mapType, setMapType] = useState("satellite"); // Tipo di mappa selezionato
   const [showModalLink, setShowModalLink] = useState(false); //modal per popup links
+  const [showLinkInterface, setShowLinkInterface] = useState(false);
 
+  useEffect(() => {
+    if (!selectedDocument) {
+      setShowLinkInterface(false);
+    }
+  }, [selectedDocument]);
 
   const ZOOM_LEVEL = 14;
   const WHOLE_AREA_CENTER = { lat: 67.85572, lng: 20.22513 }; // Definisci le coordinate per Whole Area
@@ -165,7 +171,6 @@ const DrawMap = () => {
   // Funzione per aprire popup dei documenti
   const handleMarkerClick = (document) => {
     setSelectedDocument(document);
-    setShowModal(true);
   };
 
   // Funzione per spostare la visuale della mappa in base al tipo di documento
@@ -427,7 +432,7 @@ const DrawMap = () => {
                     position={marker.latlngs}
                     icon={getMarkerIcon(marker.id)} // Usa l'icona corretta per il marker
                     eventHandlers={{
-                      click: () => handleMarkerClick(marker.document),
+                      click: () => {handleMarkerClick(marker.document); setShowModal(true)},
                     }}
                     customId={marker.id} // Qui assegni customId direttamente
 
@@ -539,7 +544,7 @@ const DrawMap = () => {
                 }}
                 onMouseEnter={() => setHoveredDocumentId(doc.id)}
                 onMouseLeave={() => setHoveredDocumentId(null)}
-                onClick={doc.area_name === "Whole Area" ? () => handleMarkerClick(doc) : () => changeMapPosition(doc)}
+                onClick={doc.area_name === "Whole Area" ? () => {handleMarkerClick(doc);} : () => changeMapPosition(doc)}
               >
                 <div className="p-2">
                   <h2><strong>{doc.document_title}</strong></h2>
@@ -571,7 +576,7 @@ const DrawMap = () => {
                           color: hoveredDocumentId === doc.id ? 'white' : 'black',
                         }}
                         variant="outline"
-                        onClick={() => handleMarkerClick(doc)}
+                        onClick={() => {handleMarkerClick(doc); setShowModal(true)}}
                       >
                         <p style={{ fontSize: "12px" }}>
                           <ArticleIcon></ArticleIcon>
@@ -610,6 +615,8 @@ const DrawMap = () => {
                             variant="outline"
                             onClick={() => {
                               setSelectedDocument(doc); // Imposta il documento selezionato
+                              setShowModal(false);
+
                               setShowModalLink(true); // Mostra il modal
                             }}
                             title="Show Links"
@@ -643,7 +650,7 @@ const DrawMap = () => {
 
       {/* Modal per visualizzare i dettagli del documento */}
       {selectedDocument && showModal && (
-        <Modal style={{ marginTop: '8%' }} show={showModal} onHide={() => setShowModal(false)}>
+        <Modal style={{ marginTop: '8%' }} show={showModal} onHide={() => {setShowModal(false); setShowModalLink(false); showLinkInterface(false)}}>
           <Modal.Header closeButton>
             <Modal.Title>Document info</Modal.Title>
           </Modal.Header>
@@ -657,9 +664,18 @@ const DrawMap = () => {
             <>
               {selectedDocument.language && <p><strong>Language:</strong> {selectedDocument.language}</p>}
               {selectedDocument.pages && <p><strong>Pages:</strong> {selectedDocument.pages}</p>}
+
+             
+
             </>
           </Modal.Body>
           <Modal.Footer>
+          <Button
+                           variant="dark"
+                            onClick={() => {setShowLinkInterface(true); setShowModal(false); }}
+                            >
+                              {`Link Documents to ${selectedDocument.document_title}`}
+                            </Button>
             <Button variant="dark" onClick={() => setShowModal(false)}>
               Close
             </Button>
@@ -667,6 +683,22 @@ const DrawMap = () => {
         </Modal>
       )}
 
+      {/* Modal to link documents */}
+      {selectedDocument && showLinkInterface && (
+<Modal show={showModalLink} onHide={() => setShowLinkInterface(false)} style={{ marginTop: '8%' }}>
+      <Modal.Header closeButton>
+        <Modal.Title>Links for {selectedDocument.document_title}</Modal.Title>
+      </Modal.Header>
+      <Modal.Body>
+        <DocumentLink selectedDocument={selectedDocument} />
+      </Modal.Body>
+      <Modal.Footer>
+        <Button variant="dark" onClick={() => setShowLinkInterface(false)}>
+          Close
+        </Button>
+      </Modal.Footer>
+    </Modal>
+      )}
       {/* Modal to change document position */}
       {selectedDocument && showEditCoordinatesModal && (
         <Modal
