@@ -1,4 +1,11 @@
+import { createClient } from '@supabase/supabase-js';
 const SERVER_URL = "http://localhost:3001";
+
+// Configura Supabase
+const supabaseUrl = 'https://htbtahvbjarpdpzgzxug.supabase.co'; 
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh0YnRhaHZiamFycGRwemd6eHVnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzI5MTM0MDUsImV4cCI6MjA0ODQ4OTQwNX0.Vnj0lJX4pd-cplV1m3K6sVBqTkPOkQgWNrPmnrh1VLE'; // La chiave anonima
+const supabase = createClient(supabaseUrl, supabaseKey);
+
 async function getDocuments() {
   const response = await fetch(`${SERVER_URL}/api/document/list`, {
     method: "GET",
@@ -42,6 +49,43 @@ async function getDocumentsGeo() {
   if (!response.ok) {
     const error = await response.json();
     throw new Error(error.message || "Errore API getDocuments");
+  }
+
+  const data = await response.json();
+
+  return data;
+}
+
+async function getGeoArea() {
+  const response = await fetch(`${SERVER_URL}/api/document/geo/area`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || "Errore API getDocuments");
+  }
+
+  const data = await response.json();
+
+  return data;
+}
+
+
+async function getAreaCoordinates(area_id){
+  const response = await fetch(`${SERVER_URL}/api/geo/:${area_id}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || "Errore API getAreaCoordinates");
   }
 
   const data = await response.json();
@@ -285,6 +329,37 @@ const addDocumentDescription = async (body) => {
   }
 };
 
+const addArea = async (body) => {
+  try {
+      const res = await fetch(SERVER_URL + "/api/geo/area", {
+          method: "POST",
+          headers: {
+              "Content-Type": "application/json",
+          },
+          body: JSON.stringify(body),
+      });
+
+      if (res.ok) {
+          return { success: true, status: res.status, message: "Area added successfully." };
+      }
+
+      const errorData = await res.json(); // Estrarre il messaggio di errore dal server
+      switch (res.status) {
+          case 403:
+              return { success: false, status: 403, error: "Area name already exists." };
+          case 422:
+              return { success: false, status: 422, error: "Missing or invalid latitude/longitude or area name." };
+          case 500:
+              return { success: false, status: 500, error: errorData.message || "Server error." };
+          default:
+              return { success: false, status: res.status, error: "Unexpected error." };
+      }
+  } catch (error) {
+      return { success: false, status: 500, error: "Failed to connect to the server." };
+  }
+};
+
+
 const addNewStakeholder = async (body) => {
   console.log(body);
   
@@ -305,6 +380,57 @@ const addNewStakeholder = async (body) => {
   else {
     return { error: "Server error" };
   }
+};
+
+//Supabase
+
+const uploadFileToSupabase = async (file, documentId) => {
+  const fileName = `uploads/resources/${documentId}/${file.name}`; 
+  const { data, error } = await supabase.storage
+    .from('resources') 
+    .upload(fileName, file, {
+      contentType: file.type, 
+    });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  const fileUrl = `${supabaseUrl}/storage/v1/object/public/resources/${fileName}`;
+  return fileUrl; 
+};
+
+const downloadFileFromSupabase = async (documentId, fileName) => {
+  const fileUrl = `${supabaseUrl}/storage/v1/object/public/resources/uploads/resources/${documentId}/${fileName}`;
+  return fileUrl; 
+};
+
+const deleteFileFromSupabase = async (documentId, fileName) => {
+  const filePath = `uploads/resources/${documentId}/${fileName}`;
+
+  try {
+    const { error } = await supabase.storage
+      .from('resources')
+      .remove([filePath]); 
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    console.log(`File "${fileName}" successfully deleted from Supabase storage.`);
+  } catch (error) {
+    console.error('Error deleting file:', error.message);
+  }
+};
+
+const listFilesInSupabase = async (documentId) => {
+  const { data, error } = await supabase.storage
+    .from('resources') 
+    .list(`uploads/resources/${documentId}`); 
+
+  if (error) {
+    throw new Error(error.message);
+  }
+  return data; 
 };
 
 
@@ -363,10 +489,13 @@ async function addDocumentType(typeName) {
 const API = {
   logIn,
   logOut,
+  addArea,
   getUserInfo,
   getDocuments,
   getDocumentsGeo,
+  getGeoArea,
   getDocumentPosition,
+  getAreaCoordinates,
   getStakeholders,
   updateDocumentCoordinates,
   updateDocumentArea,
@@ -376,7 +505,12 @@ const API = {
   getConnectionsByDocumentTitle,
   deleteConnection,
   getDocumentTypes,
-  addDocumentType
+  addDocumentType,
+  //STORAGE
+  uploadFileToSupabase,
+  downloadFileFromSupabase,
+  deleteFileFromSupabase,
+  listFilesInSupabase
 };
 
 export default API;

@@ -169,14 +169,14 @@ const DocumentDescriptionForm = () => {
             severity: "error",
           });
           return;
-        }else if((body.coordinates.lat === "" || body.coordinates.long === "") && body.area_name === "Whole Area"){
+        }else if((body.coordinates.lat === "" || body.coordinates.long === "") && body.area_name === "Kiruna Map"){
           console.log('xxx');
           // return
-        }else if((body.coordinates.lat !== "" || body.coordinates.long !== "") && body.area_name === "Whole Area"){
+        }else if((body.coordinates.lat !== "" || body.coordinates.long !== "") && body.area_name === "Kiruna Map"){
           console.log('yyyy');
           body.coordinates=[];
           // return
-        }else if((body.coordinates.lat !== "" || body.coordinates.long !== "") && body.area_name !== "Whole Area"){
+        }else if((body.coordinates.lat !== "" || body.coordinates.long !== "") && body.area_name !== "Kiruna Map"){
           console.log('zzzz');
           // return
         }
@@ -350,7 +350,7 @@ const DocumentDescriptionForm = () => {
         <CardContent>
           <div className="text-muted-foreground mt-4 mb-4">
             Fill out this form to add metadata to a document. Language and pages
-            are not mandatory. Please choose between 'Whole Area' OR a single
+            are not mandatory. Please choose between 'Kiruna Map' OR a single
             point with coordinates.
           </div>
           <Form {...form}>
@@ -533,7 +533,7 @@ const DocumentDescriptionForm = () => {
                       <Input
                         {...field}
                         type="text"
-                        placeholder="YYYY-MM-DD / YYYY-MM / YYYY"
+                        placeholder="YYYY/MM/DD - YYYY/MM - YYYY"
                       ></Input>
                     </FormControl>
                     <FormMessage />
@@ -599,9 +599,9 @@ const DocumentDescriptionForm = () => {
                       <FormControl>
                         <Checkbox
                           {...field}
-                          checked={field.value === "Whole Area"} // Checkbox is checked if value is "Whole Area"
+                          checked={field.value === "Kiruna Map"} // Checkbox is checked if value is "Kiruna Map"
                           onCheckedChange={(checked) => {
-                            const value = checked ? "Whole Area" : ""; // Set to "Whole Area" if checked, otherwise empty
+                            const value = checked ? "Kiruna Map" : ""; // Set to "Kiruna Map" if checked, otherwise empty
                             field.onChange(value); // Update the form's field value
                             setIsWholeArea(checked); // Optional: Update any additional component state
                           }}
