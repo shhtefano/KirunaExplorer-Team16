@@ -13,6 +13,9 @@ import ArticleIcon from '@mui/icons-material/Article';
 import { MapIcon } from "lucide-react";
 import CoordsMap from "./CoordsMap";
 import { Snackbar, Alert } from "@mui/material";
+import LinkIcon from "@mui/icons-material/Link";
+import DocumentLinksModal from "./list-list";
+
 
 // Configura l'icona di default di Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
@@ -75,6 +78,8 @@ const DrawMap = () => {
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
   const [mapType, setMapType] = useState("satellite"); // Tipo di mappa selezionato
+  const [showModalLink, setShowModalLink] = useState(false); //modal per popup links
+
 
   const ZOOM_LEVEL = 14;
   const WHOLE_AREA_CENTER = { lat: 67.85572, lng: 20.22513 }; // Definisci le coordinate per Whole Area
@@ -589,6 +594,33 @@ const DrawMap = () => {
                           <MapIcon alt="Open Map" label="Open Map"></MapIcon>
                         </p>
                       </Button>
+
+                                                
+                          {/* Pulsante per aprire il Modal */}
+                          <Button
+                            className="mt-4"
+                            style={{
+                              width: "70%",
+                              border: "1px solid #ddd",
+                              borderRadius: "8px",
+                              padding: "8px",
+                              backgroundColor: hoveredDocumentId === doc.id ? "#3e3b40" : "white",
+                              color: hoveredDocumentId === doc.id ? "white" : "black",
+                            }}
+                            variant="outline"
+                            onClick={() => {
+                              setSelectedDocument(doc); // Imposta il documento selezionato
+                              setShowModalLink(true); // Mostra il modal
+                            }}
+                            title="Show Links"
+                          >
+                            <p style={{ fontSize: "12px" }}>
+                              <LinkIcon alt="Show Links" label="Show Links" />
+                            </p>
+                          </Button>
+
+
+
                     </Container>
                   )}
                 </div>
@@ -598,6 +630,16 @@ const DrawMap = () => {
         </div>
 
       </div>
+
+     {/* Modal per visualizzare i link del documento */}
+          {selectedDocument && showModalLink && (
+          <DocumentLinksModal   
+          selectedDocument={selectedDocument} 
+          showModalLink={showModalLink} 
+          setShowModalLink={setShowModalLink}/>
+
+          )}
+
 
       {/* Modal per visualizzare i dettagli del documento */}
       {selectedDocument && showModal && (

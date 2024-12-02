@@ -20,7 +20,7 @@ CREATE TABLE "Connections" (
 	"parent_id"	INTEGER,
 	"children_id"	INTEGER,
 	"connection_type"	VARCHAR(50),
-	PRIMARY KEY("parent_id","children_id"),
+	PRIMARY KEY("parent_id","children_id", "connection_type"),
 	FOREIGN KEY("parent_id") REFERENCES "Nodes"("node_id"),
 	FOREIGN KEY("children_id") REFERENCES "Nodes"("node_id"),
 	FOREIGN KEY("parent_id") REFERENCES "Documents"("document_id") ON DELETE CASCADE,
