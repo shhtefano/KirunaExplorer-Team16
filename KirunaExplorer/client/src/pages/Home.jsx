@@ -63,83 +63,111 @@ const HomePage = () => {
       </div>
 
       {/* Content */}
-      <div className="relative z-10 flex flex-col w-full h-full items-center justify-center p-5 space-y-4 text-center">
-        <Card className="min-w-[270px] max-w-[800px] bg-white/90 backdrop-blur-sm">
+      <div className=" flex flex-col w-full h-full items-center justify-center p-2 space-y-4 text-center">
+        <Card className="min-w-[750px] max-w-1200px] bg-white/90 backdrop-blur-sm">
           <CardHeader>
             <CardTitle>Kiruna Explorer</CardTitle>
           </CardHeader>
           <CardContent>
-            Welcome to Kiruna Explorer. Here we will create the webapp for
-            exploring the incredible project of moving the swedish city, Kiruna.
-          </CardContent>
-          <CardFooter className="flex justify-center">
-            <div className="flex gap-x-2 justify-center items-center">
+            <div className="space-y-4 text-left mt-2">
+              <div className="flex items-center justify-between">
+                <Button
+                style={{ minWidth: "200px" }}
+                  variant="outline"
+                  className="flex items-center"
+                  onClick={() => navigate("/documents/list")}
+                >
+                  <Files className="mr-2" />
+                  <span>See Docs</span>
+                </Button>
+                <p className="text-sm text-gray-600 w-2/3">
+                  View all documents in a tabular format, making it easy to browse and manage.
+                </p>
+              </div>
+              <div className="flex items-center justify-between">
+                <Button
+                                style={{ minWidth: "200px" }}
 
-            <Button
-                    variant="outline"
-                    className="mr-2"
-                    onClick={(e) => navigate("/documents/list")}
-                  >
-                    See docs
-                    <Files />
-                  </Button>
-
-
-                  <Button
-                    variant="outline"
-                    className="mr-2"
-                    onClick={() => navigate("/map")}
-                  >
-                    See Map
-                    <Map />
-                  </Button>
-
+                  variant="outline"
+                  className="flex items-center"
+                  onClick={() => navigate("/map")}
+                >
+                  <Map className="mr-2" />
+                  <span>See Map</span>
+                </Button>
+                <p className="text-sm text-gray-600 w-2/3">
+                  Explore the documents visually on an interactive map.
+                </p>
+              </div>
               {user?.role === "urban_planner" && (
                 <>
-                  <Button
-                    variant="outline"
-                    className="mr-2"
-                    onClick={(e) =>
-                      handleRestrictedAction(e, "/add-document-description")
-                    }
-                  >
-                    Add doc
-                    <FileText />
-                  </Button>
+                  <div className="flex items-center justify-between">
+                    <Button
+                                    style={{ minWidth: "200px" }}
 
+                      variant="outline"
+                      className="flex items-center"
+                      onClick={(e) =>
+                        handleRestrictedAction(e, "/add-document-description")
+                      }
+                    >
+                      <FileText className="mr-2" />
+                      <span>Add Doc</span>
+                    </Button>
+                    <p className="text-sm text-gray-600 w-2/3">
+                      Upload and add new documents to the system.
+                    </p>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Button
+                                    style={{ minWidth: "200px" }}
 
+                      variant="outline"
+                      className="flex items-center"
+                      onClick={() => navigate("/areas")}
+                    >
+                      <LandPlot className="mr-2" />
+                      <span>Edit Areas</span>
+                    </Button>
+                    <p className="text-sm text-gray-600 w-2/3">
+                      Modify the areas associated with specific documents.
+                    </p>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Button
+                                    style={{ minWidth: "200px" }}
 
+                      variant="outline"
+                      className="flex items-center"
+                      onClick={(e) => handleRestrictedAction(e, "/graph")}
+                    >
+                      <GanttChart className="mr-2" />
+                      <span>See Graph</span>
+                    </Button>
+                    <p className="text-sm text-gray-600 w-2/3">
+                      Visualize the document timeline and storyline with an intuitive graph.
+                    </p>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <Button
+                                    style={{ minWidth: "200px" }}
 
-                  <Button
-                    variant="outline"
-                    className="mr-2"
-                    onClick={() => navigate("/areas")}
-                  >
-                    Edit Areas
-                    <LandPlot />
-                  </Button>
-
-
-                  <Button
-                    variant="outline"
-                    className="mr-2"
-                    onClick={(e) => handleRestrictedAction(e, "/graph")}
-                  >
-                    See graph
-                    <GanttChart data-testid="gantt-chart-icon" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="mr-2"
-                    onClick={(e) => handleRestrictedAction(e, "/addResources")}
-                  >
-                    See Resources
-                    <Folder data-testid="resources-icon" />
-                  </Button>
+                      variant="outline"
+                      className="flex items-center"
+                      onClick={(e) => handleRestrictedAction(e, "/addResources")}
+                    >
+                      <Folder className="mr-2" />
+                      <span>See Resources</span>
+                    </Button>
+                    <p className="text-sm text-gray-600 w-2/3">
+                      View or upload related files associated with documents for better context.
+                    </p>
+                  </div>
                 </>
               )}
             </div>
-          </CardFooter>
+          </CardContent>
+
         </Card>
 
         {!user && <LoginForm />}

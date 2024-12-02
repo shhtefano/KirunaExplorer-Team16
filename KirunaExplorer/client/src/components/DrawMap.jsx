@@ -54,14 +54,20 @@ const DrawMap = () => {
             try {
                 const areas = await API.getGeoArea();
                 const filteredAreas = areas.filter(area => area.name !== 'Point-Based Documents');
-
+    
                 setMapLayers(filteredAreas);
                 setFilteredLayers(filteredAreas); // Inizialmente tutte le aree sono visualizzate
+    
+                // Seleziona di default l'area chiamata "Kiruna Map"
+                const defaultSelected = filteredAreas.find(area => area.name === "Kiruna Map");
+                if (defaultSelected) {
+                    setSelectedAreas([defaultSelected.name]);
+                }
             } catch (error) {
                 console.error("Errore durante il caricamento:", error);
             }
         };
-
+    
         fetchMapLayers();
     }, []);
 

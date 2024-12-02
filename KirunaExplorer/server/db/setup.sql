@@ -12,15 +12,6 @@ DROP TABLE IF EXISTS DocumentTypes;
 DROP TABLE IF EXISTS Type;
 
 
-
-
-CREATE TABLE "Attachments" (
-	"file_name"	VARCHAR(255),
-	"document_id"	INTEGER NOT NULL,
-	PRIMARY KEY("file_name","document_id"),
-	FOREIGN KEY("document_id") REFERENCES "Documents"("document_id") ON DELETE CASCADE
-);
-
 CREATE TABLE "Connections" (
 	"parent_id"	INTEGER,
 	"children_id"	INTEGER,
@@ -71,12 +62,6 @@ CREATE TABLE "Geolocation_Documents" (
 	FOREIGN KEY("document_id") REFERENCES "Documents"("document_id") ON DELETE CASCADE
 );
 
-CREATE TABLE "OriginalResources" (
-	"file_name"	VARCHAR(255) NOT NULL,
-	"document_id"	INTEGER NOT NULL,
-	PRIMARY KEY("file_name","document_id"),
-	FOREIGN KEY("document_id") REFERENCES "Documents"("document_id") ON DELETE CASCADE
-);
 
 CREATE TABLE "Stakeholders" (
 	"stakeholder_id"	INTEGER,
@@ -84,14 +69,19 @@ CREATE TABLE "Stakeholders" (
 	PRIMARY KEY("stakeholder_id" AUTOINCREMENT)
 );
 
+CREATE TABLE "Type" (
+	"type_name"	TEXT,
+	PRIMARY KEY("type_name")
+);
+
 INSERT INTO Stakeholders(stakeholder_id, stakeholder_name) VALUES(1, 'LKAB');
 INSERT INTO Stakeholders(stakeholder_id, stakeholder_name) VALUES(2, 'Citizens');
 
-INSERT INTO Documents(document_id, document_title, scale, issuance_date, language, pages, document_type, document_description) VALUES (1, 'Kiruna buildings', '1:100', '2012', 'Swedish', 10, 'Informative', 'description');
-INSERT INTO Documents(document_id, document_title, scale, issuance_date, language, pages, document_type, document_description) VALUES (2, 'Kiruna workshops', '1:1000', '2012/12/25', 'English', 10, 'Material', 'description');
-INSERT INTO Documents(document_id, document_title, scale, issuance_date, language, pages, document_type, document_description) VALUES (3, 'LKAB Policy', '1:1000', '2012/12/25', 'English', 10, 'Material', 'description');
-INSERT INTO Documents(document_id, document_title, scale, issuance_date, language, pages, document_type, document_description) VALUES (4, 'Municipal Assurance', '1:1000', '2012/12/25', 'English', 10, 'Material', 'description');
-INSERT INTO Documents(document_id, document_title, scale, issuance_date, language, pages, document_type, document_description) VALUES (5, 'LKAB Assurance', '1:1000', '2012/12/25', 'English', 10, 'Material', 'description');
+INSERT INTO Documents(document_id, document_title, scale, issuance_date, language, pages, document_type, document_description) VALUES (1, 'Kiruna buildings', '1:100', '2012', 'Swedish', 10, 'Technical', 'description');
+INSERT INTO Documents(document_id, document_title, scale, issuance_date, language, pages, document_type, document_description) VALUES (2, 'Kiruna workshops', '1:1000', '2012/12/25', 'English', 10, 'Technical', 'description');
+INSERT INTO Documents(document_id, document_title, scale, issuance_date, language, pages, document_type, document_description) VALUES (3, 'LKAB Policy', '1:1000', '2012/12/25', 'English', 10, 'Technical', 'description');
+INSERT INTO Documents(document_id, document_title, scale, issuance_date, language, pages, document_type, document_description) VALUES (4, 'Municipal Assurance', '1:1000', '2012/12/25', 'English', 10, 'Technical', 'description');
+INSERT INTO Documents(document_id, document_title, scale, issuance_date, language, pages, document_type, document_description) VALUES (5, 'LKAB Assurance', '1:1000', '2012/12/25', 'English', 10, 'Technical', 'description');
 
 INSERT INTO Document_Stakeholder(stakeholder_id, document_id) VALUES(1,1);
 INSERT INTO Document_Stakeholder(stakeholder_id, document_id) VALUES(2,1);
@@ -105,14 +95,6 @@ INSERT INTO Geolocation_Documents(area_id, document_id) VALUES(1, 2);
 INSERT INTO Geolocation_Documents(area_id, document_id) VALUES(1, 3);
 INSERT INTO Geolocation_Documents(area_id, document_id) VALUES(1, 4);
 INSERT INTO Geolocation_Documents(area_id, document_id) VALUES(1, 5);
-
-
-
-
-
-
-
-
 
 INSERT INTO Type (type_name) VALUES ('Design');
 INSERT INTO Type (type_name) VALUES ('Informative');
