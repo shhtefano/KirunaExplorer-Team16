@@ -186,8 +186,6 @@ export default function DocumentsTable() {
 
                           className="px-3 py-1 text-sm text-white bg-green-500 rounded hover:bg-green-600"
                           onClick={() => {
-                            console.log(doc);
-
                             setSelectedMapDocument(doc)
                           }}
                         >

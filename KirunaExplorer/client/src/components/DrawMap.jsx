@@ -54,7 +54,6 @@ const DrawMap = () => {
             try {
                 const areas = await API.getGeoArea();
                 const filteredAreas = areas.filter(area => area.name !== 'Point-Based Documents');
-                console.log(filteredAreas);
 
                 setMapLayers(filteredAreas);
                 setFilteredLayers(filteredAreas); // Inizialmente tutte le aree sono visualizzate
@@ -176,7 +175,6 @@ const DrawMap = () => {
 
     const deleteArea = async (area_name) => {
         try {
-            console.log(area_name);
     
             const res = await API.deleteArea(area_name);
     
@@ -221,14 +219,7 @@ const DrawMap = () => {
                                     setShowModal(true);
                                 }
                             }}
-                            onDelete={(e) => {
-                                const { layerType, layer } = e;
-                                if (layerType === "polygon") {
 
-
-                                    // IMPLEMENT DELETE OF AREA
-                                }
-                            }}
                             draw={{
                                 rectangle: false,
                                 circle: false,
@@ -236,22 +227,30 @@ const DrawMap = () => {
                                 marker: false,
                                 polyline: false,
                             }}
-                            edit={{ edit: false }}
+                            edit={{ edit: false,
+                                remove: false, // Disabilita il pulsante di cancellazione
+
+                             }}
                         />
                         {/* Visualizza i poligoni quando in modalità 'polygons' */}
                         {filteredLayers.map((layer) =>
                             layer.latlngs ? (
                                 <React.Fragment key={layer.id}>
                                     {selectedAreas.length > 0 && selectedAreas.includes(layer.name) && viewMode === 'polygons' && (
-                                        <Polygon positions={layer.latlngs}>
+                                        <Polygon positions={layer.latlngs} pathOptions={{
+                                            color: layer.name === "Kiruna Map" ? "white" : "blue", // Usa rosso per "Kiruna Map", altrimenti blu
+                                            weight: 2,
+                                            opacity: 1,
+                                        }}>
                                             <Popup>{layer.name}</Popup>
                                         </Polygon>
                                     )}
                                     {/* Visualizza i marker quando in modalità 'markers' */}
                                     {selectedAreas.length > 0 && selectedAreas.includes(layer.name) && viewMode === 'markers' && (
                                         <Marker
+                                        
                                             position={L.polygon(layer.latlngs).getBounds().getCenter()}
-                                            icon={L.icon({ iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.3.1/images/marker-icon.png" })}
+                                            icon={L.icon({ iconUrl: layer.name === "Kiruna Map" ? "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png":"https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.3.1/images/marker-icon.png" })}
                                             eventHandlers={{
                                                 click: () => {
                                                     // Toggle the selection of the layer and show the polygon when the marker is clicked
@@ -271,7 +270,11 @@ const DrawMap = () => {
                                     )}
                                     {/* Mostra il poligono quando un marker è selezionato */}
                                     {selectedLayer === layer.id && viewMode === 'markers' && (
-                                        <Polygon positions={layer.latlngs}>
+                                        <Polygon positions={layer.latlngs}  pathOptions={{
+                                            color: layer.name === "Kiruna Map" ? "white" : "blue", // Usa rosso per "Kiruna Map", altrimenti blu
+                                            weight: 2,
+                                            opacity: 1,
+                                        }}>
                                             <Popup>{layer.name}</Popup>
                                         </Polygon>
                                     )}

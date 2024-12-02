@@ -170,7 +170,6 @@ async function linkDocuments(parent_id, children_id, connection_type) {
     if (!response.ok) {
       // Clone the response to safely read it in multiple ways
       const responseClone = response.clone();
-      console.log(response);
       if (response.status === 403) {
         return { success: false, message: "Duplicated Link" };
       } else if (response.status === 500) {
@@ -372,7 +371,6 @@ const addArea = async (body) => {
 
 
 const addNewStakeholder = async (body) => {
-  console.log(body);
 
   const res = await fetch(SERVER_URL + "/api/stakeholder", {
     method: "POST",
@@ -381,7 +379,6 @@ const addNewStakeholder = async (body) => {
     },
     body: JSON.stringify({ stakeholder_name: body }),
   });
-  console.log(res.status);
 
   if (res.ok) {
     return res.status;

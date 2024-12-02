@@ -75,8 +75,6 @@ router.get("/api/document/geo/area", async (req, res) => {
 
 router.post("/api/geo/area", async (req, res) => {
   try {
-    console.log(req.body);
-
     // Recupera tutti i documenti dal database    
     await documentDAO.addArea(req.body);
     // Risponde con i documenti in formato JSON

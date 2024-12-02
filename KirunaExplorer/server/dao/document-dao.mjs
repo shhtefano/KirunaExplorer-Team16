@@ -287,8 +287,7 @@ class DocumentDAO {
             coords.push(coords[0]); // Chiudi il poligono
           }
           return coords;
-        });
-        // console.log(multiPolygonCoordinates);
+        });        
 
         // Restituisci il risultato
         resolve({
@@ -845,7 +844,6 @@ class DocumentDAO {
           return reject(new Error("Errore durante l'aggiornamento delle coordinate."));
         }
 
-        console.log(rows);
 
         if (rows === 'Point-Based Documents') {
 
