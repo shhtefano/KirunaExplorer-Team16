@@ -972,5 +972,95 @@ describe("Suite test for linkDocuments function", () => {
         db.get.mockRestore();
         db.run.mockRestore();
     });
+
+    describe("deleteArea", () => {
+
+        let documentDAO;
+    
+        beforeAll(() => {
+            documentDAO = new DocumentDAO();
+        });
+    
+      afterEach(() => {
+        jest.clearAllMocks(); // Resetta i mock dopo ogni test
+      });
+    
+      test("should reject if attempting to delete 'Kiruna Map'", async () => {
+        await expect(documentDAO.deleteArea("Kiruna Map")).rejects.toThrow("Cannot delete Kiruna Map");
+      });
+    
+      test("should successfully delete an area", async () => {
+        const mockAreaName = "Test Area";
+    
+        // Mock del metodo db.get per restituire un'area trovata
+        db.get.mockImplementationOnce((query, params, callback) => {
+          callback(null, { area_id: 1 });
+        });
+    
+        // Mock del metodo db.run per simulare aggiornamenti e cancellazioni riusciti
+        db.run.mockImplementation((query, params, callback) => {
+          callback(null);
+        });
+    
+        const result = await documentDAO.deleteArea(mockAreaName);
+        expect(result).toBe("Area eliminata con successo.");
+        expect(db.get).toHaveBeenCalledWith(expect.any(String), [mockAreaName], expect.any(Function));
+        expect(db.run).toHaveBeenCalledTimes(2); // Un'operazione per update e una per delete
+      });
+    
+      test("should reject if area search fails", async () => {
+        const mockAreaName = "Test Area";
+    
+        // Mock del metodo db.get per simulare un errore
+        db.get.mockImplementationOnce((query, params, callback) => {
+          callback(new Error("Database error"), null);
+        });
+    
+        await expect(documentDAO.deleteArea(mockAreaName)).rejects.toThrow("Errore durante la ricerca dell'area");
+        expect(db.get).toHaveBeenCalledWith(expect.any(String), [mockAreaName], expect.any(Function));
+      });
+    
+      test("should reject if document update fails", async () => {
+        const mockAreaName = "Test Area";
+    
+        // Mock del metodo db.get per restituire un'area trovata
+        db.get.mockImplementationOnce((query, params, callback) => {
+          callback(null, { area_id: 1 });
+        });
+    
+        // Mock del metodo db.run per simulare un errore durante l'aggiornamento dei documenti
+        db.run.mockImplementationOnce((query, params, callback) => {
+          callback(new Error("Update error"));
+        });
+    
+        await expect(documentDAO.deleteArea(mockAreaName)).rejects.toThrow("Errore durante l'aggiornamento dei documenti");
+        expect(db.get).toHaveBeenCalledWith(expect.any(String), [mockAreaName], expect.any(Function));
+        expect(db.run).toHaveBeenCalledTimes(1); // Solo l'operazione di update viene eseguita
+      });
+    
+      test("should reject if area deletion fails", async () => {
+        const mockAreaName = "Test Area";
+    
+        // Mock del metodo db.get per restituire un'area trovata
+        db.get.mockImplementationOnce((query, params, callback) => {
+          callback(null, { area_id: 1 });
+        });
+    
+        // Mock del metodo db.run per simulare un aggiornamento riuscito
+        db.run.mockImplementationOnce((query, params, callback) => {
+          callback(null);
+        });
+    
+        // Mock del metodo db.run per simulare un errore durante la cancellazione dell'area
+        db.run.mockImplementationOnce((query, params, callback) => {
+          callback(new Error("Delete error"));
+        });
+    
+        await expect(documentDAO.deleteArea(mockAreaName)).rejects.toThrow("Errore durante la cancellazione dell'area");
+        expect(db.get).toHaveBeenCalledWith(expect.any(String), [mockAreaName], expect.any(Function));
+        expect(db.run).toHaveBeenCalledTimes(2); // Entrambe le operazioni vengono eseguite
+      });
+    
+    });
     
 });

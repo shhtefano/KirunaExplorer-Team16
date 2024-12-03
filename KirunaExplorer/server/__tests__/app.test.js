@@ -202,6 +202,76 @@ describe("API Tests", () => {
   
   });
   
+  describe("DELETE /api/geo/area", () => {
+    let deleteAreaMock;
+  
+    beforeEach(() => {
+      // Reset del mock prima di ogni test
+      deleteAreaMock = jest.spyOn(DocumentDAO.prototype, "deleteArea");
+    });
+  
+    afterEach(() => {
+      jest.restoreAllMocks(); // Ripristina i mock dopo ogni test
+    });
+  
+    test("should successfully delete the area and return a success message", async () => {
+      const mockAreaName = "Test Area";
+  
+      deleteAreaMock.mockResolvedValueOnce("Area eliminata con successo.");
+  
+      const response = await request(app)
+        .delete("/api/geo/area")
+        .send({ areaName: mockAreaName });
+  
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({ message: "Area deleted successfully." });
+      expect(deleteAreaMock).toHaveBeenCalledWith(mockAreaName);
+    });
+  
+    test("should return a 500 error if deleteArea throws an error", async () => {
+      const mockAreaName = "Test Area";
+  
+      deleteAreaMock.mockRejectedValueOnce(new Error("Errore durante la cancellazione dell'area"));
+  
+      const response = await request(app)
+        .delete("/api/geo/area")
+        .send({ areaName: mockAreaName });
+  
+      expect(response.status).toBe(500);
+      expect(response.body).toEqual({ error: "Errore durante la cancellazione dell'area" });
+      expect(deleteAreaMock).toHaveBeenCalledWith(mockAreaName);
+    });
+  
+    test("should handle attempts to delete the 'Kiruna Map' area with a 500 error", async () => {
+      const mockAreaName = "Kiruna Map";
+  
+      deleteAreaMock.mockRejectedValueOnce(new Error("Cannot delete Kiruna Map"));
+  
+      const response = await request(app)
+        .delete("/api/geo/area")
+        .send({ areaName: mockAreaName });
+  
+      expect(response.status).toBe(500);
+      expect(response.body).toEqual({ error: "Cannot delete Kiruna Map" });
+      expect(deleteAreaMock).toHaveBeenCalledWith(mockAreaName);
+    });
+  
+    test("should handle unexpected errors gracefully", async () => {
+      const mockAreaName = "Unexpected Error Area";
+  
+      deleteAreaMock.mockRejectedValueOnce(new Error("Unexpected error"));
+  
+      const response = await request(app)
+        .delete("/api/geo/area")
+        .send({ areaName: mockAreaName });
+  
+      expect(response.status).toBe(500);
+      expect(response.body).toEqual({ error: "Unexpected error" });
+      expect(deleteAreaMock).toHaveBeenCalledWith(mockAreaName);
+    });
+  });
+  
+  
 });
 
 
