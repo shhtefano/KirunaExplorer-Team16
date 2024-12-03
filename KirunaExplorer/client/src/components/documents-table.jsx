@@ -39,17 +39,49 @@ export default function DocumentsTable() {
 
 
 
-  const documentTypes = [
-    { type: "All" },
-    { type: "Design" },
-    { type: "Informative" },
-    { type: "Technical" },
-    { type: "Prescriptive" },
-    { type: "Material Effects" },
-    { type: "Agreement" },
-    { type: "Conflict" },
-    { type: "Consultation" },
-  ];
+  // const documentTypes = [
+  //   { type: "All" },
+  //   { type: "Design" },
+  //   { type: "Informative" },
+  //   { type: "Technical" },
+  //   { type: "Prescriptive" },
+  //   { type: "Material Effects" },
+  //   { type: "Agreement" },
+  //   { type: "Conflict" },
+  //   { type: "Consultation" },
+  // ];
+  const [types, setTypes] = useState([]); 
+  useEffect(() => {
+    const fetchTypes = async () => {
+      try {
+        const fetchedTypes = await API.getDocumentTypes(); 
+        setTypes(fetchedTypes); 
+      } catch (err) {
+        console.error("Error fetching document types:", err.message); 
+      }
+    };
+    fetchTypes();
+  }, []);
+
+
+  
+  const [stakeholderNames, setStakeholderNames] = useState(["All", "LKAB", "Citizens"]); // Array of stakeholders
+  // From DB:
+  // const [stakeholderNames, setStakeholderNames] = useState([]); // Array of stakeholders 
+  // useEffect(() => {
+  //   const fetchStakeholders = async () => {
+  //     try {
+  //       const response = await API.getStakeholders();
+  //       const stakeholderNames = response.map((stakeholder) => stakeholder.stakeholder_name);
+  //       setStakeholders(["All", ...stakeholderNames]);
+  //     } catch (error) {
+  //       console.error("Error fetching stakeholders:", error);
+  //     }
+  //   };
+  //   fetchStakeholders();
+  // }, []);
+
+
 
 
   const languages = ["All", "English", "Swedish"];
@@ -73,24 +105,6 @@ export default function DocumentsTable() {
     };
     fetchDocuments();
   }, []);
-
-
-
-  const [stakeholderNames, setStakeholderNames] = useState(["All", "LKAB", "Citizens"]); // Array of stakeholders
-  // From DB:
-  // const [stakeholderNames, setStakeholderNames] = useState([]); // Array of stakeholders 
-  // useEffect(() => {
-  //   const fetchStakeholders = async () => {
-  //     try {
-  //       const response = await API.getStakeholders();
-  //       const stakeholderNames = response.map((stakeholder) => stakeholder.stakeholder_name);
-  //       setStakeholders(["All", ...stakeholderNames]);
-  //     } catch (error) {
-  //       console.error("Error fetching stakeholders:", error);
-  //     }
-  //   };
-  //   fetchStakeholders();
-  // }, []);
 
 
 
@@ -122,7 +136,7 @@ export default function DocumentsTable() {
         return (
           docDate.getFullYear() === parseInt(year) &&
           docDate.getMonth() === parseInt(month) - 1
-        ); 
+        );
       } else if (dateFilterMode === "exact" && year && month && day) {
         return (
           docDate.getFullYear() === parseInt(year) &&
@@ -196,6 +210,7 @@ export default function DocumentsTable() {
         />
       </div>
 
+
       <div className="mb-6 text-gray-700">
         <p className="font-semibold mb-2">Select Document Type:</p>
         <Select onValueChange={setSelectedType} value={selectedType}>
@@ -203,9 +218,12 @@ export default function DocumentsTable() {
             <SelectValue placeholder="All" />
           </SelectTrigger>
           <SelectContent>
-            {documentTypes.map((docType) => (
-              <SelectItem key={docType.type} value={docType.type}>
-                {docType.type}
+            <SelectItem key="All" value="All">
+              All
+            </SelectItem>
+            {types.map((type) => (
+              <SelectItem key={type.type_id} value={type.type_name}>
+                {type.type_name}
               </SelectItem>
             ))}
           </SelectContent>
