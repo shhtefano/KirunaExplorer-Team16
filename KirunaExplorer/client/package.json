@@ -54,7 +54,7 @@
     "react-leaflet-draw": "^0.20.4",
     "react-router-dom": "^6.27.0",
     "sonner": "^1.7.0",
-    "supabase": "^1.223.10",
+    "supabase": "^1.226.3",
     "tailwind-merge": "^2.5.4",
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^1.1.1",
