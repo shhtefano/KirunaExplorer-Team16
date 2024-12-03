@@ -70,8 +70,9 @@ CREATE TABLE "Stakeholders" (
 );
 
 CREATE TABLE "Type" (
-	"type_name"	TEXT,
-	PRIMARY KEY("type_name")
+	"type_id"	INTEGER,
+	"type_name"	VARCHAR(50) NOT NULL,
+	PRIMARY KEY("type_id" AUTOINCREMENT)
 );
 
 INSERT INTO Stakeholders(stakeholder_id, stakeholder_name) VALUES(1, 'LKAB');
