@@ -167,10 +167,10 @@ const HomePage = () => {
                 </>
               )}
             </div>
-          </CardContent>
-
         {!user && <LoginForm />}
         {user && <UserProfileCard user={user} />}
+          </CardContent>
+
         </Card>
       </div>
 
