@@ -45,7 +45,7 @@ const HomePage = () => {
 
   return (
     <div
-      className="relative min-h-screen w-full overflow-hidden"
+      className="relative w-full overflow-hidden"
     // style={{ height: "40vh" }} // Assicura l'altezza dello schermo
     >
       {/* Background Image with Overlay */}
@@ -58,7 +58,6 @@ const HomePage = () => {
           backgroundRepeat: "no-repeat",
         }}
       >
-        {/* Dark overlay to improve content readability */}
         <div className="absolute inset-0 bg-black/10" />
       </div>
 
@@ -99,6 +98,8 @@ const HomePage = () => {
                   Explore the documents visually on an interactive map.
                 </p>
               </div>
+
+              
               {user?.role === "urban_planner" && (
                 <>
                   <div className="flex items-center justify-between">
@@ -168,11 +169,10 @@ const HomePage = () => {
             </div>
           </CardContent>
 
-        </Card>
-
         {!user && <LoginForm />}
-
         {user && <UserProfileCard user={user} />}
+        </Card>
+      </div>
 
         <Snackbar
           open={openSnackbar}
@@ -188,7 +188,6 @@ const HomePage = () => {
             {snackbarMsg}
           </Alert>
         </Snackbar>
-      </div>
     </div>
   );
 };
