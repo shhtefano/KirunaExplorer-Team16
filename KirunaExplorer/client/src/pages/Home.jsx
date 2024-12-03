@@ -166,13 +166,13 @@ const HomePage = () => {
                 </>
               )}
             </div>
+        {!user && <LoginForm />}
+        {user && <UserProfileCard user={user} />}
           </CardContent>
 
         </Card>
 
-        {!user && <LoginForm />}
 
-        {user && <UserProfileCard user={user} />}
 
         <Snackbar
           open={openSnackbar}

@@ -33,46 +33,40 @@ export default function DocumentsTable() {
   const [year, setYear] = useState("");
   const [month, setMonth] = useState("");
   const [day, setDay] = useState("");
-  const [dateFilterMode, setDateFilterMode] = useState("year");
+  const [dateFilterMode, setDateFilterMode] = useState("all");
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);  // To control Dialog for delete confirmation
   const [documentToDelete, setDocumentToDelete] = useState(null);  // To store the document that needs to be deleted
 
-
-
-
-  const [types, setTypes] = useState([]); 
+  const [types, setTypes] = useState([]);
   useEffect(() => {
     const fetchTypes = async () => {
       try {
-        const fetchedTypes = await API.getDocumentTypes(); 
-        setTypes(fetchedTypes); 
-      } catch(err) {
-        console.error("Error fetching document types:", err); 
+        const fetchedTypes = await API.getDocumentTypes();
+        setTypes(fetchedTypes);
+      } catch (err) {
+        console.error("Error fetching document types:", err);
       }
     };
     fetchTypes();
-  }, []); 
+  }, []);
 
 
-  
+
   const [stakeholderNames, setStakeholderNames] = useState([]);
   useEffect(() => {
     const fetchStakeholders = async () => {
       try {
-        const fetchedStakeholders = await API.getStakeholders(); 
+        const fetchedStakeholders = await API.getStakeholders();
         const stakeholderNames = fetchedStakeholders.map(
           (stakeholder) => stakeholder.stakeholder_name
         );
-        setStakeholderNames(["All", ...stakeholderNames]); 
+        setStakeholderNames(["All", ...stakeholderNames]);
       } catch (err) {
         console.error("Error fetching stakeholders:", err);
       }
     };
     fetchStakeholders();
-  }, []); 
-
-
-
+  }, []);
 
   const languages = ["All", "English", "Swedish"];
 
@@ -96,10 +90,6 @@ export default function DocumentsTable() {
     fetchDocuments();
   }, []);
 
-
-
-
-
   const filteredDocuments = documents.filter((doc) => {
 
     const matchesSearch = doc.document_title.toLowerCase().includes(searchQuery.toLowerCase());
@@ -116,8 +106,9 @@ export default function DocumentsTable() {
 
     // Filter by year, month, day
     const matchesDate = (() => {
-      // Skip filtering if no year, month, or day is provided
-      if (!year && !month && !day) return true;
+      // Return true if no date filter is selected
+      if (dateFilterMode === "all" || (!year && !month && !day)) return true;
+
       const docDate = new Date(doc.issuance_date);
 
       if (dateFilterMode === "year" && year) {
@@ -134,6 +125,8 @@ export default function DocumentsTable() {
           docDate.getDate() === parseInt(day)
         );
       }
+
+      return true; // Default to true if no specific condition matches
     })();
 
 
@@ -257,11 +250,12 @@ export default function DocumentsTable() {
       <div className="mb-6 text-gray-700">
         <p className="font-semibold mb-2">Select by Issuance Date:</p>
         <div className="flex items-center gap-4">
-          <Select onValueChange={setDateFilterMode} value={dateFilterMode}>
+          <Select onValueChange={setDateFilterMode} defaultValue={dateFilterMode}>
             <SelectTrigger className="w-32 p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400">
               <SelectValue placeholder="Mode" />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value="all">All</SelectItem>
               <SelectItem value="year">Year</SelectItem>
               <SelectItem value="month">Month & Year</SelectItem>
               <SelectItem value="exact">Exact Date</SelectItem>
@@ -382,14 +376,14 @@ export default function DocumentsTable() {
                         <DialogTrigger asChild>
                           <button
                             style={{ backgroundColor: "white", color: "black" }}
-                            className="px-4"
+                            className="px-4 ml-2"
                             onClick={() => { setSelectedMapDocument(doc) }}
                           >
                             <MapIcon color="black" alt="Open Map" label="Open Map"></MapIcon>
                           </button>
                         </DialogTrigger>
                         <DialogContent className="max-w-2xl p-6 bg-white rounded-lg shadow-lg">
-                          <DialogTitle className="text-xl font-bold text-gray-800">
+                          <DialogTitle className="text-xl font-bold text-gray-800" style={{ backgroundColor: "transparent" }}>
                             {doc.document_title} - Map View
                           </DialogTitle>
                           <DialogDescription className="mt-4">
@@ -402,7 +396,7 @@ export default function DocumentsTable() {
                     </div>
 
 
-                    <div>
+                    {/* <div>
                       <Dialog>
                         <DialogTrigger asChild>
                           <button
@@ -412,7 +406,7 @@ export default function DocumentsTable() {
                           </button>
                         </DialogTrigger>
                       </Dialog>
-                    </div>
+                    </div> */}
 
 
 
@@ -423,7 +417,7 @@ export default function DocumentsTable() {
                       >
                         <DialogTrigger asChild>
                           <button
-                            style={{ backgroundColor: "white", color: "black" }}
+                            style={{ backgroundColor: "transparent", color: "black" }}
                             className="px-2"
                             onClick={() => {
                               setDocumentToDelete(doc); // Set the document to delete
