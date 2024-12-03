@@ -1,3 +1,5 @@
+
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=kiruna-explorer-team-16_kiruna-explorer&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=kiruna-explorer-team-16_kiruna-explorer)
 # How to Pull and Build the Docker Image
 
 This guide explains how to pull the Docker image from the repository and build the application.
