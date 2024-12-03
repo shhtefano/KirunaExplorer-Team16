@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 
 export const UserProfileCard = ({ user }) => {
   return (
-    <Card className="min-w-[270px] max-w-[800px] w-full mt-4 bg-white/90 backdrop-blur-sm transition-all hover:shadow-lg">
+    <Card className="min-w-[270px] max-w-[750px] w-full mt-4 bg-white/90 backdrop-blur-sm transition-all hover:shadow-lg">
       <CardHeader className="pb-2">
         <div className="flex items-center gap-4">
           <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">

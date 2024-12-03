@@ -75,8 +75,6 @@ router.get("/api/document/geo/area", async (req, res) => {
 
 router.post("/api/geo/area", async (req, res) => {
   try {
-    console.log(req.body);
-
     // Recupera tutti i documenti dal database    
     await documentDAO.addArea(req.body);
     // Risponde con i documenti in formato JSON
@@ -276,6 +274,17 @@ router.post("/api/types", async (req, res) => {
       message: error.message,
       error: error.message,  // You can include the error message or stack if needed
     });
+  }
+});
+router.delete("/api/geo/area", async (req, res) => {
+  const { areaName } = req.body;
+
+  try {
+    const result = await documentDAO.deleteArea(areaName);
+    res.status(200).json({ message: "Area deleted successfully." });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: error.message });
   }
 });
 

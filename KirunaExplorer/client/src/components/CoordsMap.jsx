@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import L, { latLng } from "leaflet";
-import { MapContainer, TileLayer, FeatureGroup, Polygon, useMapEvents  } from "react-leaflet";
+import { MapContainer, TileLayer, FeatureGroup, Polygon, useMapEvents } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import "leaflet-draw/dist/leaflet.draw.css";
 import { Button } from "react-bootstrap";
@@ -29,7 +29,7 @@ const tileLayers = {
 };
 
 
-const CoordsMap = ({onSubmitCoordinates, setShowPopup}) => {
+const CoordsMap = ({ onSubmitCoordinates }) => {
   const [center] = useState({ lat: 67.85572, lng: 20.22513 });
   const [mapLayers, setMapLayers] = useState([]);
   const [mapType, setMapType] = useState("satellite"); // Tipo di mappa selezionato
@@ -40,13 +40,10 @@ const CoordsMap = ({onSubmitCoordinates, setShowPopup}) => {
     useMapEvents({
       click(e) {
         const { lat, lng } = e.latlng;
-        console.log(lat, lng);
-        
+
         // Imposta le coordinate nei campi del form
         onSubmitCoordinates(lat, lng);
 
-        // Chiudi il popup
-        // setShowPopup(false);
       },
     });
     return null;
@@ -54,8 +51,8 @@ const CoordsMap = ({onSubmitCoordinates, setShowPopup}) => {
 
   return (
     <div className="row d-flex justify-content-center">
-            {/* Menu per cambiare tipo di mappa */}
-            <div className="mb-3 ">
+      {/* Menu per cambiare tipo di mappa */}
+      <div className="mb-3 ">
         <Button
           type="button"
           variant="outline-dark"
@@ -91,20 +88,10 @@ const CoordsMap = ({onSubmitCoordinates, setShowPopup}) => {
           <MapContainer
             center={center}
             zoom={ZOOM_LEVEL}
-            style={{ height: "50em", width: "75em", margin:'0'}}
+            style={{ height: "50em", width: "75em", margin: '0' }}
           >
-                        <MapClickHandler /> {/* Questo gestisce i click sulla mappa */}
+            <MapClickHandler /> {/* Questo gestisce i click sulla mappa */}
             <FeatureGroup>
-              {/* <EditControl
-                position="topright"
-                draw={{
-                  rectangle: false,
-                  circle: false,
-                  circlemarker: false,
-                  marker: true,
-                  polyline: false,
-                }}
-              /> */}
               {mapLayers.map((layer) =>
                 layer.latlngs ? (
                   <Polygon key={layer.id} positions={layer.latlngs} />
@@ -112,9 +99,9 @@ const CoordsMap = ({onSubmitCoordinates, setShowPopup}) => {
               )}
             </FeatureGroup>
             <TileLayer
-          url={tileLayers[mapType].url}
-          attribution={tileLayers[mapType].attribution}
-        />          </MapContainer>
+              url={tileLayers[mapType].url}
+              attribution={tileLayers[mapType].attribution}
+            />          </MapContainer>
         </div>
       </div>
     </div>

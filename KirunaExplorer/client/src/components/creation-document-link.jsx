@@ -70,8 +70,8 @@ export default function DocumentLinkOnCreation({ onSave , initialDocumentTitle,t
   };
 
   return (
-    <Card className="min-w-[280px] max-w-[600px]">
-      <CardHeader>
+    <Card className="min-w-[480px] max-w-[800px]" >
+      <CardHeader style={{ border:"none"  }}>
         <CardTitle>Link Document to "{initialDocumentTitle}"</CardTitle>
       </CardHeader>
       <CardContent>
@@ -103,11 +103,11 @@ export default function DocumentLinkOnCreation({ onSave , initialDocumentTitle,t
           Save Links 
         </Button>}
 
-        {initialDocumentTitle ? (<div className="text-muted-foreground mt-4">
-          Search and select a document to link it to "{initialDocumentTitle}".
+        {initialDocumentTitle ? (<div className="text-muted-foreground mt-2 mb-2">
+          Search and select a document to link.
         </div>) : 
 
-          (<div className="text-red-500 mt-4">
+          (<div className="text-red-500 mt-2 mb-3">
 
             Write the document title before selecting a link.
           </div>) 
