@@ -39,47 +39,37 @@ export default function DocumentsTable() {
 
 
 
-  // const documentTypes = [
-  //   { type: "All" },
-  //   { type: "Design" },
-  //   { type: "Informative" },
-  //   { type: "Technical" },
-  //   { type: "Prescriptive" },
-  //   { type: "Material Effects" },
-  //   { type: "Agreement" },
-  //   { type: "Conflict" },
-  //   { type: "Consultation" },
-  // ];
+
   const [types, setTypes] = useState([]); 
   useEffect(() => {
     const fetchTypes = async () => {
       try {
         const fetchedTypes = await API.getDocumentTypes(); 
         setTypes(fetchedTypes); 
-      } catch (err) {
-        console.error("Error fetching document types:", err.message); 
+      } catch(err) {
+        console.error("Error fetching document types:", err); 
       }
     };
     fetchTypes();
-  }, []);
+  }, []); 
 
 
   
-  const [stakeholderNames, setStakeholderNames] = useState(["All", "LKAB", "Citizens"]); // Array of stakeholders
-  // From DB:
-  // const [stakeholderNames, setStakeholderNames] = useState([]); // Array of stakeholders 
-  // useEffect(() => {
-  //   const fetchStakeholders = async () => {
-  //     try {
-  //       const response = await API.getStakeholders();
-  //       const stakeholderNames = response.map((stakeholder) => stakeholder.stakeholder_name);
-  //       setStakeholders(["All", ...stakeholderNames]);
-  //     } catch (error) {
-  //       console.error("Error fetching stakeholders:", error);
-  //     }
-  //   };
-  //   fetchStakeholders();
-  // }, []);
+  const [stakeholderNames, setStakeholderNames] = useState([]);
+  useEffect(() => {
+    const fetchStakeholders = async () => {
+      try {
+        const fetchedStakeholders = await API.getStakeholders(); 
+        const stakeholderNames = fetchedStakeholders.map(
+          (stakeholder) => stakeholder.stakeholder_name
+        );
+        setStakeholderNames(["All", ...stakeholderNames]); 
+      } catch (err) {
+        console.error("Error fetching stakeholders:", err);
+      }
+    };
+    fetchStakeholders();
+  }, []); 
 
 
 
@@ -246,7 +236,6 @@ export default function DocumentsTable() {
           </SelectContent>
         </Select>
       </div>
-
 
       <div className="mb-6 text-gray-700">
         <p className="font-semibold mb-2">Select Stakeholder:</p>

@@ -81,14 +81,13 @@ class DocumentDAO {
 
   async getStakeholders() {
     return new Promise((resolve, reject) => {
-      const query = `SELECT stakeholder_name FROM Stakeholders;`;
+      const query = `SELECT stakeholder_name FROM Stakeholders`;
 
       db.all(query, [], (err, rows) => {
         if (err) {
           console.error("Errore durante il recupero dei documenti:", err);
           return reject(new Error("Errore durante il recupero dei documenti."));
         }
-
         resolve(rows);
       });
     });
@@ -165,6 +164,7 @@ class DocumentDAO {
             area.coordinates.push({ long: row.long, lat: row.lat });
           }
         });
+
 
         // Trasforma la mappa in un array di documenti con geolocalizzazioni
         const documentsArray = Object.values(documentsMap).map(document => {
@@ -967,22 +967,23 @@ class DocumentDAO {
   
 
 
-
-
   async getDocumentTypes() {
-  return new Promise((resolve, reject) => {
-    const query = `SELECT type_id, type_name FROM Type;`;
-
-    db.all(query, [], (err, rows) => {
-      if (err) {
-        console.error("Errore durante il recupero dei tipi di documento:", err);
-        return reject(new Error("Errore durante il recupero dei tipi di documento."));
-      }
-
-      resolve(rows); // Risolve con i dati dei tipi di documento
+    return new Promise((resolve, reject) => {
+      const query = `SELECT type_name FROM Type`;
+      db.all(query, [], (err, rows) => {
+        if (err) {
+          console.error("Error retrieving document types:", err);
+          return reject(new Error("Error retrieving document types."));
+        }
+        if (rows) {
+          resolve(rows); 
+        } else {
+          reject(new Error("No document types found."));
+        }
+      });
     });
-  });
-}
+  }
+
 async  addDocumentType(typeName) {
   return new Promise((resolve, reject) => {
     // Check if the document type already exists
