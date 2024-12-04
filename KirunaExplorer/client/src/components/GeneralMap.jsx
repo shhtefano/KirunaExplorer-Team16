@@ -628,12 +628,12 @@ const GeneralMap = () => {
             </>
           </Modal.Body>
           <Modal.Footer>
-            <Button
+            {user && user.role === "urban_planner" && <Button
               variant="dark"
               onClick={() => { setShowLinkInterface(true); setShowModal(false); }}
             >
               {`Link Documents to ${selectedDocument.document_title}`}
-            </Button>
+            </Button>}
             <Button variant="dark" onClick={() => setShowModal(false)}>
               Close
             </Button>
