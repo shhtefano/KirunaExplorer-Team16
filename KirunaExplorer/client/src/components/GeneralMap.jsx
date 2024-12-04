@@ -497,8 +497,10 @@ const GeneralMap = () => {
                   color: 'black',
                   fontSize: '14px',
                 }}
+                
                 onMouseEnter={() => setHoveredDocumentId(doc.id)}
                 onMouseLeave={() => setHoveredDocumentId(null)}
+                onMouseOver={ () => {}}
                 onClick={doc.area_name === "Kiruna Map" ? () => handleMarkerClick(doc) : () => changeMapPosition(doc)}
               >
                 <div className="p-2">
