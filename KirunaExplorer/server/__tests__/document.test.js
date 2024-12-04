@@ -1063,4 +1063,793 @@ describe("Suite test for linkDocuments function", () => {
     
     });
     
+
+    describe('Suite test for addArea function', () => {
+        let documentDAO;
+    
+        beforeAll(() => {
+            documentDAO = new DocumentDAO();
+    
+            // Mock delle funzioni del database
+            jest.spyOn(db, 'get').mockImplementation((query, params, callback) => {
+                if (callback) callback(null, null); // Valore predefinito: nessun risultato
+            });
+            jest.spyOn(db, 'run').mockImplementation((query, params, callback) => {
+                if (callback) callback(null); // Valore predefinito: nessun errore
+            });
+        });
+    
+        afterEach(() => {
+            jest.clearAllMocks();
+        });
+    
+    
+        test('should fail when coordinates are missing or invalid', async () => {
+            const invalidArea = [
+                { long: null, lat: 56.78, area_name: "Invalid Area", n_order: 1, sub_area_id: null },
+            ];
+    
+            await expect(documentDAO.addArea(invalidArea)).rejects.toEqual({
+                code: 422,
+                message: "Missing or invalid latitude/longitude.",
+            });
+    
+            expect(db.get).not.toHaveBeenCalled(); // Nessun accesso al database
+            expect(db.run).not.toHaveBeenCalled();
+        });
+    
+        test('should fail when area name is missing', async () => {
+            const invalidArea = [
+                { long: 12.34, lat: 56.78, area_name: null, n_order: 1, sub_area_id: null },
+            ];
+    
+            await expect(documentDAO.addArea(invalidArea)).rejects.toEqual({
+                code: 422,
+                message: "Missing area name.",
+            });
+    
+            expect(db.get).not.toHaveBeenCalled();
+            expect(db.run).not.toHaveBeenCalled();
+        });
+    
+        test('should fail if area name already exists', async () => {
+            const mockArea = [
+                { long: 12.34, lat: 56.78, area_name: "Existing Area", n_order: 1, sub_area_id: null },
+            ];
+    
+            db.get.mockImplementationOnce((query, params, callback) => {
+                callback(null, { exists: 1 }); // L'area esiste già
+            });
+    
+            await expect(documentDAO.addArea(mockArea)).rejects.toEqual({
+                code: 403,
+                message: "Area name already exists.",
+            });
+    
+            expect(db.get).toHaveBeenCalledTimes(1); // Controllo esistenza
+            expect(db.run).not.toHaveBeenCalled();
+        });
+    
+        test('should fail if a coordinate is missing long or lat', async () => {
+            const mockArea = [
+                { lat: 56.78, area_name: "Test Area", n_order: 1, sub_area_id: null } // Mancanza di `long`
+            ];
+        
+            await expect(documentDAO.addArea(mockArea)).rejects.toEqual({
+                code: 422,
+                message: "Missing or invalid latitude/longitude."
+            });
+        });
+        test('should fail if a database error occurs when checking if area exists', async () => {
+            const mockArea = [
+                { long: 12.34, lat: 56.78, area_name: "Test Area", n_order: 1, sub_area_id: null }
+            ];
+        
+            db.get.mockImplementationOnce((query, params, callback) => callback(new Error("Errore durante la verifica dell'area")));
+        
+            await expect(documentDAO.addArea(mockArea)).rejects.toEqual({
+                code: 500,
+                message: "Database error: Errore durante la verifica dell'area"
+            });
+        });
+    
+        test('should fail if the area list is empty', async () => {
+            const mockArea = [];
+        
+            await expect(documentDAO.addArea(mockArea)).rejects.toEqual({
+                code: 422,
+                message: "Missing or invalid latitude/longitude."
+            });
+        });
+        
+        
+    });
+    
+    describe('Suite test for getArea function', () => {
+        let documentDAO;
+    
+        beforeAll(() => {
+            documentDAO = new DocumentDAO();
+    
+            // Mock delle funzioni del database
+            jest.spyOn(db, 'get').mockImplementation((query, params, callback) => {
+                if (callback) callback(null, null); // Valore predefinito: nessun risultato
+            });
+            jest.spyOn(db, 'run').mockImplementation((query, params, callback) => {
+                if (callback) callback(null); // Valore predefinito: nessun errore
+            });
+        });
+    
+        afterEach(() => {
+            jest.clearAllMocks();
+        });
+    
+    
+        test('should retrieve areas successfully', async () => {
+            const mockRows = [
+                { id: 1, name: "Area 1", latitude: 10.0, longitude: 20.0, n_order: 1, sub_area_id: null },
+                { id: 1, name: "Area 1", latitude: 10.1, longitude: 20.1, n_order: 2, sub_area_id: null },
+                { id: 2, name: "Area 2", latitude: 15.0, longitude: 25.0, n_order: 1, sub_area_id: 1 },
+                { id: 2, name: "Area 2", latitude: 15.1, longitude: 25.1, n_order: 2, sub_area_id: 1 },
+                { id: 2, name: "Area 2", latitude: 15.2, longitude: 25.2, n_order: 1, sub_area_id: 2 },
+            ];
+        
+            db.all.mockImplementationOnce((query, callback) => callback(null, mockRows));
+        
+            const result = await documentDAO.getAreas();
+        
+            expect(result).toEqual([
+                {
+                    id: 1,
+                    name: "Area 1",
+                    latlngs: [
+                        { lat: 10.0, lng: 20.0 },
+                        { lat: 10.1, lng: 20.1 },
+                    ],
+                },
+                {
+                    id: 2,
+                    name: "Area 2",
+                    latlngs: [
+                        [
+                            { lat: 15.0, lng: 25.0 },
+                            { lat: 15.1, lng: 25.1 },
+                        ],
+                        [
+                            { lat: 15.2, lng: 25.2 },
+                        ],
+                    ],
+                },
+                {
+                    id: 0,
+                    name: "Point-Based Documents",
+                    latlngs: [],
+                },
+            ]);
+        });
+        
+        test('should return only Point-Based Documents if no areas are found', async () => {
+            db.all.mockImplementationOnce((query, callback) => callback(null, []));
+        
+            const result = await documentDAO.getAreas();
+        
+            expect(result).toEqual([
+                {
+                    id: 0,
+                    name: "Point-Based Documents",
+                    latlngs: [],
+                },
+            ]);
+        });
+    
+        test('should reject with an error if the database query fails', async () => {
+            db.all.mockImplementationOnce((query, callback) => callback(new Error("Database error")));
+        
+            await expect(documentDAO.getAreas()).rejects.toThrow("Errore durante il recupero delle aree.");
+        });
+        
+        test('should remove duplicate areas based on name', async () => {
+            const mockRows = [
+                { id: 1, name: "Area 1", latitude: 10.0, longitude: 20.0, n_order: 1, sub_area_id: null },
+                { id: 1, name: "Area 1", latitude: 10.1, longitude: 20.1, n_order: 2, sub_area_id: null },
+                { id: 2, name: "Area 1", latitude: 15.0, longitude: 25.0, n_order: 1, sub_area_id: 1 },
+            ];
+        
+            db.all.mockImplementationOnce((query, callback) => callback(null, mockRows));
+        
+            const result = await documentDAO.getAreas();
+        
+            expect(result).toEqual([
+                {
+                    id: 1,
+                    name: "Area 1",
+                    latlngs: [
+                        { lat: 10.0, lng: 20.0 },
+                        { lat: 10.1, lng: 20.1 },
+                    ],
+                },
+                {
+                    id: 0,
+                    name: "Point-Based Documents",
+                    latlngs: [],
+                },
+            ]);
+        });
+        
+        test('should handle rows with null sub_area_id correctly', async () => {
+            const mockRows = [
+                { id: 1, name: "Area 1", latitude: 10.0, longitude: 20.0, n_order: 1, sub_area_id: null },
+                { id: 1, name: "Area 1", latitude: 10.1, longitude: 20.1, n_order: 2, sub_area_id: null },
+            ];
+        
+            db.all.mockImplementationOnce((query, callback) => callback(null, mockRows));
+        
+            const result = await documentDAO.getAreas();
+        
+            expect(result).toEqual([
+                {
+                    id: 1,
+                    name: "Area 1",
+                    latlngs: [
+                        { lat: 10.0, lng: 20.0 },
+                        { lat: 10.1, lng: 20.1 },
+                    ],
+                },
+                {
+                    id: 0,
+                    name: "Point-Based Documents",
+                    latlngs: [],
+                },
+            ]);
+        });
+        
+        test('should handle areas without coordinates (latitude and longitude null)', async () => {
+            const mockRows = [
+                { id: 1, name: "Area 1", latitude: null, longitude: null, n_order: 1, sub_area_id: null },
+                { id: 2, name: "Area 2", latitude: 10.0, longitude: 20.0, n_order: 1, sub_area_id: null },
+            ];
+        
+            db.all.mockImplementationOnce((query, callback) => callback(null, mockRows));
+        
+            const result = await documentDAO.getAreas();
+        
+            expect(result).toEqual([
+                {
+                    id: 1,
+                    name: "Area 1",
+                    latlngs: [],
+                },
+                {
+                    id: 2,
+                    name: "Area 2",
+                    latlngs: [
+                        { lat: 10.0, lng: 20.0 },
+                    ],
+                },
+                {
+                    id: 0,
+                    name: "Point-Based Documents",
+                    latlngs: [],
+                },
+            ]);
+        
+        });
+    
+        test('should correctly separate areas with mixed sub_area_id (null and defined)', async () => {
+            const mockRows = [
+                { id: 1, name: "Area 1", latitude: 10.0, longitude: 20.0, n_order: 1, sub_area_id: null },
+                { id: 1, name: "Area 1", latitude: 10.1, longitude: 20.1, n_order: 1, sub_area_id: 1 },
+            ];
+        
+            db.all.mockImplementationOnce((query, callback) => callback(null, mockRows));
+        
+            const result = await documentDAO.getAreas();
+        
+            expect(result).toEqual([
+                {
+                    id: 1,
+                    name: "Area 1",
+                    latlngs: [
+                        { lat: 10.0, lng: 20.0 },
+                        [
+                            { lat: 10.1, lng: 20.1 },
+                        ],
+                    ],
+                },
+                {
+                    id: 0,
+                    name: "Point-Based Documents",
+                    latlngs: [],
+                },
+            ]);
+        });
+        
+        test('should handle sub_area_id with missing or sparse data correctly', async () => {
+            const mockRows = [
+                { id: 1, name: "Area 1", latitude: 10.0, longitude: 20.0, n_order: 1, sub_area_id: 1 },
+                { id: 1, name: "Area 1", latitude: null, longitude: null, n_order: 1, sub_area_id: 2 },
+                { id: 1, name: "Area 1", latitude: 10.1, longitude: 20.1, n_order: 2, sub_area_id: 1 },
+            ];
+        
+            db.all.mockImplementationOnce((query, callback) => callback(null, mockRows));
+        
+            const result = await documentDAO.getAreas();
+        
+            expect(result).toEqual([
+                {
+                    id: 1,
+                    name: "Area 1",
+                    latlngs: [
+                        [
+                            { lat: 10.0, lng: 20.0 },
+                            { lat: 10.1, lng: 20.1 },
+                        ],
+                    ],
+                },
+                {
+                    id: 0,
+                    name: "Point-Based Documents",
+                    latlngs: [],
+                },
+            ]);
+        });
+        
+        test('should always include "Point-Based Documents" in the result', async () => {
+            db.all.mockImplementationOnce((query, callback) => callback(null, []));
+        
+            const result = await documentDAO.getAreas();
+        
+            expect(result).toEqual([
+                {
+                    id: 0,
+                    name: "Point-Based Documents",
+                    latlngs: [],
+                },
+            ]);
+        });
+        
+    
+    });
+
+    
+});
+
+describe('Suite test for updatePointCoordinates function', () => {
+    let documentDAO;
+
+    beforeAll(() => {
+        documentDAO = new DocumentDAO();
+
+        // Mock delle funzioni del database
+        jest.spyOn(db, 'get').mockImplementation((query, params, callback) => {
+            if (callback) callback(null, null); // Valore predefinito: nessun risultato
+        });
+        jest.spyOn(db, 'run').mockImplementation((query, params, callback) => {
+            if (callback) callback(null); // Valore predefinito: nessun errore
+        });
+    });
+
+    afterEach(() => {
+        jest.clearAllMocks();
+    });
+
+
+    test('should update coordinates when area_id is not 1', async () => {
+        const mockDocumentId = 1;
+        const mockLong = 10.5;
+        const mockLat = 20.5;
+    
+        db.get.mockImplementationOnce((query, params, callback) => {
+            callback(null, { area_id: 2 });
+        });
+        db.run.mockImplementationOnce((query, params, callback) => {
+            callback(null); // Simula un aggiornamento riuscito
+        });
+    
+        const result = await documentDAO.updatePointCoordinates(mockDocumentId, mockLong, mockLat);
+    
+        expect(result).toEqual({
+            area_id: 2,
+            long: mockLong,
+            lat: mockLat,
+        });
+    
+        expect(db.get).toHaveBeenCalledWith(expect.any(String), [mockDocumentId], expect.any(Function));
+        expect(db.run).toHaveBeenCalledWith(expect.any(String), [mockLong, mockLat, 2], expect.any(Function));
+    });
+    test('should create a new area_id and update the document when area_id is 1', async () => {
+        const mockDocumentId = 1;
+        const mockLong = 10.5;
+        const mockLat = 20.5;
+    
+        db.get
+            .mockImplementationOnce((query, params, callback) => {
+                callback(null, { area_id: 1 }); // Primo get: recupera area_id
+            })
+            .mockImplementationOnce((query, params, callback) => {
+                callback(null, { maxId: 5 }); // Secondo get: recupera il max area_id
+            });
+    
+        db.run.mockImplementation((query, params, callback) => {
+            callback(null); // Simula un aggiornamento riuscito
+        });
+    
+        const result = await documentDAO.updatePointCoordinates(mockDocumentId, mockLong, mockLat);
+    
+        expect(result).toEqual({
+            area_id: 6,
+            document_id: mockDocumentId,
+        });
+    
+        expect(db.get).toHaveBeenCalledTimes(2);
+        expect(db.run).toHaveBeenCalledTimes(2);
+    });
+    test('should reject with an error when no area_id is found for the given document_id', async () => {
+        const mockDocumentId = 1;
+    
+        db.get.mockImplementationOnce((query, params, callback) => {
+            callback(null, null); // Nessun risultato trovato
+        });
+    
+        await expect(documentDAO.updatePointCoordinates(mockDocumentId, 10.5, 20.5)).rejects.toThrow(
+            "Nessun area_id trovato per il document_id fornito."
+        );
+    
+        expect(db.get).toHaveBeenCalledWith(expect.any(String), [mockDocumentId], expect.any(Function));
+    });
+    test('should reject with an error when an error occurs while retrieving area_id', async () => {
+        const mockDocumentId = 1;
+    
+        db.get.mockImplementationOnce((query, params, callback) => {
+            callback(new Error("Database error"));
+        });
+    
+        await expect(documentDAO.updatePointCoordinates(mockDocumentId, 10.5, 20.5)).rejects.toThrow(
+            "Errore durante il recupero dell'area_id."
+        );
+    
+        expect(db.get).toHaveBeenCalledWith(expect.any(String), [mockDocumentId], expect.any(Function));
+    });
+    test('should reject with an error when updating coordinates in Geolocation fails', async () => {
+        const mockDocumentId = 1;
+        const mockLong = 10.5;
+        const mockLat = 20.5;
+    
+        db.get.mockImplementationOnce((query, params, callback) => {
+            callback(null, { area_id: 2 });
+        });
+        db.run.mockImplementationOnce((query, params, callback) => {
+            callback(new Error("Update error"));
+        });
+    
+        await expect(documentDAO.updatePointCoordinates(mockDocumentId, mockLong, mockLat)).rejects.toThrow(
+            "Errore durante l'aggiornamento delle coordinate."
+        );
+    
+        expect(db.get).toHaveBeenCalledWith(expect.any(String), [mockDocumentId], expect.any(Function));
+        expect(db.run).toHaveBeenCalledWith(expect.any(String), [mockLong, mockLat, 2], expect.any(Function));
+    });
+    
+
+});
+
+describe('Suite test for updatePointCoordinates function', () => {
+    let documentDAO;
+
+    beforeAll(() => {
+        documentDAO = new DocumentDAO();
+
+        // Mock delle funzioni del database
+        jest.spyOn(db, 'get').mockImplementation((query, params, callback) => {
+            if (callback) callback(null, null); // Valore predefinito: nessun risultato
+        });
+        jest.spyOn(db, 'run').mockImplementation((query, params, callback) => {
+            if (callback) callback(null); // Valore predefinito: nessun errore
+        });
+    });
+
+    afterEach(() => {
+        jest.clearAllMocks();
+    });
+
+
+    test('should update coordinates when area_id is not 1', async () => {
+        const mockDocumentId = 1;
+        const mockLong = 10.5;
+        const mockLat = 20.5;
+    
+        db.get.mockImplementationOnce((query, params, callback) => {
+            callback(null, { area_id: 2 });
+        });
+        db.run.mockImplementationOnce((query, params, callback) => {
+            callback(null); // Simula un aggiornamento riuscito
+        });
+    
+        const result = await documentDAO.updatePointCoordinates(mockDocumentId, mockLong, mockLat);
+    
+        expect(result).toEqual({
+            area_id: 2,
+            long: mockLong,
+            lat: mockLat,
+        });
+    
+        expect(db.get).toHaveBeenCalledWith(expect.any(String), [mockDocumentId], expect.any(Function));
+        expect(db.run).toHaveBeenCalledWith(expect.any(String), [mockLong, mockLat, 2], expect.any(Function));
+    });
+    test('should create a new area_id and update the document when area_id is 1', async () => {
+        const mockDocumentId = 1;
+        const mockLong = 10.5;
+        const mockLat = 20.5;
+    
+        db.get
+            .mockImplementationOnce((query, params, callback) => {
+                callback(null, { area_id: 1 }); // Primo get: recupera area_id
+            })
+            .mockImplementationOnce((query, params, callback) => {
+                callback(null, { maxId: 5 }); // Secondo get: recupera il max area_id
+            });
+    
+        db.run.mockImplementation((query, params, callback) => {
+            callback(null); // Simula un aggiornamento riuscito
+        });
+    
+        const result = await documentDAO.updatePointCoordinates(mockDocumentId, mockLong, mockLat);
+    
+        expect(result).toEqual({
+            area_id: 6,
+            document_id: mockDocumentId,
+        });
+    
+        expect(db.get).toHaveBeenCalledTimes(2);
+        expect(db.run).toHaveBeenCalledTimes(2);
+    });
+    test('should reject with an error when no area_id is found for the given document_id', async () => {
+        const mockDocumentId = 1;
+    
+        db.get.mockImplementationOnce((query, params, callback) => {
+            callback(null, null); // Nessun risultato trovato
+        });
+    
+        await expect(documentDAO.updatePointCoordinates(mockDocumentId, 10.5, 20.5)).rejects.toThrow(
+            "Nessun area_id trovato per il document_id fornito."
+        );
+    
+        expect(db.get).toHaveBeenCalledWith(expect.any(String), [mockDocumentId], expect.any(Function));
+    });
+    test('should reject with an error when an error occurs while retrieving area_id', async () => {
+        const mockDocumentId = 1;
+    
+        db.get.mockImplementationOnce((query, params, callback) => {
+            callback(new Error("Database error"));
+        });
+    
+        await expect(documentDAO.updatePointCoordinates(mockDocumentId, 10.5, 20.5)).rejects.toThrow(
+            "Errore durante il recupero dell'area_id."
+        );
+    
+        expect(db.get).toHaveBeenCalledWith(expect.any(String), [mockDocumentId], expect.any(Function));
+    });
+    test('should reject with an error when updating coordinates in Geolocation fails', async () => {
+        const mockDocumentId = 1;
+        const mockLong = 10.5;
+        const mockLat = 20.5;
+    
+        db.get.mockImplementationOnce((query, params, callback) => {
+            callback(null, { area_id: 2 });
+        });
+        db.run.mockImplementationOnce((query, params, callback) => {
+            callback(new Error("Update error"));
+        });
+    
+        await expect(documentDAO.updatePointCoordinates(mockDocumentId, mockLong, mockLat)).rejects.toThrow(
+            "Errore durante l'aggiornamento delle coordinate."
+        );
+    
+        expect(db.get).toHaveBeenCalledWith(expect.any(String), [mockDocumentId], expect.any(Function));
+        expect(db.run).toHaveBeenCalledWith(expect.any(String), [mockLong, mockLat, 2], expect.any(Function));
+    });
+    
+
+});
+
+describe('Suite test for updateDocumentArea function', () => {
+    let documentDAO;
+
+    beforeAll(() => {
+        documentDAO = new DocumentDAO();
+
+        // Mock delle funzioni del database
+        jest.spyOn(db, 'get').mockImplementation((query, params, callback) => {
+            if (callback) callback(null, null); // Valore predefinito: nessun risultato
+        });
+        jest.spyOn(db, 'run').mockImplementation((query, params, callback) => {
+            if (callback) callback(null); // Valore predefinito: nessun errore
+        });
+    });
+
+    afterEach(() => {
+        jest.clearAllMocks();
+    });
+
+
+    test('should successfully update the area of a document', async () => {
+        const mockDocumentId = 1;
+        const mockAreaId = 5;
+
+        db.run.mockImplementationOnce((query, params, callback) => {
+            callback(null); // Simula un aggiornamento riuscito
+        });
+
+        const result = await documentDAO.updateDocumentArea(mockDocumentId, mockAreaId);
+
+        expect(result).toEqual({
+            area_id: mockAreaId,
+            document_id: mockDocumentId,
+        });
+
+        expect(db.run).toHaveBeenCalledWith(
+            expect.any(String),
+            [mockAreaId, mockDocumentId],
+            expect.any(Function)
+        );
+    });
+
+    // Test 2: Errore durante l'aggiornamento dell'area
+    test('should reject with an error when updating the area fails', async () => {
+        const mockDocumentId = 1;
+        const mockAreaId = 5;
+
+        db.run.mockImplementationOnce((query, params, callback) => {
+            callback(new Error("Database error")); // Simula un errore
+        });
+
+        await expect(documentDAO.updateDocumentArea(mockDocumentId, mockAreaId)).rejects.toThrow(
+            "Errore durante l'aggiornamento delle coordinate."
+        );
+
+        expect(db.run).toHaveBeenCalledWith(
+            expect.any(String),
+            [mockAreaId, mockDocumentId],
+            expect.any(Function)
+        );
+    });
+
+    test('should correctly update the area of an existing document', async () => {
+        const mockDocumentId = 1;
+        const mockAreaId = 3;
+
+        db.run
+            .mockImplementationOnce((query, params, callback) => {
+                callback(null); // Simula l'aggiornamento riuscito
+            })
+            .mockImplementationOnce((query, params, callback) => {
+                callback(null, [{ area_name: "Existing Area" }]); // Simula l'area trovata
+            });
+
+        const result = await documentDAO.updateDocumentArea(mockDocumentId, mockAreaId);
+
+        expect(result).toEqual({
+            area_id: mockAreaId,
+            document_id: mockDocumentId
+        });
+
+        expect(db.run).toHaveBeenCalledTimes(2);
+    });
+
+    // Test 9: Verifica che l'area venga eliminata solo se il nome dell'area è "Point-Based Documents"
+    test('should not delete anything if the area name is not "Point-Based Documents"', async () => {
+        const mockDocumentId = 1;
+        const mockAreaId = 2;
+
+        db.run
+            .mockImplementationOnce((query, params, callback) => {
+                callback(null); // Aggiornamento riuscito
+            })
+            .mockImplementationOnce((query, params, callback) => {
+                callback(null, [{ area_name: "Some Other Area" }]); // Nome area diverso
+            });
+
+        const result = await documentDAO.updateDocumentArea(mockDocumentId, mockAreaId);
+
+        expect(result).toEqual({
+            area_id: mockAreaId,
+            document_id: mockDocumentId
+        });
+
+        expect(db.run).toHaveBeenCalledTimes(2);
+    });
+
+    // Test 10: Verifica che venga restituito l'errore corretto quando il DB non risponde
+    test('should reject with an error if database query fails', async () => {
+        const mockDocumentId = 1;
+        const mockAreaId = 5;
+
+        db.run.mockImplementationOnce((query, params, callback) => {
+            callback(new Error("Database failure")); // Simula errore DB
+        });
+
+        await expect(documentDAO.updateDocumentArea(mockDocumentId, mockAreaId)).rejects.toThrow(
+            "Errore durante l'aggiornamento delle coordinate."
+        );
+
+        expect(db.run).toHaveBeenCalledTimes(2); // Una sola chiamata a db.run
+    });
+
+});
+
+describe('Suite test for addDocumentType function', () => {
+    let documentDAO;
+
+    beforeAll(() => {
+        documentDAO = new DocumentDAO();
+
+        // Mock delle funzioni del database
+        jest.spyOn(db, 'get').mockImplementation((query, params, callback) => {
+            if (callback) callback(null, null); // Valore predefinito: nessun risultato
+        });
+        jest.spyOn(db, 'run').mockImplementation((query, params, callback) => {
+            if (callback) callback(null); // Valore predefinito: nessun errore
+        });
+    });
+
+    afterEach(() => {
+        jest.clearAllMocks();
+    });
+
+
+    test('should reject if the document type already exists', async () => {
+        const mockTypeName = 'Invoice';
+
+        // Mock della risposta di db.get per simulare che il tipo esista già
+        db.get.mockImplementationOnce((query, params, callback) => {
+            callback(null, { type_name: mockTypeName }); // Tipo già esistente
+        });
+
+        await expect(documentDAO.addDocumentType(mockTypeName)).rejects.toThrow(
+            "Document type already exists"
+        );
+
+        expect(db.get).toHaveBeenCalledTimes(1);
+        expect(db.run).toHaveBeenCalledTimes(0);
+    });
+
+    // Test 3: Verifica che venga restituito un errore se si verifica un problema durante il controllo del tipo
+    test('should reject with an error if checking document type fails', async () => {
+        const mockTypeName = 'Invoice';
+
+        // Simula errore nel controllo del tipo
+        db.get.mockImplementationOnce((query, params, callback) => {
+            callback(new Error("Error checking document type")); // Errore nel controllo
+        });
+
+        await expect(documentDAO.addDocumentType(mockTypeName)).rejects.toThrow(
+            "Error checking document type."
+        );
+
+        expect(db.get).toHaveBeenCalledTimes(1);
+        expect(db.run).toHaveBeenCalledTimes(0);
+    });
+
+    // Test 4: Verifica che venga restituito un errore se si verifica un problema durante l'inserimento
+    test('should reject with an error if adding document type fails', async () => {
+        const mockTypeName = 'Invoice';
+
+        // Mock della risposta di db.get per simulare che il tipo non esista già
+        db.get.mockImplementationOnce((query, params, callback) => {
+            callback(null, null); // Nessun tipo esistente
+        });
+
+        // Simula errore nell'inserimento del nuovo tipo
+        db.run.mockImplementationOnce((query, params, callback) => {
+            callback(new Error("Error adding document type")); // Errore nell'inserimento
+        });
+
+        await expect(documentDAO.addDocumentType(mockTypeName)).rejects.toThrow(
+            "Error adding document type."
+        );
+
+        expect(db.get).toHaveBeenCalledTimes(1);
+        expect(db.run).toHaveBeenCalledTimes(1);
+    });
+
 });
