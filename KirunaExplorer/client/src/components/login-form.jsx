@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
+// import { Button } from "@/components/ui/button";
+import { Button } from "react-bootstrap";
 import {
   Card,
   CardContent,
@@ -39,12 +40,10 @@ export default function LoginForm() {
   };
 
   return (
-    <Card style={{ width: "800px", marginTop:"80px", paddingLeft:"200px", paddingRight:"200px"}}>
+    <Card style={{ width: "400px", marginTop:"80px" }}>
       <CardHeader>
-        <CardTitle className="text-2xl">Login</CardTitle>
-        <CardDescription>
-          Enter your username below to login to your account
-        </CardDescription>
+        <CardTitle className="text-2xl mb-2">Login</CardTitle>
+
       </CardHeader>
       <CardContent>
         <form onSubmit={handleLogin} className="grid gap-4">
@@ -61,6 +60,7 @@ export default function LoginForm() {
             />
           </div>
           <div className="grid gap-2">
+          <Label htmlFor="password">Password</Label>
             <Input
               id="password"
               type="password"
@@ -76,7 +76,9 @@ export default function LoginForm() {
               {error}
             </div>
           )}
-          <Button type="submit" variant="outline" disabled={isLoading}>
+          <div className="flex items-center justify-center">
+
+          <Button type="submit" variant="dark" disabled={isLoading} style={{ width: "30%" }}>
             {isLoading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -86,6 +88,7 @@ export default function LoginForm() {
               "Login"
             )}
           </Button>
+          </div>
         </form>
         {/* <Link to="/">
           <Button variant="outline" className="w-full mt-12">

@@ -1,12 +1,4 @@
-import {
-  Map,
-  Settings2,
-  GanttChart,
-  Telescope,
-  FileText,
-  LandPlot,
-  ChevronDown,
-} from "lucide-react";
+import { Map, GanttChart, Telescope, FileText, LandPlot } from "lucide-react";
 
 import { NavMain } from "@/components/nav-main";
 import { NavUser } from "@/components/nav-user";
@@ -79,10 +71,26 @@ export function AppSidebar({ ...props }) {
   const { user } = useAuth();
 
   // Keep all menu items for urban_planner, only show Map for others
+  // const navItems =
+  //   user?.role === "urban_planner"
+  //     ? data.navMain // Show all items
+  //     : data.navMain.filter((item) => item.title === "Map" | item.title === "Documents"); // Only show Map
   const navItems =
     user?.role === "urban_planner"
-      ? data.navMain // Show all items
-      : data.navMain.filter((item) => item.title === "Map" | item.title === "Documents"); // Only show Map
+      ? data.navMain
+      : data.navMain
+          .map((item) => {
+            if (item.title === "Documents") {
+              return {
+                ...item,
+                items: item.items.filter(
+                  (subItem) => subItem.title === "Show documents"
+                ),
+              };
+            }
+            return item;
+          })
+          .filter((item) => item.title === "Map" || item.title === "Documents");
 
   return (
     <Sidebar collapsible="icon" {...props}>

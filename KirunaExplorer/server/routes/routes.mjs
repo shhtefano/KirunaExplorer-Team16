@@ -37,6 +37,26 @@ router.get("/api/document/list", async (req, res) => {
   }
 });
 
+
+
+
+router.delete("/api/document/:document_id", async (req, res) => {
+  const { document_id } = req.params; 
+  try {
+    const result = await documentDAO.deleteDocument(document_id);
+    if (result.affectedRows === 0) {
+      return res.status(404).send("Document not found.");
+    }
+    res.status(200).json({ message: "Document deleted successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("An error occurred while deleting the document.");
+  }
+});
+
+
+
+
 router.get("/api/document/geo/list", async (req, res) => {
   try {
     // Recupera tutti i documenti dal database

@@ -74,6 +74,7 @@ const HomePage = () => {
               <div className="flex items-center justify-between">
                 <Button
                   style={{ minWidth: "200px" }}
+                  style={{ minWidth: "200px" }}
                   variant="outline"
                   className="flex items-center"
                   onClick={() => navigate("/documents/list")}
@@ -170,11 +171,33 @@ const HomePage = () => {
             </div>
           </CardContent>
 
-          {!user && <LoginForm />}
-          {user && <UserProfileCard user={user} />}
         </Card>
+        <div style={{ zIndex: 10, position: "relative", width: "800px" }}>
+          {!user && <div style={{ display: "flex", justifyContent: "center" }}>
+            <LoginForm />
+          </div>}
+          {user &&
+            <div style={{ display: "flex", justifyContent: "center" }}>
+              <UserProfileCard user={user} />
+            </div>
+          }
+        </div>
       </div>
 
+      <Snackbar
+        open={openSnackbar}
+        autoHideDuration={2000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+      >
+        <Alert
+          onClose={handleCloseSnackbar}
+          severity="error"
+          sx={{ width: "100%" }}
+        >
+          {snackbarMsg}
+        </Alert>
+      </Snackbar>
       <Snackbar
         open={openSnackbar}
         autoHideDuration={2000}
