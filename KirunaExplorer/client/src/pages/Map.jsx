@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 
-import DrawMap from "../components/DrawMap";
+import DrawMap from "../components/GeneralMap";
 
 const MapPage = () => {
   return (
