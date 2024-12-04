@@ -12,9 +12,9 @@ describe("Document Form", () => {
   });
 
   it("displays form title and fields after login", () => {
-    cy.contains("h3", "Add new document").should("be.visible");
-    cy.contains("Document type").should("be.visible");
-    cy.contains("Stakeholder").should("be.visible");
+    cy.contains("h1", "Add new document").should("be.visible");
+    cy.contains("Document Type *").should("be.visible");
+    cy.contains("Stakeholders *").should("be.visible");
   });
 
   it("shows validation messages for empty form", () => {
@@ -35,7 +35,7 @@ describe("Document Form", () => {
 
     cy.contains("Scale must be at least 3 characters").should("be.visible");
     cy.contains(
-      "Please write the date in the correct format: YYYY, YYYY-MM, or YYYY-MM-DD"
+      "Please write the date in the correct format: YYYY, YYYY/MM, or YYYY/MM/DD"
     ).should("be.visible");
     cy.contains("Description must be at least 2 characters").should(
       "be.visible"

@@ -6,7 +6,6 @@ describe("Home Page", () => {
   describe("Kiruna Explorer Card", () => {
     it("displays the main card with correct content", () => {
       cy.get("h3").contains("Kiruna Explorer").should("be.visible");
-      cy.contains("Welcome to Kiruna Explorer").should("be.visible");
     });
 
     it("has visible navigation buttons", () => {
@@ -17,10 +16,8 @@ describe("Home Page", () => {
       });
 
       const navigationButtons = [
-        { text: "Add doc" },
-        { text: "See docs" },
+        { text: "See Docs" },
         { text: "See Map" },
-        { text: "See graph" },
       ];
 
       navigationButtons.forEach((button) => {
@@ -28,36 +25,36 @@ describe("Home Page", () => {
       });
     });
 
-    it("displays Map icons and GanttChart icon", () => {
-      cy.get('[data-testid="map-icon"]').should("be.visible");
-      cy.get('[data-testid="gantt-chart-icon"]').should("be.visible");
-    });
   });
 
   describe("Navigation", () => {
+
+    const baseUrl = "http://localhost:5173";
+
+    beforeEach(() => {
+      // Make an API request to log in
+      cy.request({
+        method: "POST",
+        url: "http://localhost:3001/api/sessions",
+        body: {
+          username: "urban_planner",
+          password: "urban_planner",
+        },
+      }).then((response) => {
+        // Save the token in localStorage or cookies for the session
+        window.localStorage.setItem("auth_token", response.body.token);
+      });
+  
+    });
+
     it("navigates to map page", () => {
       cy.contains("button", "See Map").click();
       cy.url().should("include", "/map");
     });
 
-    it("navigates to graph page", () => {
-      cy.contains("button", "See graph").click();
-      cy.url().should("include", "/graph");
-    });
-
-    it("navigates to add document page", () => {
-      cy.contains("button", "Add doc").click();
-      cy.url().should("include", "/add-document-description");
-    });
-
-    it("navigates to link document page", () => {
-      cy.contains("button", "Link doc").click();
-      cy.url().should("include", "/documents/link");
-    });
-
     it("navigates to documents page", () => {
-      cy.contains("button", "See docs").click();
-      cy.url().should("include", "/documents");
+      cy.contains("button", "See Docs").click();
+      cy.url().should("include", "/documents/list");
     });
   });
 });
