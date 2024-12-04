@@ -42,3 +42,25 @@ describe("Document Form", () => {
     );
   });
 });
+
+describe('Protected Document Description Page (UI Login)', () => {
+  const username = 'urban_planner';
+  const password = 'urban_planner';
+
+  it('should log in and access the AreaMap page', () => {
+    // Visita la pagina di login
+    cy.visit('http://localhost:5173/'); 
+
+    // Inserisci username e password
+    cy.get('input[name="username"]').should('be.visible').type(username);
+    cy.get('input[name="password"]').should('be.visible').type(password);
+
+    // Clicca sul pulsante di login
+    cy.get('button[type="submit"]').should('be.visible').click();
+    cy.visit('http://localhost:5173/add-document-description'); 
+
+    // Verifica che il login sia avvenuto correttamente e che la pagina AreaMap venga caricata
+    cy.url().should('eq', 'http://localhost:5173/add-document-description');
+    cy.contains('h1', 'Add new document').should('be.visible');
+  });
+});

@@ -6,7 +6,7 @@ import "leaflet/dist/leaflet.css";
 import "leaflet-draw/dist/leaflet.draw.css";
 import { Button, Modal, Form } from "react-bootstrap";
 import { Popup } from "react-leaflet";
-import API from "@/services/API";
+import API from "../../src/services/API";
 import { Snackbar, Alert } from "@mui/material";
 import { Marker } from "react-leaflet";
 

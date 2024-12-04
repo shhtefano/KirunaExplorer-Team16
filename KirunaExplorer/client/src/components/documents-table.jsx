@@ -6,7 +6,6 @@ import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@
 import {
   Pagination,
   PaginationContent,
-  PaginationEllipsis,
   PaginationItem,
   PaginationLink,
   PaginationNext,
@@ -17,7 +16,6 @@ import DocumentLink from "./document-link.jsx";
 import DocumentMap from "./DocumentMap.jsx"; // Importa il componente mappa
 import { MapIcon, Pencil, Trash2 } from "lucide-react";
 import { Button } from "react-bootstrap";
-import { Popover } from "@/components/ui/popover";
 
 
 
@@ -183,18 +181,11 @@ export default function DocumentsTable() {
 
   return (
     <div className="max-w-6xl mx-auto p-6 pb-12 bg-white rounded shadow-md overflow-auto">
-      <div className="mb-6 text-gray-700">
-        <p className="font-semibold mb-2">Search Document Title:</p>
-        <Input
-          placeholder="Search by document title"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
-        />
-      </div>
 
 
-      <div className="mb-6 text-gray-700">
+      <div style={{display: 'flex', justifyContent:'space-between'}}>
+
+      <div className="mb-6  text-gray-700" style={{width: '20%'}}>
         <p className="font-semibold mb-2">Select Document Type:</p>
         <Select onValueChange={setSelectedType} value={selectedType}>
           <SelectTrigger className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400">
@@ -214,10 +205,10 @@ export default function DocumentsTable() {
       </div>
 
 
-      <div className="mb-6 text-gray-700">
+      <div className=" mb-6 text-gray-700" style={{width: '20%'}}>
         <p className="font-semibold mb-2">Select Language:</p>
         <Select onValueChange={setSelectedLanguage} value={selectedLanguage}>
-          <SelectTrigger className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400">
+          <SelectTrigger data-cy="language-select" className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400">
             <SelectValue placeholder="All" />
           </SelectTrigger>
           <SelectContent>
@@ -230,7 +221,7 @@ export default function DocumentsTable() {
         </Select>
       </div>
 
-      <div className="mb-6 text-gray-700">
+      <div className=" mb-6 text-gray-700" style={{width: '20%'}}>
         <p className="font-semibold mb-2">Select Stakeholder:</p>
         <Select onValueChange={setSelectedStakeholder} value={selectedStakeholder}>
           <SelectTrigger className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400">
@@ -246,52 +237,63 @@ export default function DocumentsTable() {
         </Select>
       </div>
 
-
-      <div className="mb-6 text-gray-700">
-        <p className="font-semibold mb-2">Select by Issuance Date:</p>
-        <div className="flex items-center gap-4">
-          <Select onValueChange={setDateFilterMode} defaultValue={dateFilterMode}>
-            <SelectTrigger className="w-32 p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400">
-              <SelectValue placeholder="Mode" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All</SelectItem>
-              <SelectItem value="year">Year</SelectItem>
-              <SelectItem value="month">Month & Year</SelectItem>
-              <SelectItem value="exact">Exact Date</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Popover>
-            <div className="flex flex-row gap-2">
-              <Input
-                placeholder="Year"
-                value={year}
-                onChange={(e) => setYear(e.target.value)}
-                className="p-2 border border-gray-300 rounded"
-              />
-              {dateFilterMode !== "year" && (
-                <Input
-                  placeholder="Month"
-                  value={month}
-                  onChange={(e) => setMonth(e.target.value)}
-                  className="p-2 border border-gray-300 rounded"
-                />
-              )}
-              {dateFilterMode === "exact" && (
-                <Input
-                  placeholder="Day"
-                  value={day}
-                  onChange={(e) => setDay(e.target.value)}
-                  className="p-2 border border-gray-300 rounded"
-                />
-              )}
-            </div>
-          </Popover>
-        </div>
       </div>
 
 
+      <div className="mb-6 text-gray-700">
+  <p className="font-semibold mb-2 mt-1">Select by Issuance Date:</p>
+  <div className="flex items-center gap-4">
+    <Select onValueChange={setDateFilterMode} defaultValue={dateFilterMode}>
+      <SelectTrigger className="w-32 p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400">
+        <SelectValue placeholder="Mode" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="all">All</SelectItem>
+        <SelectItem value="year">Year</SelectItem>
+        <SelectItem value="month">Month & Year</SelectItem>
+        <SelectItem value="exact">Exact Date</SelectItem>
+      </SelectContent>
+    </Select>
+
+    {dateFilterMode !== "all" && ( // Mostra i campi solo se non è selezionato "All"
+      <div className="flex flex-row gap-2">
+        <Input
+          placeholder="Year"
+          value={year}
+          onChange={(e) => setYear(e.target.value)}
+          className="p-2 border border-gray-300 rounded"
+        />
+        {dateFilterMode !== "year" && (
+          <Input
+            placeholder="Month"
+            value={month}
+            onChange={(e) => setMonth(e.target.value)}
+            className="p-2 border border-gray-300 rounded"
+          />
+        )}
+        {dateFilterMode === "exact" && (
+          <Input
+            placeholder="Day"
+            value={day}
+            onChange={(e) => setDay(e.target.value)}
+            className="p-2 border border-gray-300 rounded"
+          />
+        )}
+      </div>
+    )}
+  </div>
+</div>
+
+
+      <div className="mb-6 mt-4 text-gray-700">
+        {/* <p className="font-semibold mb-2">Search Document Title:</p> */}
+        <Input
+          placeholder="Search by document title"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+        />
+      </div>
 
       <Table className="border rounded table-fixed w-full">
         <TableHeader>
