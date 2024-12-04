@@ -68,7 +68,7 @@ Our project currently faces technical debt for:
 1. Allocate 20% of sprint capacity to debt reduction
 2. Comprehensive test coverage for refactored code
 3. Regular team feedback sessions
-4. Clear communication of long-term benefits
+4. Better communication of long-term benefits
 
 ## Success Criteria
 1. All quality gates passing
