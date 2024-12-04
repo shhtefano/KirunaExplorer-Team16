@@ -126,7 +126,7 @@ export function DocumentInfoModal({ doc, showDocInfo, setShowDocInfo, linkType }
         setLoading(true);
         setError(null);
         try {
-          const response = await API.getDocumentByTitle(doc);
+          const response = await API.getDocumentById(doc);
           setDocumentDetails(response.data || null);
         } catch (err) {
           console.error("Error fetching document details:", err);

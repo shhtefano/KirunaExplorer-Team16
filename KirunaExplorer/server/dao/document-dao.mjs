@@ -1100,7 +1100,93 @@ async  addDocumentType(typeName) {
         });
       });
     });
+    
   }
+
+ // Metodo per recuperare un documento tramite il suo ID
+ async getDocumentByTitle(document_id) {
+  return new Promise((resolve, reject) => {
+    // Query per recuperare i dettagli del documento
+    const query = `
+      SELECT 
+        D.document_id,
+        D.document_title,
+        D.scale,
+        D.issuance_date,
+        D.language,
+        D.pages,
+        D.document_type,
+        D.document_description,
+        S.stakeholder_name
+      FROM Documents D
+      JOIN Document_Stakeholder DS ON D.document_id = DS.document_id
+      JOIN Stakeholders S ON DS.stakeholder_id = S.stakeholder_id
+      WHERE D.document_title = ?;
+    `;
+
+    // Esegui la query con il document_id passato
+    db.all(query, [document_id], (err, rows) => {
+      if (err) {
+        console.error("Errore durante il recupero del documento:", err);
+        return reject(new Error("Errore durante il recupero del documento."));
+      }
+
+      if (rows.length === 0) {
+        return resolve(null); // Se non troviamo il documento, restituiamo null
+      }
+
+      // Raggruppa i dati del documento
+      const document = {
+        document_id: rows[0].document_id,
+        document_title: rows[0].document_title,
+        scale: rows[0].scale,
+        issuance_date: rows[0].issuance_date,
+        language: rows[0].language,
+        pages: rows[0].pages,
+        document_type: rows[0].document_type,
+        document_description: rows[0].document_description,
+        stakeholders: [], // Inizializza l'array degli stakeholder
+      };
+
+      // Aggiungi gli stakeholder al documento
+      rows.forEach(row => {
+        document.stakeholders.push(row.stakeholder_name);
+      });
+
+      // Restituisci il documento
+      resolve(document);
+    });
+  });
+
+}
+
+// Metodo per eliminare un link dato parent_id, child_id e connection_type
+async deleteLink(parentId, childId, connectionType) {
+  return new Promise((resolve, reject) => {
+    // Query per eliminare il link
+    const query = `
+      DELETE FROM Document_Links
+      WHERE parent_id = ? AND child_id = ? AND connection_type = ?;
+    `;
+
+    // Esegui la query con i parametri forniti
+    db.run(query, [parentId, childId, connectionType], function (err) {
+      if (err) {
+        console.error("Errore durante l'eliminazione del link:", err);
+        return reject(new Error("Errore durante l'eliminazione del link."));
+      }
+
+      // Controlla se è stata eliminata una riga
+      if (this.changes === 0) {
+        return resolve(false); // Nessun link eliminato
+      }
+
+      resolve(true); // Link eliminato con successo
+    });
+  });
+}
+
+
 
 
 }
