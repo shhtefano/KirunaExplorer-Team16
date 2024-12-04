@@ -136,9 +136,9 @@ export default function DocumentLink({ initialDocument }) {
 
   return (
     <div>
-      <Card className="min-w-[280px] max-w-[600px]">
+      <Card className="min-w-[280px] max-w-[700px]">
         <CardContent>
-          <div className="text-muted-foreground mb-4 mt-4">
+          <div className="mb-4 mt-2">
             Search and select a document to link it to "{initialDocument.document_title}".
           </div>
 
