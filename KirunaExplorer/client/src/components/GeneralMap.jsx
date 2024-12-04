@@ -14,8 +14,8 @@ import ArticleIcon from '@mui/icons-material/Article';
 import { MapIcon } from "lucide-react";
 import CoordsMap from "./CoordsMap";
 import { Snackbar, Alert } from "@mui/material";
-import LinkIcon from "@mui/icons-material/Link";
 import DocumentLinksModal from "./link-list";
+import LinkIcon from "@mui/icons-material/Link";
 import DocumentLink from "./document-link";
 
 // Configura l'icona di default di Leaflet
@@ -497,6 +497,7 @@ const GeneralMap = () => {
                   color: 'black',
                   fontSize: '14px',
                 }}
+                
                 onMouseEnter={() => setHoveredDocumentId(doc.id)}
                 onMouseLeave={() => setHoveredDocumentId(null)}
                 onClick={doc.area_name === "Kiruna Map" ? () => {handleMarkerClick(doc); setShowModal(true)} : () => changeMapPosition(doc)}
@@ -583,6 +584,7 @@ const GeneralMap = () => {
                           >
                             <p style={{ fontSize: "12px" }}>
                               <LinkIcon alt="Show Links" label="Show Links" />
+                              
                             </p>
                           </Button>
                     </Container>
