@@ -16,7 +16,7 @@ Our project currently faces technical debt for:
 ## Goals and Metrics
 ### Primary Goals
 1. Reduce technical debt identified with SonarCloud
-2. Achieve and maintain "B" or higher maintainability rating
+2. Maintain "A" maintainability rating
 3. Increase test coverage to 70%-80%
 4. Zero critical security hotspots
 
@@ -50,8 +50,8 @@ Our project currently faces technical debt for:
 ```
 - Coverage on New Code > 70%
 - Duplicated Lines on New Code < 5%
-- Maintainability Rating = B
-- Reliability Rating = A
+- Maintainability Rating = A
+- Reliability Rating = B
 - Security Rating = A
 - Technical Debt Ratio on New Code < 5%
 ```
@@ -78,4 +78,4 @@ Our project currently faces technical debt for:
 5. Automated checks implemented and running
 
 ## Conclusion
-This strategy provides our approach to reducing technical debt while maintaining project momentum. Regular reviews and adjustments will ensure we meet our debt reduction goals while delivering value to stakeholders.
+This concludes our approach to reducing technical debt while maintaining project momentum. Regular reviews and adjustments will ensure we meet our debt reduction goals while delivering value to stakeholders.
