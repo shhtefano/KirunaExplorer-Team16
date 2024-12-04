@@ -334,5 +334,39 @@ router.get("/api/document/:document_title", async (req, res) => {
     res.status(500).send("Si è verificato un errore durante il recupero del documento.");
   }
 });
+// Endpoint per eliminare un link
+router.delete('/api/links', async (req, res) => {
+  const { parentId, childId, connectionType } = req.body;
 
+  // Verifica che i parametri necessari siano forniti
+  if (!parentId || !childId || !connectionType) {
+    return res.status(400).json({
+      success: false,
+      message: 'Parametri mancanti: parentId, childId e connectionType sono richiesti.',
+    });
+  }
+
+  try {
+    // Chiamata al metodo DAO per eliminare il link
+    const result = await documentDAO.deleteLink(parentId, childId, connectionType);
+
+    if (result) {
+      return res.status(200).json({
+        success: true,
+        message: 'Link eliminato con successo.',
+      });
+    } else {
+      return res.status(404).json({
+        success: false,
+        message: 'Nessun link trovato con i parametri forniti.',
+      });
+    }
+  } catch (error) {
+    console.error('Errore durante l\'eliminazione del link:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Errore interno del server.',
+    });
+  }
+});
 export default router;

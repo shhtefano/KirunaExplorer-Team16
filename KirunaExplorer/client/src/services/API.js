@@ -562,6 +562,48 @@ async function getDocumentById(document_title) {
 
   
 }
+// Funzione per eliminare un link tramite i dettagli forniti
+async function deleteLink(parentId, childId, connectionType) {
+  try {
+    // Effettua la chiamata API al server
+    const response = await fetch(`${SERVER_URL}/api/links`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        parentId,
+        childId,
+        connectionType,
+      }),
+    });
+
+    // Gestisce gli errori HTTP
+    if (!response.ok) {
+      const responseClone = response.clone(); // Clona la risposta per il logging
+      console.error("Errore nella risposta:", responseClone);
+console.log( parentId,
+  childId,
+  connectionType,)
+      if (response.status === 404) {
+        return { success: false, message: "Link non trovato." };
+      } else if (response.status === 500) {
+        return { success: false, message: "Errore interno del server." };
+      }
+
+      return { success: false, message: `Errore sconosciuto: ${response.status}` };
+    }
+
+    // Converte la risposta in JSON
+    const data = await response.json();
+
+    // Ritorna i dati della risposta
+    return { success: true, data };
+  } catch (error) {
+    console.error("Errore durante la chiamata API:", error);
+    return { success: false, message: "Errore di rete o server non raggiungibile." };
+  }
+}
 
 const API = {
   logIn,
@@ -590,7 +632,8 @@ const API = {
   deleteFileFromSupabase,
   listFilesInSupabase,
   deleteDocument,
-  getDocumentById
+  getDocumentById,
+  deleteLink
 };
 
 export default API;

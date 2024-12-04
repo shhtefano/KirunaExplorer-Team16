@@ -101,7 +101,7 @@ export default function DocumentLinksModal({ selectedDocument, showModalLink, se
             )}
 
             {doc && showDocInfo && 
-            <DocumentInfoModal doc={doc} showDocInfo={showDocInfo} setShowDocInfo={setShowDocInfo} linkType={linkType} />}
+            <DocumentInfoModal doc={doc} showDocInfo={showDocInfo} setShowDocInfo={setShowDocInfo} linkType={linkType} selectedDocument={selectedDocument}/>}
           </Modal.Body>
           <Modal.Footer>
           <Button variant="dark" 
@@ -115,7 +115,7 @@ export default function DocumentLinksModal({ selectedDocument, showModalLink, se
   );
 }
 
-export function DocumentInfoModal({ doc, showDocInfo, setShowDocInfo, linkType }) {
+export function DocumentInfoModal({ doc, showDocInfo, setShowDocInfo, linkType , selectedDocument}) {
   const [documentDetails, setDocumentDetails] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -141,17 +141,25 @@ export function DocumentInfoModal({ doc, showDocInfo, setShowDocInfo, linkType }
     fetchDocumentDetails();
   }, [doc]);
   // Funzione per rimuovere il link associato al documento
-  const removeLink = async () => {
-    try {
-      // Fai una chiamata API per rimuovere il link (esempio)
-      await API.removeDocumentLink(doc);  // Supponendo che tu abbia un endpoint per rimuovere il link
+  // Funzione per rimuovere il link associato al documento
+const removeLink = async () => {
+  try {
+    // Chiamata API per rimuovere il link
+    const response = await API.deleteLink(doc, selectedDocument.document_title, linkType); // Passa i parametri corretti
+    if (response.success) {
       console.log(`Document link removed: ${doc}`);
-      setShowDocInfo(false);  // Chiudi il modal dopo la rimozione
-    } catch (err) {
-      console.error("Error removing document link:", err);
-      setError("Unable to remove document link.");
+      setShowDocInfo(false); // Chiudi il modal dopo la rimozione
+      alert("Link removed successfully!");
+    } else {
+      console.error("Error removing document link:", response.message);
+      setError(response.message || "Unable to remove document link.");
     }
-  };
+  } catch (err) {
+    console.error("Error removing document link:", err);
+    setError("Unable to remove document link.");
+  }
+};
+
   return (
     <Modal
 

@@ -1159,33 +1159,48 @@ async  addDocumentType(typeName) {
   });
 
 }
-
 // Metodo per eliminare un link dato parent_id, child_id e connection_type
 async deleteLink(parentId, childId, connectionType) {
   return new Promise((resolve, reject) => {
-    // Query per eliminare il link
-    const query = `
-      DELETE FROM Document_Links
-      WHERE parent_id = ? AND child_id = ? AND connection_type = ?;
+    // Query per eliminare il link (prima combinazione)
+    const query1 = `
+      DELETE FROM Connections
+      WHERE parent_id = ? AND children_id = ? AND connection_type = ?;
+    `;
+    // Query per eliminare il link (seconda combinazione)
+    const query2 = `
+      DELETE FROM Connections
+      WHERE parent_id = ? AND children_id = ? AND connection_type = ?;
     `;
 
-    // Esegui la query con i parametri forniti
-    db.run(query, [parentId, childId, connectionType], function (err) {
+    // Esegui la prima query
+    db.run(query1, [parentId, childId, connectionType], function (err) {
       if (err) {
-        console.error("Errore durante l'eliminazione del link:", err);
-        return reject(new Error("Errore durante l'eliminazione del link."));
+        console.error("Errore durante l'eliminazione del link (prima combinazione):", err);
+        return reject(new Error("Errore durante l'eliminazione del link (prima combinazione)."));
       }
 
-      // Controlla se è stata eliminata una riga
+      // Se non è stata eliminata nessuna riga nella prima query, esegui la seconda
       if (this.changes === 0) {
-        return resolve(false); // Nessun link eliminato
-      }
+        db.run(query2, [childId, parentId, connectionType], function (err) {
+          if (err) {
+            console.error("Errore durante l'eliminazione del link (seconda combinazione):", err);
+            return reject(new Error("Errore durante l'eliminazione del link (seconda combinazione)."));
+          }
 
-      resolve(true); // Link eliminato con successo
+          // Controlla se è stata eliminata una riga nella seconda query
+          if (this.changes === 0) {
+            return resolve(false); // Nessun link eliminato
+          }
+
+          resolve(true); // Link eliminato con successo
+        });
+      } else {
+        resolve(true); // Link eliminato con successo nella prima query
+      }
     });
   });
 }
-
 
 
 

@@ -645,7 +645,7 @@ const GeneralMap = () => {
         <Modal.Title>Links for {selectedDocument.document_title}</Modal.Title>
       </Modal.Header>
       <Modal.Body>
-        <DocumentLink selectedDocument={selectedDocument} />
+        <DocumentLink initialDocument={selectedDocument} />
       </Modal.Body>
       <Modal.Footer>
         <Button variant="dark" onClick={() => setShowLinkInterface(false)}>
