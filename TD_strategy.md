@@ -44,7 +44,7 @@ Our project currently faces technical debt for:
 3. Create documentation standards
 4. Set up automated dependency updates
 
-## Quality Gates Configuration
+## Quality Gates
 
 ### Required Quality Gate Conditions
 ```
@@ -56,12 +56,6 @@ Our project currently faces technical debt for:
 - Technical Debt Ratio on New Code < 5%
 ```
 
-### Mitigation Strategies
-1. Allocate 20% of sprint capacity to debt reduction
-2. Comprehensive test coverage for refactored code
-3. Regular team feedback sessions
-4. Clear communication of long-term benefits
-
 ## Team Responsibilities
 
 ### Team Members
@@ -70,6 +64,11 @@ Our project currently faces technical debt for:
 - Follow new coding standards
 - Document changes properly
 
+### Mitigation Strategies
+1. Allocate 20% of sprint capacity to debt reduction
+2. Comprehensive test coverage for refactored code
+3. Regular team feedback sessions
+4. Clear communication of long-term benefits
 
 ## Success Criteria
 1. All quality gates passing
