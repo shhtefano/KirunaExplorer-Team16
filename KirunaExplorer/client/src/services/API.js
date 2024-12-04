@@ -328,6 +328,44 @@ const logOut = async () => {
   if (response.ok) return null;
 };
 
+// Funzione per ottenere i dettagli di un documento tramite il suo ID (passato nel body)
+async function getDocumentById(document_title) {
+  try {
+    // Effettua la chiamata API al server
+    const response = await fetch(`${SERVER_URL}/api/document/${document_title}`, {
+      method: "GET", // Usa POST per inviare il body
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    // Gestisce gli errori HTTP
+    if (!response.ok) {
+      const responseClone = response.clone(); // Clona la risposta per il logging
+      console.error("Errore nella risposta:", responseClone);
+
+      if (response.status === 404) {
+        return { success: false, message: "Documento non trovato." };
+      } else if (response.status === 500) {
+        return { success: false, message: "Errore interno del server." };
+      }
+
+      return { success: false, message: `Errore sconosciuto: ${response.status}` };
+    }
+
+    // Converte la risposta in JSON
+    const data = await response.json();
+
+    // Ritorna i dati del documento
+    return { success: true, data };
+  } catch (error) {
+    console.error("Errore durante la chiamata API:", error);
+    return { success: false, message: "Errore di rete o server non raggiungibile." };
+  }
+}
+
+
+
 const API = {
   logIn,
   logOut,
@@ -342,7 +380,8 @@ const API = {
   addNewStakeholder,
   linkDocuments,
   getConnectionsByDocumentTitle,
-  deleteConnection
+  deleteConnection, 
+  getDocumentById,
 };
 
 export default API;

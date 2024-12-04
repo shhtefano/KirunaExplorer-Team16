@@ -196,6 +196,31 @@ router.put("/api/document/updateDocumentArea", async (req, res) => {
     res.status(500).send("An error occurred while updating the Document area.");
   }
 });
+// Endpoint per ottenere i dettagli di un documento tramite il suo titolo
+router.get("/api/document/:document_title", async (req, res) => {
+  try {
+    // Estrae il titolo del documento dai parametri della richiesta
+    const { document_title } = req.params;
 
+    // Controlla se il titolo del documento è fornito
+    if (!document_title) {
+      return res.status(400).json({ message: "Titolo del documento mancante." });
+    }
+
+    // Recupera i dettagli del documento dal database tramite il DAO
+    const document = await documentDAO.getDocumentByTitle(document_title);
+
+    // Controlla se il documento esiste
+    if (!document) {
+      return res.status(404).json({ message: "Documento non trovato." });
+    }
+
+    // Risponde con i dettagli del documento
+    res.status(200).json(document);
+  } catch (error) {
+    console.error("Errore durante il recupero del documento:", error);
+    res.status(500).send("Si è verificato un errore durante il recupero del documento.");
+  }
+});
 
 export default router;
