@@ -16,7 +16,7 @@ CREATE TABLE "Connections" (
 	"parent_id"	INTEGER,
 	"children_id"	INTEGER,
 	"connection_type"	VARCHAR(50),
-	PRIMARY KEY("parent_id","children_id"),
+	PRIMARY KEY("parent_id","children_id", "connection_type"),
 	FOREIGN KEY("parent_id") REFERENCES "Nodes"("node_id"),
 	FOREIGN KEY("children_id") REFERENCES "Nodes"("node_id"),
 	FOREIGN KEY("parent_id") REFERENCES "Documents"("document_id") ON DELETE CASCADE,
@@ -44,11 +44,16 @@ CREATE TABLE "Documents" (
 	PRIMARY KEY("document_id" AUTOINCREMENT)
     FOREIGN KEY ("document_type") REFERENCES "Type"("type_name")
 	);
+    FOREIGN KEY ("document_type") REFERENCES "Type"("type_name")
+	);
 
 CREATE TABLE "Geolocation" (
 	"area_id"	INTEGER NOT NULL,
 	"long"	REAL NOT NULL,
 	"lat"	REAL NOT NULL,
+	"area_name"	TEXT NOT NULL DEFAULT ' ',
+	"n_order" INTEGER NOT NULL DEFAULT 0,
+	"sub_area_id" INTEGER
 	"area_name"	TEXT NOT NULL DEFAULT ' ',
 	"n_order" INTEGER NOT NULL DEFAULT 0,
 	"sub_area_id" INTEGER
@@ -83,6 +88,11 @@ INSERT INTO Documents(document_id, document_title, scale, issuance_date, languag
 INSERT INTO Documents(document_id, document_title, scale, issuance_date, language, pages, document_type, document_description) VALUES (3, 'LKAB Policy', '1:1000', '2012/12/25', 'English', 10, 'Technical', 'description');
 INSERT INTO Documents(document_id, document_title, scale, issuance_date, language, pages, document_type, document_description) VALUES (4, 'Municipal Assurance', '1:1000', '2012/12/25', 'English', 10, 'Technical', 'description');
 INSERT INTO Documents(document_id, document_title, scale, issuance_date, language, pages, document_type, document_description) VALUES (5, 'LKAB Assurance', '1:1000', '2012/12/25', 'English', 10, 'Technical', 'description');
+INSERT INTO Documents(document_id, document_title, scale, issuance_date, language, pages, document_type, document_description) VALUES (1, 'Kiruna buildings', '1:100', '2012', 'Swedish', 10, 'Technical', 'description');
+INSERT INTO Documents(document_id, document_title, scale, issuance_date, language, pages, document_type, document_description) VALUES (2, 'Kiruna workshops', '1:1000', '2012/12/25', 'English', 10, 'Technical', 'description');
+INSERT INTO Documents(document_id, document_title, scale, issuance_date, language, pages, document_type, document_description) VALUES (3, 'LKAB Policy', '1:1000', '2012/12/25', 'English', 10, 'Technical', 'description');
+INSERT INTO Documents(document_id, document_title, scale, issuance_date, language, pages, document_type, document_description) VALUES (4, 'Municipal Assurance', '1:1000', '2012/12/25', 'English', 10, 'Technical', 'description');
+INSERT INTO Documents(document_id, document_title, scale, issuance_date, language, pages, document_type, document_description) VALUES (5, 'LKAB Assurance', '1:1000', '2012/12/25', 'English', 10, 'Technical', 'description');
 
 INSERT INTO Document_Stakeholder(stakeholder_id, document_id) VALUES(1,1);
 INSERT INTO Document_Stakeholder(stakeholder_id, document_id) VALUES(2,1);
@@ -90,10 +100,18 @@ INSERT INTO Document_Stakeholder(stakeholder_id, document_id) VALUES(2,2);
 INSERT INTO Document_Stakeholder(stakeholder_id, document_id) VALUES(2,3);
 INSERT INTO Document_Stakeholder(stakeholder_id, document_id) VALUES(1,4);
 INSERT INTO Document_Stakeholder(stakeholder_id, document_id) VALUES(1,5);
+INSERT INTO Document_Stakeholder(stakeholder_id, document_id) VALUES(2,2);
+INSERT INTO Document_Stakeholder(stakeholder_id, document_id) VALUES(2,3);
+INSERT INTO Document_Stakeholder(stakeholder_id, document_id) VALUES(1,4);
+INSERT INTO Document_Stakeholder(stakeholder_id, document_id) VALUES(1,5);
 
 INSERT INTO Geolocation_Documents(area_id, document_id) VALUES(1, 1);
 INSERT INTO Geolocation_Documents(area_id, document_id) VALUES(1, 2);
+INSERT INTO Geolocation_Documents(area_id, document_id) VALUES(1, 1);
+INSERT INTO Geolocation_Documents(area_id, document_id) VALUES(1, 2);
 INSERT INTO Geolocation_Documents(area_id, document_id) VALUES(1, 3);
+INSERT INTO Geolocation_Documents(area_id, document_id) VALUES(1, 4);
+INSERT INTO Geolocation_Documents(area_id, document_id) VALUES(1, 5);
 INSERT INTO Geolocation_Documents(area_id, document_id) VALUES(1, 4);
 INSERT INTO Geolocation_Documents(area_id, document_id) VALUES(1, 5);
 
