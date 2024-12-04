@@ -184,8 +184,9 @@ router.post('/api/document/connections/document', async (req, res) => {
 
   try {
     // Chiama il DAO per ottenere le connessioni
-    const connections = await documentDAO.getConnectionsByDocumentTitle(title);
+    const connections = await documentDAO.getConnectionsByDocumentTitle(title)
     res.status(200).json({ success: true, data: connections });
+    console.log(connections, 'ROUTER')
   } catch (error) {
     console.error("Errore connessioni documento", error.message);
     res.status(500).json({ success: false, message: error.message });

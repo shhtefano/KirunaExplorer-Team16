@@ -1,34 +1,36 @@
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-  CardFooter,
-} from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Map, GanttChart, User, Folder, Files, FileText, LandPlot } from "lucide-react";
+import {
+  Map,
+  GanttChart,
+  Folder,
+  Files,
+  FileText,
+  LandPlot,
+} from "lucide-react";
 import LoginForm from "@/components/login-form";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { Snackbar, Alert } from "@mui/material";
 import { useState } from "react";
-import kirunaImage from "@/assets/kiruna.jpg";
+//import kirunaImage from "@/assets/kiruna.jpg";
+import kirunaNoCopywright from "@/assets/kiruna_pexels.jpg";
 import { UserProfileCard } from "@/components/user-profile-card";
 
 const HomePage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [openSnackbar, setOpenSnackbar] = useState(false);
-  const [snackbarMsg, setSnackbarMsg] = useState('');
+  const [snackbarMsg, setSnackbarMsg] = useState("");
 
   const handleRestrictedAction = (e, path) => {
     if (!user) {
       e.preventDefault();
-      setSnackbarMsg('Please log in to access this page.');
+      setSnackbarMsg("Please log in to access this page.");
       setOpenSnackbar(true);
     } else {
-      if (user.role !== 'urban_planner') {
-        setSnackbarMsg('You are not authorized to access this page.');
+      if (user.role !== "urban_planner") {
+        setSnackbarMsg("You are not authorized to access this page.");
         setOpenSnackbar(true);
       } else {
         navigate(path);
@@ -46,13 +48,13 @@ const HomePage = () => {
   return (
     <div
       className="relative w-full overflow-hidden"
-    // style={{ height: "40vh" }} // Assicura l'altezza dello schermo
+      // style={{ height: "40vh" }} // Assicura l'altezza dello schermo
     >
       {/* Background Image with Overlay */}
       <div
         className="fixed top-0 left-0 w-full h-full z-0 overflow-hidden"
         style={{
-          backgroundImage: `url(${kirunaImage})`,
+          backgroundImage: `url(${kirunaNoCopywright})`,
           backgroundSize: "cover",
           backgroundPosition: "center",
           backgroundRepeat: "no-repeat",
@@ -80,13 +82,13 @@ const HomePage = () => {
                   <span>See Docs</span>
                 </Button>
                 <p className="text-sm text-gray-600 w-2/3">
-                  View all documents in a tabular format, making it easy to browse and manage.
+                  View all documents in a tabular format, making it easy to
+                  browse and manage.
                 </p>
               </div>
               <div className="flex items-center justify-between">
                 <Button
                   style={{ minWidth: "200px" }}
-
                   variant="outline"
                   className="flex items-center"
                   onClick={() => navigate("/map")}
@@ -99,13 +101,11 @@ const HomePage = () => {
                 </p>
               </div>
 
-
               {user?.role === "urban_planner" && (
                 <>
                   <div className="flex items-center justify-between">
                     <Button
                       style={{ minWidth: "200px" }}
-
                       variant="outline"
                       className="flex items-center"
                       onClick={(e) =>
@@ -122,7 +122,6 @@ const HomePage = () => {
                   <div className="flex items-center justify-between">
                     <Button
                       style={{ minWidth: "200px" }}
-
                       variant="outline"
                       className="flex items-center"
                       onClick={() => navigate("/areas")}
@@ -137,7 +136,6 @@ const HomePage = () => {
                   <div className="flex items-center justify-between">
                     <Button
                       style={{ minWidth: "200px" }}
-
                       variant="outline"
                       className="flex items-center"
                       onClick={(e) => handleRestrictedAction(e, "/graph")}
@@ -146,42 +144,60 @@ const HomePage = () => {
                       <span>See Graph</span>
                     </Button>
                     <p className="text-sm text-gray-600 w-2/3">
-                      Visualize the document timeline and storyline with an intuitive graph.
+                      Visualize the document timeline and storyline with an
+                      intuitive graph.
                     </p>
                   </div>
                   <div className="flex items-center justify-between">
                     <Button
                       style={{ minWidth: "200px" }}
-
                       variant="outline"
                       className="flex items-center"
-                      onClick={(e) => handleRestrictedAction(e, "/addResources")}
+                      onClick={(e) =>
+                        handleRestrictedAction(e, "/addResources")
+                      }
                     >
                       <Folder className="mr-2" />
                       <span>See Resources</span>
                     </Button>
                     <p className="text-sm text-gray-600 w-2/3">
-                      View or upload related files associated with documents for better context.
+                      View or upload related files associated with documents for
+                      better context.
                     </p>
                   </div>
                 </>
               )}
             </div>
           </CardContent>
-
         </Card>
         <div style={{ zIndex: 10, position: "relative", width: "800px" }}>
-          {!user && <div style={{ display: "flex", justifyContent: "center" }}>
-            <LoginForm />
-          </div>}
-          {user &&
+          {!user && (
+            <div style={{ display: "flex", justifyContent: "center" }}>
+              <LoginForm />
+            </div>
+          )}
+          {user && (
             <div style={{ display: "flex", justifyContent: "center" }}>
               <UserProfileCard user={user} />
             </div>
-          }
+          )}
         </div>
       </div>
 
+      <Snackbar
+        open={openSnackbar}
+        autoHideDuration={2000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+      >
+        <Alert
+          onClose={handleCloseSnackbar}
+          severity="error"
+          sx={{ width: "100%" }}
+        >
+          {snackbarMsg}
+        </Alert>
+      </Snackbar>
       <Snackbar
         open={openSnackbar}
         autoHideDuration={2000}

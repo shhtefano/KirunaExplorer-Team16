@@ -1,8 +1,28 @@
 import { useState, useEffect } from "react";
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogTrigger, DialogContent, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectTrigger,
+  SelectContent,
+  SelectItem,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Pagination,
   PaginationContent,
@@ -14,8 +34,10 @@ import {
 import API from "../services/API.js";
 import DocumentLink from "./document-link.jsx";
 import DocumentMap from "./DocumentMap.jsx"; // Importa il componente mappa
-import { MapIcon, Pencil, Trash2 } from "lucide-react";
+import FileUpload from "./FileUpload2.jsx";
+import { MapIcon, Pencil, Trash2, Upload } from "lucide-react";
 import { Button } from "react-bootstrap";
+import { useAuth } from "../contexts/AuthContext";
 
 
 
@@ -32,8 +54,9 @@ export default function DocumentsTable() {
   const [month, setMonth] = useState("");
   const [day, setDay] = useState("");
   const [dateFilterMode, setDateFilterMode] = useState("all");
-  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);  // To control Dialog for delete confirmation
-  const [documentToDelete, setDocumentToDelete] = useState(null);  // To store the document that needs to be deleted
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false); // To control Dialog for delete confirmation
+  const [documentToDelete, setDocumentToDelete] = useState(null); // To store the document that needs to be deleted
+  const { user } = useAuth();
 
   const [types, setTypes] = useState([]);
   useEffect(() => {
@@ -47,8 +70,6 @@ export default function DocumentsTable() {
     };
     fetchTypes();
   }, []);
-
-
 
   const [stakeholderNames, setStakeholderNames] = useState([]);
   useEffect(() => {
@@ -67,7 +88,6 @@ export default function DocumentsTable() {
   }, []);
 
   const languages = ["All", "English", "Swedish"];
-
 
   const [selectedMapDocument, setSelectedMapDocument] = useState(null);
   const [selectedDocument, setSelectedDocument] = useState(null);
@@ -89,18 +109,23 @@ export default function DocumentsTable() {
   }, []);
 
   const filteredDocuments = documents.filter((doc) => {
-
-    const matchesSearch = doc.document_title.toLowerCase().includes(searchQuery.toLowerCase());
-
+    const matchesSearch = doc.document_title
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase());
     const matchesType =
-      selectedType && selectedType !== "All" ? doc.document_type === selectedType : true;
+      selectedType && selectedType !== "All"
+        ? doc.document_type === selectedType
+        : true;
 
     const matchesStakeholder =
-      selectedStakeholder && selectedStakeholder !== "All" ? (doc.stakeholders || []).includes(selectedStakeholder) : true;
+      selectedStakeholder && selectedStakeholder !== "All"
+        ? (doc.stakeholders || []).includes(selectedStakeholder)
+        : true;
 
     const matchesLanguage =
-      selectedLanguage && selectedLanguage !== "All" ? doc.language === selectedLanguage : true;
-
+      selectedLanguage && selectedLanguage !== "All"
+        ? doc.language === selectedLanguage
+        : true;
 
     // Filter by year, month, day
     const matchesDate = (() => {
@@ -127,8 +152,6 @@ export default function DocumentsTable() {
       return true; // Default to true if no specific condition matches
     })();
 
-
-
     // Filter by year Only
     // const matchesDate = (() => {
     //   if (!year) return true; // No year filter applied
@@ -137,28 +160,25 @@ export default function DocumentsTable() {
     //   return docDate.getFullYear() === parseInt(year);
     // })();
 
-
-    return matchesSearch && matchesType && matchesLanguage && matchesDate && matchesStakeholder;
-
-
+    return (
+      matchesSearch &&
+      matchesType &&
+      matchesLanguage &&
+      matchesDate &&
+      matchesStakeholder
+    );
   });
-
-
 
   //Handle the Delete Button Click
   const handleDeleteDocument = async (id) => {
     try {
       await API.deleteDocument(id);
       console.log("Document deleted successfully");
-      setDocuments((prev) =>
-        prev.filter((doc) => doc.document_id !== id)
-      );
+      setDocuments((prev) => prev.filter((doc) => doc.document_id !== id));
     } catch (error) {
       console.error("Error deleting document:", error);
     }
   };
-
-
 
   //Pagination
   const totalPages = Math.ceil(filteredDocuments.length / itemsPerPage);
@@ -167,17 +187,11 @@ export default function DocumentsTable() {
     currentPage * itemsPerPage
   );
 
-
-
-
-
   useEffect(() => {
     if (!selectedDocument) {
       setShowLinkInterface(false);
     }
   }, [selectedDocument]);
-
-
 
   return (
     <div className="max-w-6xl mx-auto p-6 pb-12 bg-white rounded shadow-md overflow-auto">
@@ -223,7 +237,10 @@ export default function DocumentsTable() {
 
       <div className=" mb-6 text-gray-700" style={{width: '20%'}}>
         <p className="font-semibold mb-2">Select Stakeholder:</p>
-        <Select onValueChange={setSelectedStakeholder} value={selectedStakeholder}>
+        <Select
+          onValueChange={setSelectedStakeholder}
+          value={selectedStakeholder}
+        >
           <SelectTrigger className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400">
             <SelectValue placeholder="All" />
           </SelectTrigger>
@@ -236,7 +253,6 @@ export default function DocumentsTable() {
           </SelectContent>
         </Select>
       </div>
-
       </div>
 
 
@@ -302,14 +318,16 @@ export default function DocumentsTable() {
             <TableHead className="w-1/5">Issuance Date</TableHead>
             <TableHead className="w-1/5">Type</TableHead>
             <TableHead className="w-1/5">Language</TableHead>
-            <TableHead className="w-1/4">Actions</TableHead>
+            <TableHead className="w-1/3">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {paginatedDocuments.length > 0 ? (
             paginatedDocuments.map((doc) => (
               <TableRow key={doc.document_title} className="hover:bg-gray-50">
-                <TableCell className="py-2 px-4">{doc.document_title}</TableCell>
+                <TableCell className="py-2 px-4">
+                  {doc.document_title}
+                </TableCell>
                 <TableCell className="py-2 px-4">{doc.issuance_date}</TableCell>
                 <TableCell className="py-2 px-4">{doc.document_type}</TableCell>
                 <TableCell className="py-2 px-4">{doc.language}</TableCell>
@@ -328,49 +346,91 @@ export default function DocumentsTable() {
                           >
                             Open
                           </button>
-
-
                         </DialogTrigger>
                         <DialogContent
                           className=" p-6 bg-white rounded-lg shadow-lg"
                           style={{ maxHeight: "140vh", overflowY: "auto" }}
                         >
                           <DialogTitle className="text-xl font-bold text-gray-800">
-                            {selectedDocument?.document_title || "No Document Selected"}
+                            {selectedDocument?.document_title ||
+                              "No Document Selected"}
                           </DialogTitle>
                           <DialogDescription className="text-gray-700">
-
                             {showLinkInterface ? (
                               <div className="mt-6 border-t pt-4">
-                                <DocumentLink initialDocument={selectedDocument} />
+                                <DocumentLink
+                                  initialDocument={selectedDocument}
+                                />
                               </div>
                             ) : (
-                              <div style={{ fontSize: "16px", margin: '10px' }}>
-
-                                <p className="m-2"><strong>Stakeholders:</strong> {selectedDocument?.stakeholders?.length > 0
-                                  ? selectedDocument.stakeholders.join(", ")
-                                  : "No Stakeholders"}</p>
-                                <p className="m-2"><strong>Scale:</strong> {selectedDocument?.scale}</p>
-                                <p className="m-2"><strong>Issuance Date:</strong> {selectedDocument?.issuance_date}</p>
-                                <p className="m-2"><strong>Type:</strong> {selectedDocument?.document_type}</p>
-                                <p className="m-2"><strong>Language:</strong> {selectedDocument?.language}</p>
-                                <p className="m-2"><strong>Pages:</strong> {selectedDocument?.pages}</p>
+                              <div style={{ fontSize: "16px", margin: "10px" }}>
+                                <p className="m-2">
+                                  <strong>Stakeholders:</strong>{" "}
+                                  {selectedDocument?.stakeholders?.length > 0
+                                    ? selectedDocument.stakeholders.join(", ")
+                                    : "No Stakeholders"}
+                                </p>
+                                <p className="m-2">
+                                  <strong>Scale:</strong>{" "}
+                                  {selectedDocument?.scale}
+                                </p>
+                                <p className="m-2">
+                                  <strong>Issuance Date:</strong>{" "}
+                                  {selectedDocument?.issuance_date}
+                                </p>
+                                <p className="m-2">
+                                  <strong>Type:</strong>{" "}
+                                  {selectedDocument?.document_type}
+                                </p>
+                                <p className="m-2">
+                                  <strong>Language:</strong>{" "}
+                                  {selectedDocument?.language}
+                                </p>
+                                <p className="m-2">
+                                  <strong>Pages:</strong>{" "}
+                                  {selectedDocument?.pages}
+                                </p>
                                 <div className="m-2 my-4">
-                                  <p><strong>Description:</strong> {selectedDocument?.document_description}</p>
+                                  <p>
+                                    <strong>Description:</strong>{" "}
+                                    {selectedDocument?.document_description}
+                                  </p>
                                 </div>
-                                <Button
-                                  variant="outline"
-                                  style={{ backgroundColor: "black", color: "white" }}
-                                  className="px-4 py-2 mt-4 text-white bg-blue-500 rounded hover:bg-blue-600"
-                                  onClick={() => setShowLinkInterface(true)}
-                                >
-                                  Link Documents
-                                </Button>
+                                {user?.role === "urban_planner" && (
+                                  <Button
+                                    variant="outline"
+                                    style={{
+                                      backgroundColor: "black",
+                                      color: "white",
+                                    }}
+                                    className="px-4 py-2 mt-4 text-white bg-blue-500 rounded hover:bg-blue-600"
+                                    onClick={() => setShowLinkInterface(true)}
+                                  >
+                                    Link Documents
+                                  </Button>
+                                )}
                               </div>
                             )}
                           </DialogDescription>
                         </DialogContent>
                       </Dialog>
+                    </div>
+                    <div className="ml-2">
+                      {user?.role === "urban_planner" && (
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <button className="px-3 py-1 text-sm border border-black rounded hover:bg-gray-100">
+                              <Upload className="w-4 h-4" />
+                            </button>
+                          </DialogTrigger>
+                          <DialogContent className="sm:max-w-xl">
+                            <DialogTitle>Upload Resources</DialogTitle>
+                            <DialogDescription>
+                              <FileUpload selectedDocument={doc} />
+                            </DialogDescription>
+                          </DialogContent>
+                        </Dialog>
+                      )}
                     </div>
 
                     <div>
@@ -378,25 +438,31 @@ export default function DocumentsTable() {
                         <DialogTrigger asChild>
                           <button
                             style={{ backgroundColor: "white", color: "black" }}
-                            className="px-4 ml-2"
-                            onClick={() => { setSelectedMapDocument(doc) }}
+                            className="px-2 ml-2"
+                            onClick={() => {
+                              setSelectedMapDocument(doc);
+                            }}
                           >
-                            <MapIcon color="black" alt="Open Map" label="Open Map"></MapIcon>
+                            <MapIcon
+                              color="black"
+                              alt="Open Map"
+                              label="Open Map"
+                            ></MapIcon>
                           </button>
                         </DialogTrigger>
                         <DialogContent className="max-w-2xl p-6 bg-white rounded-lg shadow-lg">
-                          <DialogTitle className="text-xl font-bold text-gray-800" style={{ backgroundColor: "transparent" }}>
+                          <DialogTitle
+                            className="text-xl font-bold text-gray-800"
+                            style={{ backgroundColor: "transparent" }}
+                          >
                             {doc.document_title} - Map View
                           </DialogTitle>
                           <DialogDescription className="mt-4">
-                            <DocumentMap
-                              document_id={doc.document_id}
-                            />
+                            <DocumentMap document_id={doc.document_id} />
                           </DialogDescription>
                         </DialogContent>
                       </Dialog>
                     </div>
-
 
                     {/* <div>
                       <Dialog>
@@ -410,60 +476,71 @@ export default function DocumentsTable() {
                       </Dialog>
                     </div> */}
 
-
-
                     <div>
-                      <Dialog
-                        open={openDeleteDialog} // Controlled by openDeleteDialog state
-                        onOpenChange={setOpenDeleteDialog} // Update state when the dialog is closed via outside click or Cancel
-                      >
-                        <DialogTrigger asChild>
-                          <button
-                            style={{ backgroundColor: "transparent", color: "black" }}
-                            className="px-2"
-                            onClick={() => {
-                              setDocumentToDelete(doc); // Set the document to delete
-                              setOpenDeleteDialog(true); // Open the delete confirmation dialog
-                            }}
-                          >
-                            <Trash2 color="black" className="h-5 w-5 inline-block" />
-                          </button>
-                        </DialogTrigger>
+                      {user?.role === "urban_planner" && (
+                        <Dialog
+                          open={openDeleteDialog} // Controlled by openDeleteDialog state
+                          onOpenChange={setOpenDeleteDialog} // Update state when the dialog is closed via outside click or Cancel
+                        >
+                          <DialogTrigger asChild>
+                            <button
+                              style={{
+                                backgroundColor: "transparent",
+                                color: "black",
+                              }}
+                              className="px-2"
+                              onClick={() => {
+                                setDocumentToDelete(doc); // Set the document to delete
+                                setOpenDeleteDialog(true); // Open the delete confirmation dialog
+                              }}
+                            >
+                              <Trash2
+                                color="black"
+                                className="h-5 w-5 inline-block"
+                              />
+                            </button>
+                          </DialogTrigger>
 
-                        <DialogContent className="p-4 bg-white rounded-lg shadow-lg">
-                          <DialogTitle className="text-xl font-bold text-gray-800">
-                            Confirm Deletion
-                          </DialogTitle>
-                          <DialogDescription className="text-gray-800 my-1">
-                            Are you sure you want to delete this document?
-                          </DialogDescription>
-                          <DialogFooter>
-                            <button
-                              style={{ backgroundColor: "black", color: "white" }}
-                              className="px-3 pb-1 text-sm text-white rounded"
-                              onClick={() => {
-                                setOpenDeleteDialog(false); // Close dialog
-                              }}
-                            >
-                              Cancel
-                            </button>
-                            <button
-                              style={{ backgroundColor: "red", color: "white" }}
-                              className="px-3 pb-1 text-sm text-white rounded"
-                              onClick={() => {
-                                handleDeleteDocument(documentToDelete.document_id); // Call delete function
-                                setOpenDeleteDialog(false); // Close dialog
-                              }}
-                            >
-                              Yes, Delete
-                            </button>
-                          </DialogFooter>
-                        </DialogContent>
-                      </Dialog>
+                          <DialogContent className="p-4 bg-white rounded-lg shadow-lg">
+                            <DialogTitle className="text-xl font-bold text-gray-800">
+                              Confirm Deletion
+                            </DialogTitle>
+                            <DialogDescription className="text-gray-800 my-1">
+                              Are you sure you want to delete this document?
+                            </DialogDescription>
+                            <DialogFooter>
+                              <button
+                                style={{
+                                  backgroundColor: "black",
+                                  color: "white",
+                                }}
+                                className="px-3 pb-1 text-sm text-white rounded"
+                                onClick={() => {
+                                  setOpenDeleteDialog(false); // Close dialog
+                                }}
+                              >
+                                Cancel
+                              </button>
+                              <button
+                                style={{
+                                  backgroundColor: "red",
+                                  color: "white",
+                                }}
+                                className="px-3 pb-1 text-sm text-white rounded"
+                                onClick={() => {
+                                  handleDeleteDocument(
+                                    documentToDelete.document_id
+                                  ); // Call delete function
+                                  setOpenDeleteDialog(false); // Close dialog
+                                }}
+                              >
+                                Yes, Delete
+                              </button>
+                            </DialogFooter>
+                          </DialogContent>
+                        </Dialog>
+                      )}
                     </div>
-
-
-
                   </div>
                 </TableCell>
               </TableRow>
@@ -494,7 +571,9 @@ export default function DocumentsTable() {
                 <PaginationLink
                   href="#"
                   onClick={() => setCurrentPage(index + 1)}
-                  className={currentPage === index + 1 ? "font-bold text-blue-500" : ""}
+                  className={
+                    currentPage === index + 1 ? "font-bold text-blue-500" : ""
+                  }
                 >
                   {index + 1}
                 </PaginationLink>
@@ -503,7 +582,9 @@ export default function DocumentsTable() {
             <PaginationItem>
               <PaginationNext
                 href="#"
-                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                onClick={() =>
+                  setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                }
               >
                 Next
               </PaginationNext>
