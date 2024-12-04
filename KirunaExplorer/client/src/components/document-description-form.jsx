@@ -352,7 +352,7 @@ const DocumentDescriptionForm = () => {
         <h1>
           Add new document        </h1>
       </div>
-      <Card className="min-w-[280px] max-w-[700px]">
+      <Card className="min-w-[280px] max-w-[750px]">
 
         <CardContent>
           <div className="text-muted-foreground mt-4 mb-4">
@@ -734,7 +734,7 @@ const DocumentDescriptionForm = () => {
                             <DialogTrigger asChild>
                               <Button variant="outline">Link documents</Button>
                             </DialogTrigger>
-                            <DialogContent className="sm:max-w-[605px] flex text-center items-center justify-center " style={{ border: "none" }}>
+                            <DialogContent className="sm:max-w-[805px] flex text-center items-center justify-center " style={{ border: "none" }}>
                               <div className="flex p-2 justify-center items-center text-center">
                                 <ScrollArea className="h-[700px] p-2" style={{ width: "100%", border: "none" }}>
                                   <DocumentLinkOnCreation
@@ -752,31 +752,35 @@ const DocumentDescriptionForm = () => {
                           </Dialog>
                         </FormControl>
                         <FormMessage />
-                        {temporaryLinks.length > 0 && (
-                          <div className="mt-4">
-                            <h3 className="text-sm font-semibold">
-                              Temporary Links:
-                            </h3>
-                            <ul className="list-disc pl-5 space-y-1">
-                              {temporaryLinks.map((link, index) => (
-                                <li key={index} className="text-sm">
-                                  {link.from} -- {link.to} ({link.type})
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
+                        
                       </FormItem>
                     )}
                   />
                 </div>
+
                 <div style={{ textAlign: "center" }}>
                   <Button type="submit" disabled={isPending} variant="outline" style={{ color: "white", backgroundColor: "black" }}>
                     Add document description
                   </Button>
                 </div>
-
               </div>
+                    <div>
+              {temporaryLinks.length > 0 && (
+                          <div className="mt-4">
+                            <h3 className="text-sm font-semibold">
+                              Temporary Links:
+                            </h3>
+                            <div className="list-disc">
+                              {temporaryLinks.map((link, index) => (
+                                <div key={index} className="text-md mt-4">
+                                  {index+1}{`)`} {link.from} <b>{`<->`}</b> {link.to} ({link.type})
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                    </div>
             </form>
           </Form>
         </CardContent>

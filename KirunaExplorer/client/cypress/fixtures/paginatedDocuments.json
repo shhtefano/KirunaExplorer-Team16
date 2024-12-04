@@ -1,0 +1,11 @@
+{
+    "documents": [
+      { "id": 1, "title": "Document 1", "language": "English" },
+      { "id": 2, "title": "Document 2", "language": "French" }
+    ],
+    "pagination": {
+      "currentPage": 1,
+      "totalPages": 2
+    }
+  }
+  

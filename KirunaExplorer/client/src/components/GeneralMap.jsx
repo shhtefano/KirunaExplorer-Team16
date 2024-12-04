@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from "react";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import L from "leaflet";
@@ -6,12 +7,16 @@ import { Modal, Button, Dropdown, Form } from "react-bootstrap";
 import "leaflet/dist/leaflet.css";
 import "leaflet-draw/dist/leaflet.draw.css";
 import API from "../services/API";
+import { EditControl } from "react-leaflet-draw";
 import { useAuth } from "@/contexts/AuthContext";
 import { Container } from "@mui/material";
 import ArticleIcon from '@mui/icons-material/Article';
 import { MapIcon } from "lucide-react";
 import CoordsMap from "./CoordsMap";
 import { Snackbar, Alert } from "@mui/material";
+import LinkIcon from "@mui/icons-material/Link";
+import DocumentLinksModal from "./link-list";
+import DocumentLink from "./document-link";
 
 // Configura l'icona di default di Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
@@ -59,11 +64,7 @@ const GeneralMap = () => {
   const [allDocs, setAllDocs] = useState([]);
   const [showModalLink, setShowModalLink] = useState(false); //modal per popup links
   const [showLinkInterface, setShowLinkInterface] = useState(false);
-  useEffect(() => {
-    if (!selectedDocument) {
-      setShowLinkInterface(false);
-    }
-  }, [selectedDocument]);
+ 
   const ZOOM_LEVEL = 7;
   const WHOLE_AREA_CENTER = { lat: 67.85572, lng: 20.22513 }; // Definisci le coordinate per Kiruna Map
   const WHOLE_AREA_ZOOM = 12; // Definisci un livello di zoom per Kiruna Map
@@ -104,29 +105,29 @@ const GeneralMap = () => {
 
           } else {
 
-            const filteredMarkers = markers.map((doc) => ({
-              id: doc.document_id,
-              type: "marker",
-              latlngs: [doc.geolocations[0].coordinates[0].lat, doc.geolocations[0].coordinates[0].long],
-              document: doc,
-            }));
+          const filteredMarkers = markers.map((doc) => ({
+            id: doc.document_id,
+            type: "marker",
+            latlngs: [doc.geolocations[0].coordinates[0].lat, doc.geolocations[0].coordinates[0].long],
+            document: doc,
+          }));
 
             const pointBasedDocuments = filteredMarkers.map((doc) => ({
-              id: doc.document.document_id,
-              document_title: doc.document.document_title,
-              description: doc.document.document_description,
-              stakeholder: doc.document.stakeholder,
-              scale: doc.document.scale,
-              issuance_date: doc.document.issuance_date,
-              language: doc.document.language,
-              pages: doc.document.pages,
-              document_type: doc.document.document_type,
-              area_name: doc.document.geolocations[0].area_name,
-              coordinates: doc.document.geolocations[0].coordinates,
-            }));
+            id: doc.document.document_id,
+            document_title: doc.document.document_title,
+            description: doc.document.document_description,
+            stakeholder: doc.document.stakeholder,
+            scale: doc.document.scale,
+            issuance_date: doc.document.issuance_date,
+            language: doc.document.language,
+            pages: doc.document.pages,
+            document_type: doc.document.document_type,
+            area_name: doc.document.geolocations[0].area_name,
+            coordinates: doc.document.geolocations[0].coordinates,
+          }));
 
             setFilteredDocuments(pointBasedDocuments); // Inizialmente mostra tutti i documenti
-            setFilteredMarkers(filteredMarkers);
+          setFilteredMarkers(filteredMarkers);
             setAllDocs(filteredMarkers);
 
           }
@@ -144,26 +145,26 @@ const GeneralMap = () => {
             setAllDocs([]);
 
           } else {
-            const filteredMarkers = markers.map((doc) => ({
-              id: doc.document_id,
-              type: "marker",
-              latlngs: [doc.geolocations[0].coordinates[0].lat, doc.geolocations[0].coordinates[0].long],
-              document: doc,
-            }));
+          const filteredMarkers = markers.map((doc) => ({
+            id: doc.document_id,
+            type: "marker",
+            latlngs: [doc.geolocations[0].coordinates[0].lat, doc.geolocations[0].coordinates[0].long],
+            document: doc,
+          }));
 
-            const wholeAreaDocs = filteredMarkers.map((doc) => ({
-              id: doc.document.document_id,
-              document_title: doc.document.document_title,
-              description: doc.document.document_description,
-              stakeholder: doc.document.stakeholder,
-              scale: doc.document.scale,
-              issuance_date: doc.document.issuance_date,
-              language: doc.document.language,
-              pages: doc.document.pages,
-              document_type: doc.document.document_type,
-              area_name: doc.document.geolocations[0].area_name,
-              coordinates: doc.document.geolocations[0].coordinates,
-            }));
+          const wholeAreaDocs = filteredMarkers.map((doc) => ({
+            id: doc.document.document_id,
+            document_title: doc.document.document_title,
+            description: doc.document.document_description,
+            stakeholder: doc.document.stakeholder,
+            scale: doc.document.scale,
+            issuance_date: doc.document.issuance_date,
+            language: doc.document.language,
+            pages: doc.document.pages,
+            document_type: doc.document.document_type,
+            area_name: doc.document.geolocations[0].area_name,
+            coordinates: doc.document.geolocations[0].coordinates,
+          }));
 
             setFilteredDocuments(wholeAreaDocs); // Set documents for Kiruna Map
             setFilteredMarkers(filteredMarkers);
@@ -183,7 +184,6 @@ const GeneralMap = () => {
   // Funzione per aprire popup dei documenti
   const handleMarkerClick = (document) => {
     setSelectedDocument(document);
-    setShowModal(true);
   };
 
   // Funzione per spostare la visuale della mappa in base al tipo di documento
@@ -279,13 +279,13 @@ const GeneralMap = () => {
 
             // Aggiorna lo stato locale
             setSelectedArea(selectedAreaObj);
-            setFilteredDocuments((prevDocuments) =>
-              prevDocuments.map((doc) =>
-                doc.id === selectedDocument.id
+          setFilteredDocuments((prevDocuments) =>
+            prevDocuments.map((doc) =>
+              doc.id === selectedDocument.id
                   ? { ...doc, area_name: selectedAreaName }
-                  : doc
-              )
-            );
+                : doc
+            )
+          );
           }
         } else {
           await API.updateDocumentCoordinates(selectedDocument.id, lat, long);
@@ -368,13 +368,13 @@ const GeneralMap = () => {
 
           {selectedArea && selectedArea.name === "Point-Based Documents" &&
             filteredMarkers.map((marker) => (
-              <Marker
-                key={`marker-${marker.id}`}
-                position={marker.latlngs}
+                  <Marker
+                    key={`marker-${marker.id}`}
+                    position={marker.latlngs}
                 icon={getMarkerIcon(marker.id)}
-                eventHandlers={{
-                  click: () => handleMarkerClick(marker.document),
-                }}
+                    eventHandlers={{
+                      click: () => {handleMarkerClick(marker.document); setShowModal(true)},
+                    }}
                 customId={marker.id}
               />
             ))
@@ -406,7 +406,7 @@ const GeneralMap = () => {
                   click: () => handleMarkerClick(marker.document),
                 }}
                 customId={marker.id}
-              />
+                  />
             ))}
 
           {selectedArea && <Polygon key={selectedArea.id} positions={selectedArea.latlngs} />}
@@ -417,8 +417,8 @@ const GeneralMap = () => {
 
         </MapContainer>
 
-        {/* Menu per cambiare tipo di mappa */}
-        <div className="mt-3 ">
+                {/* Menu per cambiare tipo di mappa */}
+                <div className="mt-3 ">
           <Button
             type="button"
             variant="outline-dark"
@@ -462,7 +462,7 @@ const GeneralMap = () => {
           <Dropdown.Menu>
             {areas && areas.map((area) => (
               <Dropdown.Item key={area.id} eventKey={area.id}>
-                {area.name}
+                    {area.name}
               </Dropdown.Item>
             ))}
           </Dropdown.Menu>
@@ -499,7 +499,7 @@ const GeneralMap = () => {
                 }}
                 onMouseEnter={() => setHoveredDocumentId(doc.id)}
                 onMouseLeave={() => setHoveredDocumentId(null)}
-                onClick={doc.area_name === "Kiruna Map" ? () => handleMarkerClick(doc) : () => changeMapPosition(doc)}
+                onClick={doc.area_name === "Kiruna Map" ? () => {handleMarkerClick(doc); setShowModal(true)} : () => changeMapPosition(doc)}
               >
                 <div className="p-2">
                   <h2><strong>{doc.document_title}</strong></h2>
@@ -535,7 +535,7 @@ const GeneralMap = () => {
                           color: hoveredDocumentId === doc.id ? 'white' : 'black',
                         }}
                         variant="outline"
-                        onClick={() => handleMarkerClick(doc)}
+                        onClick={() => {handleMarkerClick(doc); setShowModal(true)}}
                       >
                         <p style={{ fontSize: "12px" }}>
                           <ArticleIcon></ArticleIcon>
@@ -561,7 +561,7 @@ const GeneralMap = () => {
                           <MapIcon alt="Open Map" label="Open Map"></MapIcon>
                         </p>
                       </Button>
-                          {/* Pulsante per aprire il Modal */}
+                          {/* Pulsante per aprire il Modal dei link */}
                           <Button
                             className="mt-4"
                             style={{
@@ -573,10 +573,10 @@ const GeneralMap = () => {
                               color: hoveredDocumentId === doc.id ? "white" : "black",
                             }}
                             variant="outline"
-                            onClick={() => {
-                              setSelectedDocument(doc); // Imposta il documento selezionato
-                              setShowModal(false);
+                            onClick={(event) => {
+                              event.stopPropagation(); // Blocca la propagazione dell'evento
 
+                              setSelectedDocument(doc); // Imposta il documento selezionato
                               setShowModalLink(true); // Mostra il modal
                             }}
                             title="Show Links"
@@ -600,7 +600,7 @@ const GeneralMap = () => {
       </div>
 
      {/* Modal per visualizzare i link del documento */}
-     {selectedDocument && showModalLink && (
+          {selectedDocument && showModalLink && (
           <DocumentLinksModal   
           selectedDocument={selectedDocument} 
           showModalLink={showModalLink} 
@@ -608,7 +608,7 @@ const GeneralMap = () => {
 
           )}
       {/* Modal per visualizzare i dettagli del documento */}
-      {selectedDocument && showModal && !showEditCoordinatesModal && (
+      {selectedDocument && showModal && !showEditCoordinatesModal && !showModalLink && (
         <Modal style={{ marginTop: '8%' }} show={showModal} onHide={() => setShowModal(false)}>
           <Modal.Header closeButton>
             <Modal.Title>Document info</Modal.Title>
@@ -626,15 +626,21 @@ const GeneralMap = () => {
             </>
           </Modal.Body>
           <Modal.Footer>
+          <Button
+                           variant="dark"
+                            onClick={() => {setShowLinkInterface(true); setShowModal(false); }}
+                            >
+                              {`Link Documents to ${selectedDocument.document_title}`}
+                            </Button>
             <Button variant="dark" onClick={() => setShowModal(false)}>
               Close
             </Button>
           </Modal.Footer>
         </Modal>
       )}
-  {/* Modal to link documents */}
-  {selectedDocument && showLinkInterface && (
-<Modal show={showModalLink} onHide={() => setShowLinkInterface(false)} style={{ marginTop: '8%' }}>
+      {/* Modal to link documents */}
+      {selectedDocument && showLinkInterface && (
+<Modal show={showLinkInterface} onHide={() => setShowLinkInterface(false)} style={{ marginTop: '8%' }}>
       <Modal.Header closeButton>
         <Modal.Title>Links for {selectedDocument.document_title}</Modal.Title>
       </Modal.Header>

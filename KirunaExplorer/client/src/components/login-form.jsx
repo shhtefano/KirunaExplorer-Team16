@@ -40,7 +40,7 @@ export default function LoginForm() {
   };
 
   return (
-    <Card style={{ width: "400px", marginTop:"80px" }}>
+    <Card style={{ width: "400px", marginTop: "80px" }}>
       <CardHeader>
         <CardTitle className="text-2xl mb-2">Login</CardTitle>
 
@@ -51,7 +51,7 @@ export default function LoginForm() {
             <Label htmlFor="username">Username</Label>
             <Input
               id="username"
-              type="text"
+              name="username" // Aggiungi l'attributo name              type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               placeholder="Enter your username"
@@ -60,9 +60,10 @@ export default function LoginForm() {
             />
           </div>
           <div className="grid gap-2">
-          <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password">Password</Label>
             <Input
               id="password"
+              name="password" 
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -78,16 +79,16 @@ export default function LoginForm() {
           )}
           <div className="flex items-center justify-center">
 
-          <Button type="submit" variant="dark" disabled={isLoading} style={{ width: "30%" }}>
-            {isLoading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Logging in...
-              </>
-            ) : (
-              "Login"
-            )}
-          </Button>
+            <Button type="submit" variant="dark" disabled={isLoading} style={{ width: "30%" }}>
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Logging in...
+                </>
+              ) : (
+                "Login"
+              )}
+            </Button>
           </div>
         </form>
         {/* <Link to="/">

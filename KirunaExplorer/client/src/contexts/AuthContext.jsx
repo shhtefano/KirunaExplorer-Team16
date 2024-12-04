@@ -1,6 +1,6 @@
 /* eslint-disable no-useless-catch */
 import { createContext, useState, useContext, useEffect } from "react";
-import API from "@/services/API";
+import API from "../../src/services/API";
 
 const AuthContext = createContext(null);
 

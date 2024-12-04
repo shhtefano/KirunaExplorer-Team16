@@ -70,7 +70,7 @@ export default function DocumentLinkOnCreation({ onSave , initialDocumentTitle,t
   };
 
   return (
-    <Card className="min-w-[480px] max-w-[800px]" >
+    <Card className="min-w-[680px] max-w-[800px]" >
       <CardHeader style={{ border:"none"  }}>
         <CardTitle>Link Document to "{initialDocumentTitle}"</CardTitle>
       </CardHeader>
@@ -81,19 +81,22 @@ export default function DocumentLinkOnCreation({ onSave , initialDocumentTitle,t
             <h3 className="font-semibold text-sm">Temporary Links:</h3>
             <ul className="list-disc pl-5 space-y-1">
               {temporaryLinks.map((link, index) => (
+                <div key={index} style={{ display: "flex", flexDirection: "column", justifyContent: "justify-between", alignItems: "flex-start", marginTop: "10px" }}>
                 <li key={index} className="text-sm flex items-center space-x-2">
-                  <span>
-                    {link.from} -- {link.to} ({link.type})
-                  </span>
                   <Button
-                    variant="ghost"
+                    variant="outline"
                     size="sm"
                     className="text-red-500"
                     onClick={() => handleRemoveTemporaryLink(index)}
                   >
-                    Remove
+                    X
                   </Button>
+                  <span>
+                    {link.from} -- {link.to} ({link.type})
+                  </span>
                 </li>
+
+                </div>
               ))}
             </ul>
           </div>

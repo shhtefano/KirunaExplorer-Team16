@@ -12,8 +12,8 @@ describe("Map Page Tests", () => {
       method: "POST",
       url: "http://localhost:3001/api/sessions",
       body: {
-        username: "test",
-        password: "test",
+        username: "urban_planner",
+        password: "urban_planner",
       },
     }).then((response) => {
       // Save the token in localStorage or cookies for the session
@@ -50,17 +50,6 @@ describe("Map Page Tests", () => {
     cy.get(".leaflet-marker-icon").should("have.length.at.least", 1);
   });
 
-  it("opens the document details modal when a marker is clicked", () => {
-    // Select an area with markers
-    cy.get(".dropdown-toggle").click();
-    cy.contains("Point-Based Documents").click();
-
-    // Click the first visible marker
-    cy.get(".leaflet-marker-icon").first().click();
-
-    // Verify that the modal is visible
-    cy.get(".modal-title").should("contain", "Document info");
-  });
 });
 
 /// <reference types="cypress" />

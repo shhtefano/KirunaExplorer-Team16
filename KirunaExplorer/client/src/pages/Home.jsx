@@ -67,7 +67,7 @@ const HomePage = () => {
       <div className=" flex flex-col w-full h-full items-center justify-center p-2 space-y-4 text-center">
         <Card className="min-w-[750px] max-w-1200px] bg-white/90 backdrop-blur-sm">
           <CardHeader>
-            <CardTitle>Kiruna Explorer</CardTitle>
+            <CardTitle><h3>Kiruna Explorer</h3></CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4 text-left mt-2">

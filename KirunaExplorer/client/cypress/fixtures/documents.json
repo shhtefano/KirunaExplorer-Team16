@@ -1,0 +1,38 @@
+[
+    {
+      "id": 1,
+      "title": "Document 1",
+      "language": "English",
+      "author": "Author A",
+      "createdAt": "2023-12-01T10:00:00Z"
+    },
+    {
+      "id": 2,
+      "title": "Document 2",
+      "language": "French",
+      "author": "Author B",
+      "createdAt": "2023-12-02T11:00:00Z"
+    },
+    {
+      "id": 3,
+      "title": "Document 3",
+      "language": "Spanish",
+      "author": "Author C",
+      "createdAt": "2023-12-03T12:00:00Z"
+    },
+    {
+      "id": 4,
+      "title": "Document 4",
+      "language": "English",
+      "author": "Author D",
+      "createdAt": "2023-12-04T13:00:00Z"
+    },
+    {
+      "id": 5,
+      "title": "Document 5",
+      "language": "German",
+      "author": "Author E",
+      "createdAt": "2023-12-05T14:00:00Z"
+    }
+  ]
+  
