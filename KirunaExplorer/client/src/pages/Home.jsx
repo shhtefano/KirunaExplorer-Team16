@@ -74,7 +74,6 @@ const HomePage = () => {
               <div className="flex items-center justify-between">
                 <Button
                   style={{ minWidth: "200px" }}
-                  style={{ minWidth: "200px" }}
                   variant="outline"
                   className="flex items-center"
                   onClick={() => navigate("/documents/list")}
@@ -170,17 +169,18 @@ const HomePage = () => {
               )}
             </div>
           </CardContent>
-
         </Card>
         <div style={{ zIndex: 10, position: "relative", width: "800px" }}>
-          {!user && <div style={{ display: "flex", justifyContent: "center" }}>
-            <LoginForm />
-          </div>}
-          {user &&
+          {!user && (
+            <div style={{ display: "flex", justifyContent: "center" }}>
+              <LoginForm />
+            </div>
+          )}
+          {user && (
             <div style={{ display: "flex", justifyContent: "center" }}>
               <UserProfileCard user={user} />
             </div>
-          }
+          )}
         </div>
       </div>
 
