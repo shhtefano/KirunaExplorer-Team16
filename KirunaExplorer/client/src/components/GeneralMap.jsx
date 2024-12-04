@@ -57,6 +57,13 @@ const GeneralMap = () => {
   const [mapType, setMapType] = useState("satellite"); // Tipo di mappa selezionato
   const [areas, setAreas] = useState([]); // Stato per le aree
   const [allDocs, setAllDocs] = useState([]);
+  const [showModalLink, setShowModalLink] = useState(false); //modal per popup links
+  const [showLinkInterface, setShowLinkInterface] = useState(false);
+  useEffect(() => {
+    if (!selectedDocument) {
+      setShowLinkInterface(false);
+    }
+  }, [selectedDocument]);
   const ZOOM_LEVEL = 7;
   const WHOLE_AREA_CENTER = { lat: 67.85572, lng: 20.22513 }; // Definisci le coordinate per Kiruna Map
   const WHOLE_AREA_ZOOM = 12; // Definisci un livello di zoom per Kiruna Map
@@ -554,6 +561,30 @@ const GeneralMap = () => {
                           <MapIcon alt="Open Map" label="Open Map"></MapIcon>
                         </p>
                       </Button>
+                          {/* Pulsante per aprire il Modal */}
+                          <Button
+                            className="mt-4"
+                            style={{
+                              width: "70%",
+                              border: "1px solid #ddd",
+                              borderRadius: "8px",
+                              padding: "8px",
+                              backgroundColor: hoveredDocumentId === doc.id ? "#3e3b40" : "white",
+                              color: hoveredDocumentId === doc.id ? "white" : "black",
+                            }}
+                            variant="outline"
+                            onClick={() => {
+                              setSelectedDocument(doc); // Imposta il documento selezionato
+                              setShowModal(false);
+
+                              setShowModalLink(true); // Mostra il modal
+                            }}
+                            title="Show Links"
+                          >
+                            <p style={{ fontSize: "12px" }}>
+                              <LinkIcon alt="Show Links" label="Show Links" />
+                            </p>
+                          </Button>
                     </Container>
                   )}
                 </div>
@@ -568,6 +599,14 @@ const GeneralMap = () => {
 
       </div>
 
+     {/* Modal per visualizzare i link del documento */}
+     {selectedDocument && showModalLink && (
+          <DocumentLinksModal   
+          selectedDocument={selectedDocument} 
+          showModalLink={showModalLink} 
+          setShowModalLink={setShowModalLink}/>
+
+          )}
       {/* Modal per visualizzare i dettagli del documento */}
       {selectedDocument && showModal && !showEditCoordinatesModal && (
         <Modal style={{ marginTop: '8%' }} show={showModal} onHide={() => setShowModal(false)}>
@@ -593,7 +632,22 @@ const GeneralMap = () => {
           </Modal.Footer>
         </Modal>
       )}
-
+  {/* Modal to link documents */}
+  {selectedDocument && showLinkInterface && (
+<Modal show={showModalLink} onHide={() => setShowLinkInterface(false)} style={{ marginTop: '8%' }}>
+      <Modal.Header closeButton>
+        <Modal.Title>Links for {selectedDocument.document_title}</Modal.Title>
+      </Modal.Header>
+      <Modal.Body>
+        <DocumentLink selectedDocument={selectedDocument} />
+      </Modal.Body>
+      <Modal.Footer>
+        <Button variant="dark" onClick={() => setShowLinkInterface(false)}>
+          Close
+        </Button>
+      </Modal.Footer>
+    </Modal>
+      )}
       {/* Modal to change document position */}
       {selectedDocument && showEditCoordinatesModal && (
         <Modal
