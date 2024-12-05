@@ -31,19 +31,19 @@ sections:
 | Story | # Tasks | Points | Hours est. | Hours actual     |     |
 | ----- | ------- | ------ | ---------- | ---------------- | --- |
 | _#0_  | 3       | -      | 20h30m     | 20h              | --- |
-| 1 & 2 | 14      | -      | 20h        | 25h30m (25.6667) | FIX |
+| 1 & 2 | 14      | -      | 17h30m        | 25h45m | FIX |
 | 7     | 5       | 5      | 14h        | 11h45m           |     |
 | 8     | 4       | 3      | 7h         | 7h30m            |     |
 | 9     | 5       | 8      | 21h        | 14h30m           |     |
-| 19    | 5       | 3      | 17h        | 11h30m           |     |
+| 19    | 5       | 3      | 17h        | 11h       |     |
 
 > place technical tasks corresponding to story `#0` and leave out story points (not applicable in this case)
 
 - Hours per task (average, standard deviation)
-- Estimate: 3.40 ± 1.80 hours per task
-- Actual: 2.99 ± 1.68 hours per task
-- Total task estimation error ratio: sum of total hours estimation / sum of total hours spent -1
-- Total estimation error ratio: -8.63%
+- Estimate: 3,37 ore hours per task,  1,83 hours per task
+- Actual: 2,97 hours per task, 1,69 hours per task
+- Total task estimation error ratio: sum of total hours estimation / sum of total hours spent -1: +7,18%
+- Total estimation error ratio: −0.067
 
 ## QUALITY MEASURES
 
