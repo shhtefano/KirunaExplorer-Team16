@@ -24,6 +24,7 @@ Definition of done:
 - Code review completed
 - Code present on VCS
 - End-to-End tests performed
+- 
 
 ### Detailed statistics
 
