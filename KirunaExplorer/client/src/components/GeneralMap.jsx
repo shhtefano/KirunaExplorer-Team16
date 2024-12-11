@@ -17,6 +17,10 @@ import { Snackbar, Alert } from "@mui/material";
 import DocumentLinksModal from "./link-list";
 import LinkIcon from "@mui/icons-material/Link";
 import DocumentLink from "./document-link";
+import 'leaflet.markercluster';
+import 'leaflet.markercluster/dist/MarkerCluster.css';
+import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
+import * as turf from "@turf/turf";
 
 // Configura l'icona di default di Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
@@ -26,6 +30,29 @@ L.Icon.Default.mergeOptions({
   shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.3.1/images/marker-shadow.png",
 });
 
+const createCountIcon = (count) => {
+  return new L.DivIcon({
+    html: `
+      <div style="
+        background-color: grey;
+        background-opacity: 0.5;
+        color: black; 
+        border: 2px solid white; 
+        border-radius: 50%; 
+        width: 40px; 
+        height: 40px; 
+        display: flex; 
+        justify-content: center; 
+        align-items: center; 
+        font-size: 14px;
+        font-weight: bold;">
+        ${count}
+      </div>`,
+    className: "",
+    iconSize: [40, 40],
+    iconAnchor: [20, 20],
+  });
+};
 
 const tileLayers = {
   maptiler: {
@@ -91,7 +118,8 @@ const GeneralMap = () => {
       try {
         const response = await API.getDocumentsGeo();
         const documents = Array.isArray(response) ? response : [];
-
+        console.log(documents);
+        
         if (selectedArea.name === "Point-Based Documents") {
 
           let markers = documents.filter((document) => {
@@ -116,7 +144,7 @@ const GeneralMap = () => {
               id: doc.document.document_id,
               document_title: doc.document.document_title,
               description: doc.document.document_description,
-              stakeholder: doc.document.stakeholder,
+              stakeholders: doc.document.stakeholders,
               scale: doc.document.scale,
               issuance_date: doc.document.issuance_date,
               language: doc.document.language,
@@ -156,7 +184,7 @@ const GeneralMap = () => {
               id: doc.document.document_id,
               document_title: doc.document.document_title,
               description: doc.document.document_description,
-              stakeholder: doc.document.stakeholder,
+              stakeholders: doc.document.stakeholders,
               scale: doc.document.scale,
               issuance_date: doc.document.issuance_date,
               language: doc.document.language,
@@ -181,6 +209,116 @@ const GeneralMap = () => {
     fetchDocumentsGeo();
   }, [selectedArea]);
 
+  useEffect(() => {
+    const map = mapRef.current?.leafletElement || mapRef.current;
+  
+    if (map) {
+      // Rimuovi tutti i marker o cluster precedenti
+      map.eachLayer((layer) => {
+        if (layer instanceof L.Marker || layer instanceof L.MarkerClusterGroup) {
+          map.removeLayer(layer);
+        }
+      });
+    }
+  
+    if (selectedArea && selectedArea.name === "Point-Based Documents") {
+      renderMarkersWithClustering();
+    } else {
+      renderAreaMarkers();
+    }
+  }, [filteredMarkers, selectedArea]);
+  
+  // Funzione per renderizzare icone cluster aree
+  const renderAreaMarkers = () => {
+    const map = mapRef.current?.leafletElement || mapRef.current;
+    if (!map) return;
+  
+    // Rimuovi tutti i marker e cluster precedenti
+    map.eachLayer((layer) => {
+      if (layer instanceof L.Marker || layer instanceof L.MarkerClusterGroup) {
+        map.removeLayer(layer);
+      }
+    });
+  
+    // Aggiungi il marker dell'area solo se non è "Point-Based Documents"
+    if (selectedArea && selectedArea.name !== "Point-Based Documents") {
+      const documentsForArea = filteredDocuments.length;
+  
+      if (selectedArea.latlngs && selectedArea.latlngs.length > 0) {
+        let coordinates;
+  
+        // Verifica se è un poligono o un multipoligono
+        if (Array.isArray(selectedArea.latlngs[0])) {
+          // Multipoligono: latlngs è un array di array di punti
+          coordinates = selectedArea.latlngs.map((polygon) =>
+            polygon.map((point) => [point.lng, point.lat]) // Inverti lat/lng
+          );
+        } else {
+          // Poligono: latlngs è un array di punti
+          coordinates = [selectedArea.latlngs.map((point) => [point.lng, point.lat])];
+        }
+  
+        // Crea un oggetto GeoJSON
+        const geojson = {
+          type: "Feature",
+          geometry: {
+            type: "Polygon",
+            coordinates,
+          },
+        };
+  
+        try {
+          // Calcola il centroide usando Turf.js
+          const center = turf.centerOfMass(geojson);
+  
+          // Ottieni le coordinate del centroide
+          const [lng, lat] = center.geometry.coordinates;
+  
+          // Aggiungi il marker al centroide
+          const areaMarker = L.marker([lat, lng], {
+            icon: createCountIcon(documentsForArea),
+          });
+          map.addLayer(areaMarker);
+        } catch (error) {
+          console.error("Errore durante il calcolo del centroide:", error);
+        }
+      } else {
+        console.warn("Nessuna coordinate valida trovata per l'area selezionata.");
+      }
+    }
+  };
+  
+  
+  // Funzione per renderizzare icone cluster documenti point-based
+  const renderMarkersWithClustering = () => {
+    if (selectedArea && selectedArea.name === "Point-Based Documents") {
+      const map = mapRef.current?.leafletElement || mapRef.current;
+      if (!map) return;
+
+      // Crea un gruppo di cluster
+      const markerClusterGroup = L.markerClusterGroup();
+
+      // Aggiungi i marker al gruppo
+      filteredMarkers.forEach((marker) => {
+        const leafletMarker = L.marker(marker.latlngs, { icon: getMarkerIcon(marker.id) })
+          .on("click", () => {
+            handleMarkerClick(marker.document);
+            setShowModal(true);
+          });
+        markerClusterGroup.addLayer(leafletMarker);
+      });
+
+      // Rimuovi i cluster precedenti e aggiungi il nuovo gruppo alla mappa
+      map.eachLayer((layer) => {
+        if (layer instanceof L.MarkerClusterGroup) {
+          map.removeLayer(layer);
+        }
+      });
+
+      map.addLayer(markerClusterGroup);
+    }
+  };
+
   // Funzione per aprire popup dei documenti
   const handleMarkerClick = (document) => {
     setSelectedDocument(document);
@@ -190,40 +328,44 @@ const GeneralMap = () => {
   const changeMapPosition = (doc) => {
     const map = mapRef.current;
     if (!map) return;
-
+  
     // Check if the document is Point-Based Documents-based
     if (doc.area_name === "Point-Based Documents") {
       // Use the document's updated coordinates for a Point-Based Documents-based location
       const [lat, lng] = [doc.coordinates[0].lat, doc.coordinates[0].long];
-      map.setView([lat, lng], ZOOM_LEVEL);
+      map.setView([lat, lng], 13);
     } else if (doc.area_name === "Kiruna Map") {
       // If the document is "Kiruna Map", use predefined coordinates for the entire area
-      map.setView([WHOLE_AREA_CENTER.lat, WHOLE_AREA_CENTER.lng], WHOLE_AREA_ZOOM);
+      map.setView([WHOLE_AREA_CENTER.lat, WHOLE_AREA_CENTER.lng], 13);
     }
-
-    // Update the selected marker ID (after setting map view)
+  
+    // Update the selected marker ID (trigger a re-render of markers)
     setSelectedMarkerId(doc.id);
+  
+    // Force markers to update
+    setFilteredMarkers((prevMarkers) => [...prevMarkers]);
   };
+  
 
   // Funzione per cambiare colore icona
   const getMarkerIcon = (id) => {
     return id === selectedMarkerId
       ? new L.Icon({
-        iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png", // Icona rossa per il marker selezionato
-        iconSize: [25, 41],
-        iconAnchor: [12, 41],
-        popupAnchor: [1, -34],
-        shadowSize: [41, 41],
-      })
+          iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png", // Icona rossa per il marker selezionato
+          iconSize: [25, 41],
+          iconAnchor: [12, 41],
+          popupAnchor: [1, -34],
+          shadowSize: [41, 41],
+        })
       : new L.Icon({
-        iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.3.1/images/marker-icon.png", // Icona blu per gli altri marker
-        iconSize: [25, 41],
-        iconAnchor: [12, 41],
-        popupAnchor: [1, -34],
-        shadowSize: [41, 41],
-      });
+          iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.3.1/images/marker-icon.png", // Icona blu per gli altri marker
+          iconSize: [25, 41],
+          iconAnchor: [12, 41],
+          popupAnchor: [1, -34],
+          shadowSize: [41, 41],
+        });
   };
-
+  
   // Funzione per gestire la ricerca
   const handleSearchChange = (event) => {
     const query = event.target.value;
@@ -246,8 +388,6 @@ const GeneralMap = () => {
     }
   };
 
-
-
   const changeDocumentPosition = (document) => {
     setSelectedDocument(document);
     setShowEditCoordinatesModal(true);
@@ -262,6 +402,7 @@ const GeneralMap = () => {
       coordinates: [{ lat, long }],
     }));
   }
+
   const submitNewDocumentPosition = async () => {
 
     if (selectedDocument) {
@@ -338,35 +479,77 @@ const GeneralMap = () => {
   const handleAreaChange = (areaId) => {
     const selected = areas.find((area) => area.id === parseInt(areaId, 10));
     setSelectedArea(selected);
-
+  
     // Centra la mappa se l'area ha coordinate
-    if (selected.latlngs.length > 0) {
-      const [firstPoint] = selected.latlngs[0];
+    if (selected.latlngs && selected.latlngs.length > 0) {
+      // Controlla se `selected.latlngs[0]` è un array (per multipoligoni)
+      const firstPoint = Array.isArray(selected.latlngs[0])
+        ? selected.latlngs[0][0] // Prendi il primo punto del primo poligono
+        : selected.latlngs[0];   // Usa direttamente il primo punto (se non è multipoligono)
+  
       setCenter(firstPoint);
+    } else {
+      console.warn("L'area selezionata non ha coordinate valide.");
+    }
+  
+    if (selected.name !== "Point-Based Documents") {
+      renderAreaMarkers();
     }
   };
 
 
   return (
-    <div className="row" style={{ padding: '0px', width: '100%', margin: '0', height: '650px' }}>
+    <div className="row" style={{ padding: '0px', width: '100%', marginLeft: '10px', height: '80vh' }}>
 
       {/* Mappa */}
-      <div className="col-12 col-md-8 text-center ">
+      <div className="col-12 col-md-9 text-center ">
+        {/* Menu per cambiare tipo di mappa */}
+        <div className="mb-3 ">
+          <Button
+            type="button"
+            variant="outline-dark"
+            className={`btn ${mapType === "maptiler" ? "btn-dark" : "btn-outline-primary"} rounded-pill`}
+            style={{ color: `${mapType === "maptiler" ? "white" : "black"}`, fontSize: "12px" }}
+            onClick={() => setMapType("maptiler")}
+          >
 
+            MAPTILER
+          </Button>
+          <Button
+            type="button"
+            variant="outline-dark"
+
+            className={`ml-3 btn ${mapType === "satellite" ? "btn-dark" : "btn-outline-primary"} rounded-pill`}
+            style={{ color: `${mapType === "satellite" ? "white" : "black"}`, fontSize: "12px" }}
+            onClick={() => setMapType("satellite")}
+          >
+            SATELLITE
+          </Button>
+          <Button
+            type="button"
+            variant="outline-dark"
+
+            className={`ml-3 btn ${mapType === "dark" ? "btn-dark" : "btn-outline-primary"} rounded-pill`}
+            style={{ color: `${mapType === "dark" ? "white" : "black"}`, fontSize: "12px" }}
+            onClick={() => setMapType("dark")}
+          >
+            DARK
+          </Button>
+        </div>
         <MapContainer ref={mapRef} center={center} zoom={ZOOM_LEVEL} style={{ height: "100%", width: "100%" }}>
 
-          {selectedArea && selectedArea.name === "Kiruna Map" &&
+          {selectedArea && selectedArea.name !== "Point-Based Documents" &&
             selectedArea.latlngs.map((polygon, index) => (
               <Polygon
-
                 key={`polygon-${selectedArea.id}-${index}`}
                 positions={polygon}
                 pathOptions={{ color: "blue" }}
-
               />
-            ))}
+            ))
+          }
 
-          {selectedArea && selectedArea.name === "Point-Based Documents" &&
+
+          {/* {selectedArea && selectedArea.name === "Point-Based Documents" &&
             filteredMarkers.map((marker) => (
               <Marker
                 key={`marker-${marker.id}`}
@@ -378,11 +561,9 @@ const GeneralMap = () => {
                 customId={marker.id}
               />
             ))
-          }
+          } */}
 
           {selectedArea && selectedArea.name === "Point-Based Documents" &&
-
-
             areas.filter(area => area.name === 'Kiruna Map').map((area) => (
               area.latlngs.map((polygon, index) => (
                 <Polygon
@@ -417,44 +598,12 @@ const GeneralMap = () => {
 
         </MapContainer>
 
-        {/* Menu per cambiare tipo di mappa */}
-        <div className="mt-3 ">
-          <Button
-            type="button"
-            variant="outline-dark"
-            className={`btn ${mapType === "maptiler" ? "btn-dark" : "btn-outline-primary"} rounded-pill`}
-            style={{ color: `${mapType === "maptiler" ? "white" : "black"}`, fontSize: "12px" }}
-            onClick={() => setMapType("maptiler")}
-          >
 
-            MAPTILER
-          </Button>
-          <Button
-            type="button"
-            variant="outline-dark"
-
-            className={`ml-3 btn ${mapType === "satellite" ? "btn-dark" : "btn-outline-primary"} rounded-pill`}
-            style={{ color: `${mapType === "satellite" ? "white" : "black"}`, fontSize: "12px" }}
-            onClick={() => setMapType("satellite")}
-          >
-            SATELLITE
-          </Button>
-          <Button
-            type="button"
-            variant="outline-dark"
-
-            className={`ml-3 btn ${mapType === "dark" ? "btn-dark" : "btn-outline-primary"} rounded-pill`}
-            style={{ color: `${mapType === "dark" ? "white" : "black"}`, fontSize: "12px" }}
-            onClick={() => setMapType("dark")}
-          >
-            DARK
-          </Button>
-        </div>
 
       </div>
 
       {/* Sidebar con Dropdown, Search e Lista dei Documenti */}
-      <div className="col-12 col-md-4">
+      <div className="col-12 col-md-3 text-center">
         {/* Dropdown per selezionare l'area */}
 
         <Dropdown onSelect={(eventKey) => handleAreaChange(eventKey)} className="mb-3">
@@ -479,7 +628,7 @@ const GeneralMap = () => {
         />
 
         {/* Lista dei documenti filtrati */}
-        <div style={{ maxHeight: '550px', overflowY: 'auto' }}>
+        <div style={{ maxHeight: '65vh', overflowY: 'auto' }}>
           {selectedArea && filteredDocuments.length > 0 ? filteredDocuments.map((doc) => (
             <div key={doc.id}>
               <div
@@ -502,27 +651,30 @@ const GeneralMap = () => {
                 onMouseLeave={() => setHoveredDocumentId(null)}
                 onClick={doc.area_name === "Kiruna Map" ? () => { handleMarkerClick(doc); setShowModal(true) } : () => changeMapPosition(doc)}
               >
-                <div className="p-2">
+
+                {/*DOCUMENTI*/}
+
+                <div className="p-2 text-left">
                   <h2><strong>{doc.document_title}</strong></h2>
-                  <p className="mt-3"><strong>Type:</strong> {doc.document_type}</p>
+                  <p className="mt-1"><strong>Type:</strong> {doc.document_type}</p>
                   <p className="mt-1"><strong>Date:</strong> {doc.issuance_date}</p>
                   {/* <p className="mt-1"><strong>Area:</strong> {doc.area_name === "Point-Based Documents" ? "Point-Based Documents" : doc.area_name}</p> */}
                   {/* Mostra le coordinate */}
-                  {doc.coordinates && doc.coordinates.length > 0 && doc.area_name === "Point-Based Documents" && (
+                  {/* {doc.coordinates && doc.coordinates.length > 0 && doc.area_name === "Point-Based Documents" && (
                     <p className="mt-1">
                       {doc.coordinates.map((coord, index) => (
                         <span className="" key={index}>
-                          <strong>LAT:</strong> {coord.lat.toFixed(6)}  <strong>LONG:</strong> {coord.long.toFixed(6)}
+                          <strong>LAT:</strong> {coord.lat.toFixed(6)}  <strong> <br/>LONG:</strong> {coord.long.toFixed(6)}
                         </span>
                       ))}
                     </p>
-                  )}
+                  )} */}
                 </div>
 
                 {/* OPEN DOCUMENT AND CHANGE POSITION BUTTON*/}
                 <div>
                   {user && user.role === "urban_planner" && (
-                    <Container className="flex flex-row gap-x-4 text-center">
+                    <Container className="flex flex-row gap-x-2 text-center">
 
 
                       <Button
@@ -531,14 +683,14 @@ const GeneralMap = () => {
                           width: "70%",
                           border: "1px solid #ddd",
                           borderRadius: "8px",
-                          padding: "8px",
+                          padding: "4px",
                           backgroundColor: hoveredDocumentId === doc.id ? '#3e3b40' : 'white',
                           color: hoveredDocumentId === doc.id ? 'white' : 'black',
                         }}
                         variant="outline"
                         onClick={() => { handleMarkerClick(doc); setShowModal(true) }}
                       >
-                        <p style={{ fontSize: "12px" }}>
+                        <p style={{ fontSize: "8px" }}>
                           <ArticleIcon></ArticleIcon>
                         </p>
                       </Button>
@@ -551,14 +703,14 @@ const GeneralMap = () => {
                           width: "70%",
                           border: "1px solid #ddd",
                           borderRadius: "8px",
-                          padding: "8px",
+                          padding: "4px",
                           backgroundColor: hoveredDocumentId === doc.id ? '#3e3b40' : 'white',
                           color: hoveredDocumentId === doc.id ? 'white' : 'black',
                         }}
                         variant="outline"
                         onClick={() => changeDocumentPosition(doc)}
                       >
-                        <p style={{ fontSize: "12px" }}>
+                        <p style={{ fontSize: "8px" }}>
                           <MapIcon alt="Open Map" label="Open Map"></MapIcon>
                         </p>
                       </Button>
@@ -569,7 +721,7 @@ const GeneralMap = () => {
                           width: "70%",
                           border: "1px solid #ddd",
                           borderRadius: "8px",
-                          padding: "8px",
+                          padding: "4px",
                           backgroundColor: hoveredDocumentId === doc.id ? "#3e3b40" : "white",
                           color: hoveredDocumentId === doc.id ? "white" : "black",
                         }}
@@ -582,7 +734,7 @@ const GeneralMap = () => {
                         }}
                         title="Show Links"
                       >
-                        <p style={{ fontSize: "12px" }}>
+                        <p style={{ fontSize: "8px" }}>
                           <LinkIcon alt="Show Links" label="Show Links" />
 
                         </p>
@@ -616,15 +768,15 @@ const GeneralMap = () => {
             <Modal.Title>Document info</Modal.Title>
           </Modal.Header>
           <Modal.Body>
-            <p><strong>Name:</strong> {selectedDocument.document_title}</p>
-            <p><strong>Document Type:</strong> {selectedDocument.document_type}</p>
-            <p><strong>Stakeholder:</strong> {selectedDocument.stakeholder}</p>
-            <p><strong>Date:</strong> {selectedDocument.issuance_date}</p>
-            <p><strong>Description:</strong> {selectedDocument.description}</p>
-            <p><strong>Scale:</strong> {selectedDocument.scale}</p>
+            <p style={{marginBottom:'10px'}}><strong>Title:</strong> {selectedDocument.document_title}</p>
+            <p style={{marginBottom:'10px'}}><strong>Document Type:</strong> {selectedDocument.document_type}</p>
+            <p style={{marginBottom:'10px'}}><strong>Stakeholders:</strong> {selectedDocument.stakeholders.length>0? selectedDocument.stakeholders.join(', ') : selectedDocument.stakeholders}</p>
+            <p style={{marginBottom:'10px'}}><strong>Date:</strong> {selectedDocument.issuance_date}</p>
+            <p style={{marginBottom:'10px'}}><strong>Description:</strong> {selectedDocument.description}</p>
+            <p style={{marginBottom:'10px'}}><strong>Scale:</strong> {selectedDocument.scale}</p>
             <>
-              {selectedDocument.language && <p><strong>Language:</strong> {selectedDocument.language}</p>}
-              {selectedDocument.pages && <p><strong>Pages:</strong> {selectedDocument.pages}</p>}
+              {selectedDocument.language && <p style={{marginBottom:'10px'}}><strong>Language:</strong> {selectedDocument.language}</p>}
+              {selectedDocument.pages && <p style={{marginBottom:'10px'}}><strong>Pages:</strong> {selectedDocument.pages}</p>}
             </>
           </Modal.Body>
           <Modal.Footer>

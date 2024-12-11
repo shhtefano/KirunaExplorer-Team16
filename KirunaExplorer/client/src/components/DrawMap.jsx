@@ -211,10 +211,44 @@ const DrawMap = () => {
     
 
     return (
-        <div className="row" style={{ height: "600px", width: "100%", maxHeight: "600px" }}>
+        <div className="row" style={{ height: "90vh", width: "100%", maxHeight: "90vh" }}>
+                         {/* Menu per cambiare tipo di mappa */}
+
             {/* Colonna sinistra: mappa */}
-            <div className="col-md-9 text-center">
-                <MapContainer center={center} zoom={7} style={{ height: "100%", width: "100%", maxHeight: "600px" }}>
+            <div className="col-md-10 text-center">
+                         <div className="mb-3 text-center">
+          <Button
+            type="button"
+            variant="outline-dark"
+            className={`btn ${mapType === "maptiler" ? "btn-dark" : "btn-outline-primary"} rounded-pill`}
+            style={{ color: `${mapType === "maptiler" ? "white" : "black"}`, fontSize: "12px" }}
+            onClick={() => setMapType("maptiler")}
+          >
+
+            MAPTILER
+          </Button>
+          <Button
+            type="button"
+            variant="outline-dark"
+
+            className={`ml-3 btn ${mapType === "satellite" ? "btn-dark" : "btn-outline-primary"} rounded-pill`}
+            style={{ color: `${mapType === "satellite" ? "white" : "black"}`, fontSize: "12px" }}
+            onClick={() => setMapType("satellite")}
+          >
+            SATELLITE
+          </Button>
+          <Button
+            type="button"
+            variant="outline-dark"
+
+            className={`ml-3 btn ${mapType === "dark" ? "btn-dark" : "btn-outline-primary"} rounded-pill`}
+            style={{ color: `${mapType === "dark" ? "white" : "black"}`, fontSize: "12px" }}
+            onClick={() => setMapType("dark")}
+          >
+            DARK
+          </Button>
+        </div>
+                <MapContainer center={center} zoom={7} style={{ height: "100%", width: "100%", maxHeight: "80vh" }}>
                     <FeatureGroup ref={featureGroupRef}>
                         <EditControl
                             position="topright"
@@ -323,37 +357,11 @@ const DrawMap = () => {
                     </Modal.Footer>
                 </Modal>
 
-                {/* Menu per cambiare tipo di mappa */}
-                <div className="mt-3">
-                    <Button
-                        type="button"
-                        variant={mapType === "maptiler" ? "dark" : "outline-dark"}
-                        onClick={() => setMapType("maptiler")}
-                    >
-                        MAPTILER
-                    </Button>
-                    <Button
-                        type="button"
-                        variant={mapType === "satellite" ? "dark" : "outline-dark"}
-                        className="ml-3"
-                        onClick={() => setMapType("satellite")}
-                    >
-                        SATELLITE
-                    </Button>
-                    <Button
-                        type="button"
-                        variant={mapType === "dark" ? "dark" : "outline-dark"}
-                        className="ml-3"
-                        onClick={() => setMapType("dark")}
-                    >
-                        DARK
-                    </Button>
-                </div>
-
+   
             </div>
 
             {/* Colonna destra: lista delle aree */}
-            <div className="col-md-3 bg-light p-3" style={{ maxHeight: "600px" }}>
+            <div className="col-md-2 bg-light p-3" style={{ height: "70vh"}}>
                 <div className="d-flex justify-content-center mb-4">
                     <Button type="button" variant="dark" onClick={viewMode === 'polygons' ? () => setViewMode('markers') : () => setViewMode('polygons')}>
                         Switch View Mode: {viewMode === 'polygons' ? 'Markers' : 'Polygons'}
