@@ -92,7 +92,7 @@ export function AppSidebar({ ...props }) {
       <SidebarHeader>
         <TeamSwitcher teams={data.teams} />
       </SidebarHeader>
-      <SidebarContent style={{ overflow: "hidden !important " }}>
+      <SidebarContent style={{ overflow: "hidden " }}>
         <NavMain items={navItems} />
       </SidebarContent>
       <SidebarFooter style={{ overflow: "hidden", margin: 0, padding: 0 }}>
