@@ -45,6 +45,7 @@ import { useAuth } from "../contexts/AuthContext";
 export default function DocumentsTable() {
   const [documents, setDocuments] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchKeyword, setSearchKeyword] = useState("");
   const [selectedType, setSelectedType] = useState("");
   const [selectedStakeholder, setSelectedStakeholder] = useState("");
   const [selectedLanguage, setSelectedLanguage] = useState("");
@@ -89,6 +90,7 @@ export default function DocumentsTable() {
 
   const languages = ["All", "English", "Swedish"];
 
+
   const [selectedMapDocument, setSelectedMapDocument] = useState(null);
   const [selectedDocument, setSelectedDocument] = useState(null);
   const [showLinkInterface, setShowLinkInterface] = useState(false);
@@ -112,6 +114,11 @@ export default function DocumentsTable() {
     const matchesSearch = doc.document_title
       .toLowerCase()
       .includes(searchQuery.toLowerCase());
+
+    const matchesDescription = doc.document_description
+      ?.toLowerCase()
+      .includes(searchKeyword.toLowerCase());
+    
     const matchesType =
       selectedType && selectedType !== "All"
         ? doc.document_type === selectedType
@@ -152,16 +159,10 @@ export default function DocumentsTable() {
       return true; // Default to true if no specific condition matches
     })();
 
-    // Filter by year Only
-    // const matchesDate = (() => {
-    //   if (!year) return true; // No year filter applied
-    //   const docDate = new Date(doc.issuance_date);
-    //   console.log(doc.issuance_date);
-    //   return docDate.getFullYear() === parseInt(year);
-    // })();
 
     return (
       matchesSearch &&
+      matchesDescription &&
       matchesType &&
       matchesLanguage &&
       matchesDate &&
@@ -187,6 +188,7 @@ export default function DocumentsTable() {
     currentPage * itemsPerPage
   );
 
+  
   useEffect(() => {
     if (!selectedDocument) {
       setShowLinkInterface(false);
@@ -300,13 +302,24 @@ export default function DocumentsTable() {
   </div>
 </div>
 
-
+      {/* search by title of documents */}
       <div className="mb-6 mt-4 text-gray-700">
         {/* <p className="font-semibold mb-2">Search Document Title:</p> */}
         <Input
           placeholder="Search by document title"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+        />
+      </div>
+
+      {/* search based on keywords in the description of documents */}
+      <div className="mb-6 mt-4 text-gray-700">
+        {/* <p className="font-semibold mb-2">Search Document Title:</p> */}
+        <Input
+          placeholder="Type Keywords"
+          value={searchKeyword}
+          onChange={(e) => setSearchKeyword(e.target.value)}
           className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
         />
       </div>
