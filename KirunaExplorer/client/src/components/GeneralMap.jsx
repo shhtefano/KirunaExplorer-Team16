@@ -502,7 +502,7 @@ const GeneralMap = () => {
     <div className="row" style={{ padding: '0px', width: '100%', marginLeft: '10px', height: '88vh' }}>
 
       {/* Mappa */}
-      <div className="col-12 col-md-9 text-center " style={{border: '7px solid #242424', padding:'0', borderRadius: '20px'}}>
+      <div className="col-12 col-md-9 text-center " style={{ padding:'0'}}>
 
 
         <MapContainer ref={mapRef} center={center} zoom={ZOOM_LEVEL} style={{ height: "100%", width: "100%", maxHeight: "88vh", borderRadius: '10px' }}>

@@ -70,11 +70,6 @@ const data = {
 export function AppSidebar({ ...props }) {
   const { user } = useAuth();
 
-  // Keep all menu items for urban_planner, only show Map for others
-  // const navItems =
-  //   user?.role === "urban_planner"
-  //     ? data.navMain // Show all items
-  //     : data.navMain.filter((item) => item.title === "Map" | item.title === "Documents"); // Only show Map
   const navItems =
     user?.role === "urban_planner"
       ? data.navMain
@@ -97,13 +92,13 @@ export function AppSidebar({ ...props }) {
       <SidebarHeader>
         <TeamSwitcher teams={data.teams} />
       </SidebarHeader>
-      <SidebarContent style={{ overflow: "hidden"}}>
+      <SidebarContent style={{ overflow: "hidden !important " }}>
         <NavMain items={navItems} />
       </SidebarContent>
       <SidebarFooter style={{ overflow: "hidden", margin: 0, padding: 0 }}>
         <NavUser user={data.user} />
       </SidebarFooter>
-      <SidebarRail />
+      {/* <SidebarRail /> */}
     </Sidebar>
   );
 }

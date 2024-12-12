@@ -53,13 +53,25 @@ const DrawMap = () => {
         const fetchMapLayers = async () => {
             try {
                 const areas = await API.getGeoArea();
+                const documents = await API.getDocumentsGeo();
+                console.log(documents);
+
                 const filteredAreas = areas.filter(area => area.name !== 'Point-Based Documents');
 
-                setMapLayers(filteredAreas);
-                setFilteredLayers(filteredAreas); // Inizialmente tutte le aree sono visualizzate
+                // Associa i documenti alle aree
+                const areasWithDocuments = filteredAreas.map((area) => {
+                    const associatedDocuments = documents.filter((doc) =>
+                        doc.geolocations.some((geo) => geo.area_name === area.name)
+                    );
+                    return { ...area, documents: associatedDocuments };
+                });
+
+
+                setMapLayers(areasWithDocuments);
+                setFilteredLayers(areasWithDocuments); // Inizialmente tutte le aree sono visualizzate
 
                 // Seleziona di default l'area chiamata "Kiruna Map"
-                const defaultSelected = filteredAreas.find(area => area.name === "Kiruna Map");
+                const defaultSelected = areasWithDocuments.find(area => area.name === "Kiruna Map");
                 if (defaultSelected) {
                     setSelectedAreas([defaultSelected.name]);
                 }
@@ -215,89 +227,148 @@ const DrawMap = () => {
             {/* Menu per cambiare tipo di mappa */}
 
             {/* Colonna sinistra: mappa */}
-            <div className="col-9 col-md-9 text-center" style={{border: '7px solid #242424', padding:'0', borderRadius: '20px'}}>
+            <div className="col-9 col-md-9 text-center" style={{  padding: '0' }}>
 
                 <MapContainer center={center} zoom={7} style={{ height: "100%", width: "100%", maxHeight: "88vh", borderRadius: '10px' }}>
                     <div>
-                    <FeatureGroup ref={featureGroupRef}>
-                        <EditControl
-                            position="topright"
-                            onCreated={(e) => {
-                                const { layerType, layer } = e;
-                                if (layerType === "polygon") {
-                                    setCurrentLayer(layer);
-                                    setShowModal(true);
-                                }
-                            }}
+                        <FeatureGroup ref={featureGroupRef}>
+                            <EditControl
+                                position="topright"
+                                onCreated={(e) => {
+                                    const { layerType, layer } = e;
+                                    if (layerType === "polygon") {
+                                        setCurrentLayer(layer);
+                                        setShowModal(true);
+                                    }
+                                }}
 
-                            draw={{
-                                rectangle: false,
-                                circle: false,
-                                circlemarker: false,
-                                marker: false,
-                                polyline: false,
-                            }}
-                            edit={{
-                                edit: false,
-                                remove: false, // Disabilita il pulsante di cancellazione
+                                draw={{
+                                    rectangle: false,
+                                    circle: false,
+                                    circlemarker: false,
+                                    marker: false,
+                                    polyline: false,
+                                }}
+                                edit={{
+                                    edit: false,
+                                    remove: false, // Disabilita il pulsante di cancellazione
 
-                            }}
+                                }}
+                            />
+                            {/* Visualizza i poligoni quando in modalità 'polygons' */}
+                            {filteredLayers.map((layer) =>
+                                layer.latlngs ? (
+                                    <React.Fragment key={layer.id}>
+                                        {selectedAreas.length > 0 && selectedAreas.includes(layer.name) && viewMode === 'polygons' && (
+                                            <Polygon positions={layer.latlngs} pathOptions={{
+                                                color: layer.name === "Kiruna Map" ? "white" : "blue", // Usa rosso per "Kiruna Map", altrimenti blu
+                                                weight: 2,
+                                                opacity: 1,
+                                            }}>
+                                                      <Popup>
+                                                    <div className="d-flex flex-column text-center">
+                                                        <p style={{fontSize:'10pt'}}><strong>Area:</strong> {layer.name}</p>
+                                                        {layer.documents && layer.documents.length > 0 ? <div>
+                                                            <p style={{fontSize:'10pt'}}><strong>Documents {"(" + layer.documents.length +")"}</strong></p>
+                                                            <ul style={{ listStyleType: "none", padding: 0 }}>
+                                                                {layer.documents && layer.documents.length > 0 ? (
+                                                                    layer.documents.map((doc, index) => (
+                                                                        <li key={index} style={{textAlign:'left'}}>
+                                                                             • <i>{doc.document_title}</i>
+                                                                        </li>
+                                                                    ))
+                                                                ) : (
+                                                                    <li>No documents available</li>
+                                                                )}
+                                                            </ul>
+                                                        </div> : <p>No documents available</p>}
+                                                    </div>
+                                                </Popup>
+
+
+                                            </Polygon>
+                                        )}
+                                        {/* Visualizza i marker quando in modalità 'markers' */}
+                                        {selectedAreas.length > 0 && selectedAreas.includes(layer.name) && viewMode === 'markers' && (
+                                            <Marker
+
+                                                position={L.polygon(layer.latlngs).getBounds().getCenter()}
+                                                icon={L.icon({ iconUrl: layer.name === "Kiruna Map" ? "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png" : "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.3.1/images/marker-icon.png" })}
+                                                eventHandlers={{
+                                                    click: () => {
+                                                        // Toggle the selection of the layer and show the polygon when the marker is clicked
+                                                        setSelectedLayer(prevLayer => {
+                                                            // If the same layer is clicked again, deselect it, otherwise select it
+                                                            if (prevLayer === layer.id) {
+                                                                return null; // Deselect
+                                                            } else {
+                                                                return layer.id; // Select the new layer
+                                                            }
+                                                        });
+                                                    },
+                                                }}
+                                            >
+                                                     <Popup>
+                                                    <div className="d-flex flex-column text-center">
+                                                        <p style={{fontSize:'10pt'}}><strong>Area:</strong> {layer.name}</p>
+                                                        {layer.documents &&  layer.documents.length > 0 ? <div>
+                                                            <p style={{fontSize:'10pt'}}><strong>Documents {"(" + layer.documents.length +")"}</strong></p>
+                                                            <ul style={{ listStyleType: "none", padding: 0 }}>
+                                                                {layer.documents && layer.documents.length > 0 ? (
+                                                                    layer.documents.map((doc, index) => (
+                                                                        <li key={index} style={{textAlign:'left'}}>
+                                                                             • <i>{doc.document_title}</i>
+                                                                        </li>
+                                                                    ))
+                                                                ) : (
+                                                                    <li>No documents available</li>
+                                                                )}
+                                                            </ul>
+                                                        </div> : <p>No documents available</p>}
+                                                    </div>
+                                                </Popup>
+
+                                            </Marker>
+                                        )}
+                                        {/* Mostra il poligono quando un marker è selezionato */}
+                                        {selectedLayer === layer.id && viewMode === 'markers' && (
+                                            <Polygon positions={layer.latlngs} pathOptions={{
+                                                color: layer.name === "Kiruna Map" ? "white" : "blue", // Usa rosso per "Kiruna Map", altrimenti blu
+                                                weight: 2,
+                                                opacity: 1,
+                                            }}>
+                                                  <Popup>
+                                                    <div className="d-flex flex-column text-center">
+                                                        <p style={{fontSize:'10pt'}}><strong>Area:</strong> {layer.name}</p>
+                                                        {layer.documents && layer.documents.length > 0 ? <div>
+                                                            <p style={{fontSize:'10pt'}}><strong>Documents {"(" + layer.documents.length +")"}</strong></p>
+                                                            <ul style={{ listStyleType: "none", padding: 0 }}>
+                                                                {layer.documents && layer.documents.length > 0 ? (
+                                                                    layer.documents.map((doc, index) => (
+                                                                        <li key={index} style={{textAlign:'left'}}>
+                                                                             • <i>{doc.document_title}</i>
+                                                                        </li>
+                                                                    ))
+                                                                ) : (
+                                                                    <li>No documents available</li>
+                                                                )}
+                                                            </ul>
+                                                        </div> : <p>No documents available</p>}
+                                                    </div>
+                                                </Popup>
+
+
+                                            </Polygon>
+                                        )}
+                                    </React.Fragment>
+                                ) : null
+                            )}
+                        </FeatureGroup>
+
+                        <TileLayer
+                            url={tileLayers[mapType].url}
+                            attribution={tileLayers[mapType].attribution}
                         />
-                        {/* Visualizza i poligoni quando in modalità 'polygons' */}
-                        {filteredLayers.map((layer) =>
-                            layer.latlngs ? (
-                                <React.Fragment key={layer.id}>
-                                    {selectedAreas.length > 0 && selectedAreas.includes(layer.name) && viewMode === 'polygons' && (
-                                        <Polygon positions={layer.latlngs} pathOptions={{
-                                            color: layer.name === "Kiruna Map" ? "white" : "blue", // Usa rosso per "Kiruna Map", altrimenti blu
-                                            weight: 2,
-                                            opacity: 1,
-                                        }}>
-                                            <Popup>{layer.name}</Popup>
-                                        </Polygon>
-                                    )}
-                                    {/* Visualizza i marker quando in modalità 'markers' */}
-                                    {selectedAreas.length > 0 && selectedAreas.includes(layer.name) && viewMode === 'markers' && (
-                                        <Marker
-
-                                            position={L.polygon(layer.latlngs).getBounds().getCenter()}
-                                            icon={L.icon({ iconUrl: layer.name === "Kiruna Map" ? "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png" : "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.3.1/images/marker-icon.png" })}
-                                            eventHandlers={{
-                                                click: () => {
-                                                    // Toggle the selection of the layer and show the polygon when the marker is clicked
-                                                    setSelectedLayer(prevLayer => {
-                                                        // If the same layer is clicked again, deselect it, otherwise select it
-                                                        if (prevLayer === layer.id) {
-                                                            return null; // Deselect
-                                                        } else {
-                                                            return layer.id; // Select the new layer
-                                                        }
-                                                    });
-                                                },
-                                            }}
-                                        >
-                                            <Popup>{layer.name}</Popup>
-                                        </Marker>
-                                    )}
-                                    {/* Mostra il poligono quando un marker è selezionato */}
-                                    {selectedLayer === layer.id && viewMode === 'markers' && (
-                                        <Polygon positions={layer.latlngs} pathOptions={{
-                                            color: layer.name === "Kiruna Map" ? "white" : "blue", // Usa rosso per "Kiruna Map", altrimenti blu
-                                            weight: 2,
-                                            opacity: 1,
-                                        }}>
-                                            <Popup>{layer.name}</Popup>
-                                        </Polygon>
-                                    )}
-                                </React.Fragment>
-                            ) : null
-                        )}
-                    </FeatureGroup>
-
-                    <TileLayer
-                        url={tileLayers[mapType].url}
-                        attribution={tileLayers[mapType].attribution}
-                    />
 
                     </div>
                 </MapContainer>
@@ -309,10 +380,10 @@ const DrawMap = () => {
                     </Modal.Header>
                     <Modal.Body>
                         <Form
-                         onSubmit={(event) => {
-                            event.preventDefault(); // Impedisce il refresh della pagina
-                            handleSave(); // Chiama la funzione per salvare l'area
-                        }}>
+                            onSubmit={(event) => {
+                                event.preventDefault(); // Impedisce il refresh della pagina
+                                handleSave(); // Chiama la funzione per salvare l'area
+                            }}>
                             <Form.Group>
                                 {/* <Form.Label>Area name</Form.Label> */}
                                 <Form.Control
@@ -372,33 +443,33 @@ const DrawMap = () => {
                     </Button>
                 </div>
 
-                <div style={{display:'flex', justifyContent:'center', alignItems:'center', marginBottom: '20px', marginTop: '20px', width:'100%' }}>
-                    <Button style={{width:'65%',borderRadius:'18px', border:'2px solid black', paddingTop:'5px', paddingBottom:'5px'}} type="button" variant="dark" onClick={viewMode === 'polygons' ? () => setViewMode('markers') : () => setViewMode('polygons')}>
-                        <div style={{display:'flex', justifyContent:'center', alignItems:'center', gapX: '20px'}}>
+                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '20px', marginTop: '20px', width: '100%' }}>
+                    <Button style={{ width: '65%', borderRadius: '18px', border: '2px solid black', paddingTop: '5px', paddingBottom: '5px' }} type="button" variant="dark" onClick={viewMode === 'polygons' ? () => setViewMode('markers') : () => setViewMode('polygons')}>
+                        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gapX: '20px' }}>
 
-                        Switch View Mode: {viewMode === 'polygons' ? <> <Crop style={{marginLeft:'10px'}}/></> : <> <MapPin style={{marginLeft:'10px'}}/></>}
+                            Switch View Mode: {viewMode === 'polygons' ? <> <Crop style={{ marginLeft: '10px' }} /></> : <> <MapPin style={{ marginLeft: '10px' }} /></>}
                         </div>
                     </Button>
 
                 </div>
                 {/* <h5>Select areas</h5> */}
 
-                
-                <div style={{width: '100%', textAlign:'center', justifyContent:'center', alignItems:'center'}}>
 
-                <Button variant="dark" onClick={toggleSelectAll}
-                    style={{ width: '40%', textAlign: 'center', fontSize: '14px', marginTop: '20px', border: '1px solid black', borderRadius: '20px', padding: '10px' }}>
-                    Select All
-                    <Form.Check
-                        type="checkbox"
-                        label="Select / Deselect All"
-                        checked={selectedAreas.length === mapLayers.length}
-                        onChange={toggleSelectAll}
-                        onClick={toggleSelectAll}
-                        style={{ display: 'none' }} // Nasconde la checkbox
+                <div style={{ width: '100%', textAlign: 'center', justifyContent: 'center', alignItems: 'center' }}>
 
-                    />
-                </Button>
+                    <Button variant="dark" onClick={toggleSelectAll}
+                        style={{ width: '40%', textAlign: 'center', fontSize: '14px', marginTop: '20px', border: '1px solid black', borderRadius: '20px', padding: '10px' }}>
+                        Select All
+                        <Form.Check
+                            type="checkbox"
+                            label="Select / Deselect All"
+                            checked={selectedAreas.length === mapLayers.length}
+                            onChange={toggleSelectAll}
+                            onClick={toggleSelectAll}
+                            style={{ display: 'none' }} // Nasconde la checkbox
+
+                        />
+                    </Button>
                 </div>
                 <Form.Control
                     type="text"
@@ -407,11 +478,11 @@ const DrawMap = () => {
                     onChange={handleSearchChange}
                     style={{ marginTop: '30px' }}
                 />
-                <div className="mt-3" style={{maxHeight:'55vh',overflowY: "auto" }} >
+                <div className="mt-3" style={{ maxHeight: '53vh', overflowY: "auto" }} >
                     {mapLayers
                         .filter((layer) => layer.name.toLowerCase().includes(searchTerm.toLowerCase()))
                         .map((layer) => (
-                            <Button variant={selectedAreas.includes(layer.name) ? "dark" : "outline" }onClick={() => toggleAreaSelection(layer.name)} style={{ width: '100%', border: '3px solid #303030', borderRadius: '20px', paddingLeft: '20px', paddingRight: '20px', paddingTop: '10px', paddingBottom: '10px', display: 'flex', justifyContent: 'space-between', fontSize: '16px', marginTop: '10px' }}>
+                            <Button variant={selectedAreas.includes(layer.name) ? "dark" : "outline"} onClick={() => toggleAreaSelection(layer.name)} style={{ width: '100%', border: '3px solid #303030', borderRadius: '20px', paddingLeft: '20px', paddingRight: '20px', paddingTop: '10px', paddingBottom: '10px', display: 'flex', justifyContent: 'space-between', fontSize: '16px', marginTop: '10px' }}>
                                 <Form.Check
                                     key={layer.id}
                                     type="checkbox"
@@ -419,7 +490,7 @@ const DrawMap = () => {
                                     checked={selectedAreas.includes(layer.name)}
                                     onChange={() => toggleAreaSelection(layer.name)}
                                     style={{ display: 'none' }} // Nasconde la checkbox
-                                    />{layer.name}
+                                />{layer.name}
                                 {layer.name === 'Kiruna Map' ? (<></>) : (<>
                                     <Button
                                         type="button"
