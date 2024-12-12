@@ -65,7 +65,7 @@ export default function DocumentLinksModal({ selectedDocument, showModalLink, se
                             color: "#333",
                             fontSize: "14px",
                             cursor: "pointer",
-                            textTransform: "lowercase", // Aggiungi questa linea
+                            whiteSpace: "nowrap",
                           }}
                         >
                           {link.parent_id}
@@ -83,7 +83,7 @@ export default function DocumentLinksModal({ selectedDocument, showModalLink, se
                             color: "#333",
                             fontSize: "14px",
                             cursor: "pointer",
-                            textTransform: "lowercase", // Aggiungi questa linea
+                            whiteSpace: "nowrap",
                           }}
                         >
                           {link.children_id}

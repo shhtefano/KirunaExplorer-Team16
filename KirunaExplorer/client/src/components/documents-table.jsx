@@ -415,6 +415,39 @@ export default function DocumentsTable() {
                         </DialogContent>
                       </Dialog>
                     </div>
+
+                    <Dialog>
+                        <DialogTrigger asChild>
+                          <button
+                            style={{ backgroundColor: "black", color: "white" }}
+                            className="px-3 py-1 text-sm text-white rounded"
+                            onClick={() => {
+                              setSelectedDocument(doc);
+                              setShowLinkInterface(false);
+                            }}
+                          >
+                            Links
+                          </button>
+                        </DialogTrigger>
+                        <DialogContent
+                          className=" p-6 bg-white rounded-lg shadow-lg"
+                          style={{ maxHeight: "140vh", overflowY: "auto" }}
+                        >
+                          <DialogTitle className="text-xl font-bold text-gray-800">
+                            {selectedDocument?.document_title + " Connections"}
+                          </DialogTitle>
+                          <DialogDescription className="text-gray-700">
+                           
+                          </DialogDescription>
+                        </DialogContent>
+                      </Dialog>
+
+
+
+
+
+
+
                     <div className="ml-2">
                       {user?.role === "urban_planner" && (
                         <Dialog>
