@@ -20,7 +20,7 @@ import { useSidebar } from "@/components/ui/sidebar";
 export function NavMain({ items }) {
   const { state, toggleSidebar } = useSidebar();
   return (
-    <SidebarGroup>
+    <SidebarGroup style={{  overflow: "hidden", padding: '0', width: '100%' }}>
       <SidebarGroupLabel>Application</SidebarGroupLabel>
       <SidebarMenu>
         {items.map((item) =>

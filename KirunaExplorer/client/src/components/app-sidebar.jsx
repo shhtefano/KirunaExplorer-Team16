@@ -70,11 +70,6 @@ const data = {
 export function AppSidebar({ ...props }) {
   const { user } = useAuth();
 
-  // Keep all menu items for urban_planner, only show Map for others
-  // const navItems =
-  //   user?.role === "urban_planner"
-  //     ? data.navMain // Show all items
-  //     : data.navMain.filter((item) => item.title === "Map" | item.title === "Documents"); // Only show Map
   const navItems =
     user?.role === "urban_planner"
       ? data.navMain
@@ -93,17 +88,17 @@ export function AppSidebar({ ...props }) {
           .filter((item) => item.title === "Map" || item.title === "Documents");
 
   return (
-    <Sidebar collapsible="icon" {...props}>
+    <Sidebar collapsible="icon" {...props} style={{ overflow: "hidden"}}>
       <SidebarHeader>
         <TeamSwitcher teams={data.teams} />
       </SidebarHeader>
-      <SidebarContent>
+      <SidebarContent style={{ overflow: "hidden " }}>
         <NavMain items={navItems} />
       </SidebarContent>
-      <SidebarFooter>
+      <SidebarFooter style={{ overflow: "hidden", margin: 0, padding: 0 }}>
         <NavUser user={data.user} />
       </SidebarFooter>
-      <SidebarRail />
+      {/* <SidebarRail /> */}
     </Sidebar>
   );
 }

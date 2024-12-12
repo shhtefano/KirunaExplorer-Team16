@@ -90,6 +90,7 @@ export default function DocumentsTable() {
 
   const languages = ["All", "English", "Swedish"];
 
+
   const [selectedMapDocument, setSelectedMapDocument] = useState(null);
   const [selectedDocument, setSelectedDocument] = useState(null);
   const [showLinkInterface, setShowLinkInterface] = useState(false);
@@ -187,6 +188,7 @@ export default function DocumentsTable() {
     currentPage * itemsPerPage
   );
 
+  
   useEffect(() => {
     if (!selectedDocument) {
       setShowLinkInterface(false);
