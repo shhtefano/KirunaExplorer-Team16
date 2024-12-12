@@ -348,13 +348,13 @@ const DocumentDescriptionForm = () => {
 
   return (
     <div>
-      <div className="d-flex justify-content-center" style={{ fontSize: "34px", fontWeight: "bold", marginBottom: '20px' }}>
-        <h1>
-          Add new document        </h1>
-      </div>
-      <Card className="min-w-[280px] max-w-[750px]">
 
+      <Card className="min-w-[280px] max-w-[750px]">
         <CardContent>
+
+        <h1 style={{marginTop:'20px', fontSize:'22px'}}>
+          <strong>Add new document</strong>        
+          </h1>
           <div className="text-muted-foreground mt-4 mb-4">
             Fill out this form to add metadata to a document. Language and pages
             are not mandatory. Please choose between 'Kiruna Map' OR a single

@@ -141,7 +141,7 @@ const FileUpload = () => {
 
   return (
     <>
-      <Card className="w-full max-w-2xl mx-auto">
+      <Card className="w-full max-w-2xl mx-auto mt-4">
         <CardHeader>
           <CardTitle>Upload Original Resources</CardTitle>
         </CardHeader>
