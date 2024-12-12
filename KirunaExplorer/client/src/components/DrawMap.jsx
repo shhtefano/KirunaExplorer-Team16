@@ -9,7 +9,7 @@ import { Popup } from "react-leaflet";
 import API from "../../src/services/API";
 import { Snackbar, Alert } from "@mui/material";
 import { Marker } from "react-leaflet";
-
+import { Crop, MapPin, Trash2 } from "lucide-react";
 // Configura l'icona di default di Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
 
@@ -54,10 +54,10 @@ const DrawMap = () => {
             try {
                 const areas = await API.getGeoArea();
                 const filteredAreas = areas.filter(area => area.name !== 'Point-Based Documents');
-    
+
                 setMapLayers(filteredAreas);
                 setFilteredLayers(filteredAreas); // Inizialmente tutte le aree sono visualizzate
-    
+
                 // Seleziona di default l'area chiamata "Kiruna Map"
                 const defaultSelected = filteredAreas.find(area => area.name === "Kiruna Map");
                 if (defaultSelected) {
@@ -67,7 +67,7 @@ const DrawMap = () => {
                 console.error("Errore durante il caricamento:", error);
             }
         };
-    
+
         fetchMapLayers();
     }, []);
 
@@ -181,20 +181,20 @@ const DrawMap = () => {
 
     const deleteArea = async (area_name) => {
         try {
-    
+
             const res = await API.deleteArea(area_name);
-    
+
             if (res) {
                 setSnackbarMsg("Area deleted successfully.");
                 setOpenSnackbar(true);
                 setErrorSeverity("success");
-    
+
                 setMapLayers((prevLayers) => {
                     const updatedLayers = prevLayers.filter((layer) => layer.name !== area_name);
-                    setFilteredLayers(updatedLayers); 
+                    setFilteredLayers(updatedLayers);
                     return updatedLayers;
                 });
-    
+
                 setSelectedAreas((prevSelected) =>
                     prevSelected.filter((name) => name !== area_name)
                 );
@@ -208,47 +208,17 @@ const DrawMap = () => {
             setErrorSeverity("error");
         }
     };
-    
+
 
     return (
-        <div className="row" style={{ height: "90vh", width: "100%", maxHeight: "90vh" }}>
-                         {/* Menu per cambiare tipo di mappa */}
+        <div className="row" style={{ height: "88vh", width: "100%" }}>
+            {/* Menu per cambiare tipo di mappa */}
 
             {/* Colonna sinistra: mappa */}
-            <div className="col-md-10 text-center">
-                         <div className="mb-3 text-center">
-          <Button
-            type="button"
-            variant="outline-dark"
-            className={`btn ${mapType === "maptiler" ? "btn-dark" : "btn-outline-primary"} rounded-pill`}
-            style={{ color: `${mapType === "maptiler" ? "white" : "black"}`, fontSize: "12px" }}
-            onClick={() => setMapType("maptiler")}
-          >
+            <div className="col-9 col-md-9 text-center" style={{border: '7px solid #242424', padding:'0', borderRadius: '20px'}}>
 
-            MAPTILER
-          </Button>
-          <Button
-            type="button"
-            variant="outline-dark"
-
-            className={`ml-3 btn ${mapType === "satellite" ? "btn-dark" : "btn-outline-primary"} rounded-pill`}
-            style={{ color: `${mapType === "satellite" ? "white" : "black"}`, fontSize: "12px" }}
-            onClick={() => setMapType("satellite")}
-          >
-            SATELLITE
-          </Button>
-          <Button
-            type="button"
-            variant="outline-dark"
-
-            className={`ml-3 btn ${mapType === "dark" ? "btn-dark" : "btn-outline-primary"} rounded-pill`}
-            style={{ color: `${mapType === "dark" ? "white" : "black"}`, fontSize: "12px" }}
-            onClick={() => setMapType("dark")}
-          >
-            DARK
-          </Button>
-        </div>
-                <MapContainer center={center} zoom={7} style={{ height: "100%", width: "100%", maxHeight: "80vh" }}>
+                <MapContainer center={center} zoom={7} style={{ height: "100%", width: "100%", maxHeight: "88vh", borderRadius: '10px' }}>
+                    <div>
                     <FeatureGroup ref={featureGroupRef}>
                         <EditControl
                             position="topright"
@@ -267,10 +237,11 @@ const DrawMap = () => {
                                 marker: false,
                                 polyline: false,
                             }}
-                            edit={{ edit: false,
+                            edit={{
+                                edit: false,
                                 remove: false, // Disabilita il pulsante di cancellazione
 
-                             }}
+                            }}
                         />
                         {/* Visualizza i poligoni quando in modalità 'polygons' */}
                         {filteredLayers.map((layer) =>
@@ -288,9 +259,9 @@ const DrawMap = () => {
                                     {/* Visualizza i marker quando in modalità 'markers' */}
                                     {selectedAreas.length > 0 && selectedAreas.includes(layer.name) && viewMode === 'markers' && (
                                         <Marker
-                                        
+
                                             position={L.polygon(layer.latlngs).getBounds().getCenter()}
-                                            icon={L.icon({ iconUrl: layer.name === "Kiruna Map" ? "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png":"https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.3.1/images/marker-icon.png" })}
+                                            icon={L.icon({ iconUrl: layer.name === "Kiruna Map" ? "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png" : "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.3.1/images/marker-icon.png" })}
                                             eventHandlers={{
                                                 click: () => {
                                                     // Toggle the selection of the layer and show the polygon when the marker is clicked
@@ -310,7 +281,7 @@ const DrawMap = () => {
                                     )}
                                     {/* Mostra il poligono quando un marker è selezionato */}
                                     {selectedLayer === layer.id && viewMode === 'markers' && (
-                                        <Polygon positions={layer.latlngs}  pathOptions={{
+                                        <Polygon positions={layer.latlngs} pathOptions={{
                                             color: layer.name === "Kiruna Map" ? "white" : "blue", // Usa rosso per "Kiruna Map", altrimenti blu
                                             weight: 2,
                                             opacity: 1,
@@ -327,6 +298,8 @@ const DrawMap = () => {
                         url={tileLayers[mapType].url}
                         attribution={tileLayers[mapType].attribution}
                     />
+
+                    </div>
                 </MapContainer>
 
                 {/* Modal per inserire il nome dell'area */}
@@ -335,7 +308,11 @@ const DrawMap = () => {
                         <Modal.Title>Insert area name</Modal.Title>
                     </Modal.Header>
                     <Modal.Body>
-                        <Form>
+                        <Form
+                         onSubmit={(event) => {
+                            event.preventDefault(); // Impedisce il refresh della pagina
+                            handleSave(); // Chiama la funzione per salvare l'area
+                        }}>
                             <Form.Group>
                                 {/* <Form.Label>Area name</Form.Label> */}
                                 <Form.Control
@@ -357,58 +334,112 @@ const DrawMap = () => {
                     </Modal.Footer>
                 </Modal>
 
-   
+
             </div>
 
             {/* Colonna destra: lista delle aree */}
-            <div className="col-md-2 bg-light p-3" style={{ height: "70vh"}}>
-                <div className="d-flex justify-content-center mb-4">
-                    <Button type="button" variant="dark" onClick={viewMode === 'polygons' ? () => setViewMode('markers') : () => setViewMode('polygons')}>
-                        Switch View Mode: {viewMode === 'polygons' ? 'Markers' : 'Polygons'}
+            <div className="col-3 col-md-3 bg-light p-3" >
+                <div className="text-center" style={{ marginBottom: '30px' }}>
+                    <Button
+                        type="button"
+                        variant="outline-dark"
+                        className={`btn ${mapType === "maptiler" ? "btn-dark" : "btn-outline-primary"} rounded-pill`}
+                        style={{ color: `${mapType === "maptiler" ? "white" : "black"}`, fontSize: "12px" }}
+                        onClick={() => setMapType("maptiler")}
+                    >
+
+                        MAPTILER
+                    </Button>
+                    <Button
+                        type="button"
+                        variant="outline-dark"
+
+                        className={`ml-3 btn ${mapType === "satellite" ? "btn-dark" : "btn-outline-primary"} rounded-pill`}
+                        style={{ color: `${mapType === "satellite" ? "white" : "black"}`, fontSize: "12px" }}
+                        onClick={() => setMapType("satellite")}
+                    >
+                        SATELLITE
+                    </Button>
+                    <Button
+                        type="button"
+                        variant="outline-dark"
+
+                        className={`ml-3 btn ${mapType === "dark" ? "btn-dark" : "btn-outline-primary"} rounded-pill`}
+                        style={{ color: `${mapType === "dark" ? "white" : "black"}`, fontSize: "12px" }}
+                        onClick={() => setMapType("dark")}
+                    >
+                        DARK
+                    </Button>
+                </div>
+
+                <div style={{display:'flex', justifyContent:'center', alignItems:'center', marginBottom: '20px', marginTop: '20px', width:'100%' }}>
+                    <Button style={{width:'65%',borderRadius:'18px', border:'2px solid black', paddingTop:'5px', paddingBottom:'5px'}} type="button" variant="dark" onClick={viewMode === 'polygons' ? () => setViewMode('markers') : () => setViewMode('polygons')}>
+                        <div style={{display:'flex', justifyContent:'center', alignItems:'center', gapX: '20px'}}>
+
+                        Switch View Mode: {viewMode === 'polygons' ? <> <Crop style={{marginLeft:'10px'}}/></> : <> <MapPin style={{marginLeft:'10px'}}/></>}
+                        </div>
                     </Button>
 
                 </div>
                 {/* <h5>Select areas</h5> */}
+
+                
+                <div style={{width: '100%', textAlign:'center', justifyContent:'center', alignItems:'center'}}>
+
+                <Button variant="dark" onClick={toggleSelectAll}
+                    style={{ width: '40%', textAlign: 'center', fontSize: '14px', marginTop: '20px', border: '1px solid black', borderRadius: '20px', padding: '10px' }}>
+                    Select All
+                    <Form.Check
+                        type="checkbox"
+                        label="Select / Deselect All"
+                        checked={selectedAreas.length === mapLayers.length}
+                        onChange={toggleSelectAll}
+                        onClick={toggleSelectAll}
+                        style={{ display: 'none' }} // Nasconde la checkbox
+
+                    />
+                </Button>
+                </div>
                 <Form.Control
                     type="text"
                     placeholder="Search areas by name"
                     value={searchTerm}
                     onChange={handleSearchChange}
+                    style={{ marginTop: '30px' }}
                 />
-                <Form.Check
-                    className="mt-3"
-                    type="checkbox"
-                    label="Select all"
-                    checked={selectedAreas.length === mapLayers.length}
-                    onChange={toggleSelectAll}
-                />
-                <div className="mt-3" style={{ maxHeight: "80%", overflowY: "scroll" }}>
+                <div className="mt-3" style={{maxHeight:'55vh',overflowY: "auto" }} >
                     {mapLayers
                         .filter((layer) => layer.name.toLowerCase().includes(searchTerm.toLowerCase()))
                         .map((layer) => (
-                            <div style={{ display: 'flex' }}>
+                            <Button variant={selectedAreas.includes(layer.name) ? "dark" : "outline" }onClick={() => toggleAreaSelection(layer.name)} style={{ width: '100%', border: '3px solid #303030', borderRadius: '20px', paddingLeft: '20px', paddingRight: '20px', paddingTop: '10px', paddingBottom: '10px', display: 'flex', justifyContent: 'space-between', fontSize: '16px', marginTop: '10px' }}>
                                 <Form.Check
                                     key={layer.id}
                                     type="checkbox"
                                     label={layer.name}
                                     checked={selectedAreas.includes(layer.name)}
                                     onChange={() => toggleAreaSelection(layer.name)}
-                                />
-                                <Button
-                                    type="button"
-                                    variant="dark"
-                                    onClick={() => deleteArea(layer.name)}
-                                    style={{
-                                        fontSize: "12px", // Per renderlo più piccolo
-                                        padding: "4px 8px", // Regola il padding per adattarlo
-                                        color: "red", // Scritta rossa
-                                        backgroundColor: "transparent", // Sfondo trasparente
-                                        border: "none", // Rimuovi il bordo
-                                    }}
-                                >
-                                    X
-                                </Button>
-                            </div>
+                                    style={{ display: 'none' }} // Nasconde la checkbox
+                                    />{layer.name}
+                                {layer.name === 'Kiruna Map' ? (<></>) : (<>
+                                    <Button
+                                        type="button"
+                                        variant="dark"
+                                        onClick={() => deleteArea(layer.name)}
+                                        style={{
+                                            // marginLeft:'0px',
+                                            // width:'10px',
+                                            overflow: "hidden",
+                                            padding: "4px 8px", // Regola il padding per adattarlo
+                                            color: "black", // Scritta rossa
+                                            backgroundColor: "transparent", // Sfondo trasparente
+                                            border: "none", // Rimuovi il bordo
+                                        }}
+                                    >
+                                        <Trash2 color={selectedAreas.includes(layer.name) ? "white" : "black"} size={18}></Trash2>
+                                    </Button>
+                                </>)}
+
+                            </Button>
                         ))}
                 </div>
             </div>

@@ -39,11 +39,18 @@ export function Providers({ children }) {
                 <span className="font-semibold text-lg">
 
                 <a href="/" className="">
-                <u>Home</u> 
+                <u>
+                  <i>
+
+                Home
+                  </i>
+
+
+                </u>
                 </a>
                 { " >"}
                 </span>
-                <span className=" text-lg"> <strong><u>{currentPageTitle}</u> </strong></span>
+                <span className=" text-lg"> <strong><i>{currentPageTitle}</i> </strong></span>
               </div>
             </header>
             <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
