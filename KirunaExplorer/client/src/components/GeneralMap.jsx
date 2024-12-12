@@ -119,7 +119,7 @@ const GeneralMap = () => {
         const response = await API.getDocumentsGeo();
         const documents = Array.isArray(response) ? response : [];
         console.log(documents);
-        
+
         if (selectedArea.name === "Point-Based Documents") {
 
           let markers = documents.filter((document) => {
@@ -211,7 +211,7 @@ const GeneralMap = () => {
 
   useEffect(() => {
     const map = mapRef.current?.leafletElement || mapRef.current;
-  
+
     if (map) {
       // Rimuovi tutti i marker o cluster precedenti
       map.eachLayer((layer) => {
@@ -220,33 +220,33 @@ const GeneralMap = () => {
         }
       });
     }
-  
+
     if (selectedArea && selectedArea.name === "Point-Based Documents") {
       renderMarkersWithClustering();
     } else {
       renderAreaMarkers();
     }
   }, [filteredMarkers, selectedArea]);
-  
+
   // Funzione per renderizzare icone cluster aree
   const renderAreaMarkers = () => {
     const map = mapRef.current?.leafletElement || mapRef.current;
     if (!map) return;
-  
+
     // Rimuovi tutti i marker e cluster precedenti
     map.eachLayer((layer) => {
       if (layer instanceof L.Marker || layer instanceof L.MarkerClusterGroup) {
         map.removeLayer(layer);
       }
     });
-  
+
     // Aggiungi il marker dell'area solo se non è "Point-Based Documents"
     if (selectedArea && selectedArea.name !== "Point-Based Documents") {
       const documentsForArea = filteredDocuments.length;
-  
+
       if (selectedArea.latlngs && selectedArea.latlngs.length > 0) {
         let coordinates;
-  
+
         // Verifica se è un poligono o un multipoligono
         if (Array.isArray(selectedArea.latlngs[0])) {
           // Multipoligono: latlngs è un array di array di punti
@@ -257,7 +257,7 @@ const GeneralMap = () => {
           // Poligono: latlngs è un array di punti
           coordinates = [selectedArea.latlngs.map((point) => [point.lng, point.lat])];
         }
-  
+
         // Crea un oggetto GeoJSON
         const geojson = {
           type: "Feature",
@@ -266,14 +266,14 @@ const GeneralMap = () => {
             coordinates,
           },
         };
-  
+
         try {
           // Calcola il centroide usando Turf.js
           const center = turf.centerOfMass(geojson);
-  
+
           // Ottieni le coordinate del centroide
           const [lng, lat] = center.geometry.coordinates;
-  
+
           // Aggiungi il marker al centroide
           const areaMarker = L.marker([lat, lng], {
             icon: createCountIcon(documentsForArea),
@@ -287,8 +287,8 @@ const GeneralMap = () => {
       }
     }
   };
-  
-  
+
+
   // Funzione per renderizzare icone cluster documenti point-based
   const renderMarkersWithClustering = () => {
     if (selectedArea && selectedArea.name === "Point-Based Documents") {
@@ -328,7 +328,7 @@ const GeneralMap = () => {
   const changeMapPosition = (doc) => {
     const map = mapRef.current;
     if (!map) return;
-  
+
     // Check if the document is Point-Based Documents-based
     if (doc.area_name === "Point-Based Documents") {
       // Use the document's updated coordinates for a Point-Based Documents-based location
@@ -338,34 +338,34 @@ const GeneralMap = () => {
       // If the document is "Kiruna Map", use predefined coordinates for the entire area
       map.setView([WHOLE_AREA_CENTER.lat, WHOLE_AREA_CENTER.lng], 13);
     }
-  
+
     // Update the selected marker ID (trigger a re-render of markers)
     setSelectedMarkerId(doc.id);
-  
+
     // Force markers to update
     setFilteredMarkers((prevMarkers) => [...prevMarkers]);
   };
-  
+
 
   // Funzione per cambiare colore icona
   const getMarkerIcon = (id) => {
     return id === selectedMarkerId
       ? new L.Icon({
-          iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png", // Icona rossa per il marker selezionato
-          iconSize: [25, 41],
-          iconAnchor: [12, 41],
-          popupAnchor: [1, -34],
-          shadowSize: [41, 41],
-        })
+        iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png", // Icona rossa per il marker selezionato
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41],
+      })
       : new L.Icon({
-          iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.3.1/images/marker-icon.png", // Icona blu per gli altri marker
-          iconSize: [25, 41],
-          iconAnchor: [12, 41],
-          popupAnchor: [1, -34],
-          shadowSize: [41, 41],
-        });
+        iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.3.1/images/marker-icon.png", // Icona blu per gli altri marker
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41],
+      });
   };
-  
+
   // Funzione per gestire la ricerca
   const handleSearchChange = (event) => {
     const query = event.target.value;
@@ -479,19 +479,19 @@ const GeneralMap = () => {
   const handleAreaChange = (areaId) => {
     const selected = areas.find((area) => area.id === parseInt(areaId, 10));
     setSelectedArea(selected);
-  
+
     // Centra la mappa se l'area ha coordinate
     if (selected.latlngs && selected.latlngs.length > 0) {
       // Controlla se `selected.latlngs[0]` è un array (per multipoligoni)
       const firstPoint = Array.isArray(selected.latlngs[0])
         ? selected.latlngs[0][0] // Prendi il primo punto del primo poligono
         : selected.latlngs[0];   // Usa direttamente il primo punto (se non è multipoligono)
-  
+
       setCenter(firstPoint);
     } else {
       console.warn("L'area selezionata non ha coordinate valide.");
     }
-  
+
     if (selected.name !== "Point-Based Documents") {
       renderAreaMarkers();
     }
@@ -499,44 +499,13 @@ const GeneralMap = () => {
 
 
   return (
-    <div className="row" style={{ padding: '0px', width: '100%', marginLeft: '10px', height: '80vh' }}>
+    <div className="row" style={{ padding: '0px', width: '100%', marginLeft: '10px', height: '88vh' }}>
 
       {/* Mappa */}
-      <div className="col-12 col-md-9 text-center ">
-        {/* Menu per cambiare tipo di mappa */}
-        <div className="mb-3 ">
-          <Button
-            type="button"
-            variant="outline-dark"
-            className={`btn ${mapType === "maptiler" ? "btn-dark" : "btn-outline-primary"} rounded-pill`}
-            style={{ color: `${mapType === "maptiler" ? "white" : "black"}`, fontSize: "12px" }}
-            onClick={() => setMapType("maptiler")}
-          >
+      <div className="col-12 col-md-9 text-center " style={{ padding:'0'}}>
 
-            MAPTILER
-          </Button>
-          <Button
-            type="button"
-            variant="outline-dark"
 
-            className={`ml-3 btn ${mapType === "satellite" ? "btn-dark" : "btn-outline-primary"} rounded-pill`}
-            style={{ color: `${mapType === "satellite" ? "white" : "black"}`, fontSize: "12px" }}
-            onClick={() => setMapType("satellite")}
-          >
-            SATELLITE
-          </Button>
-          <Button
-            type="button"
-            variant="outline-dark"
-
-            className={`ml-3 btn ${mapType === "dark" ? "btn-dark" : "btn-outline-primary"} rounded-pill`}
-            style={{ color: `${mapType === "dark" ? "white" : "black"}`, fontSize: "12px" }}
-            onClick={() => setMapType("dark")}
-          >
-            DARK
-          </Button>
-        </div>
-        <MapContainer ref={mapRef} center={center} zoom={ZOOM_LEVEL} style={{ height: "100%", width: "100%" }}>
+        <MapContainer ref={mapRef} center={center} zoom={ZOOM_LEVEL} style={{ height: "100%", width: "100%", maxHeight: "88vh", borderRadius: '10px' }}>
 
           {selectedArea && selectedArea.name !== "Point-Based Documents" &&
             selectedArea.latlngs.map((polygon, index) => (
@@ -548,20 +517,6 @@ const GeneralMap = () => {
             ))
           }
 
-
-          {/* {selectedArea && selectedArea.name === "Point-Based Documents" &&
-            filteredMarkers.map((marker) => (
-              <Marker
-                key={`marker-${marker.id}`}
-                position={marker.latlngs}
-                icon={getMarkerIcon(marker.id)}
-                eventHandlers={{
-                  click: () => { handleMarkerClick(marker.document); setShowModal(true) },
-                }}
-                customId={marker.id}
-              />
-            ))
-          } */}
 
           {selectedArea && selectedArea.name === "Point-Based Documents" &&
             areas.filter(area => area.name === 'Kiruna Map').map((area) => (
@@ -604,18 +559,56 @@ const GeneralMap = () => {
 
       {/* Sidebar con Dropdown, Search e Lista dei Documenti */}
       <div className="col-12 col-md-3 text-center">
-        {/* Dropdown per selezionare l'area */}
 
-        <Dropdown onSelect={(eventKey) => handleAreaChange(eventKey)} className="mb-3">
-          <Dropdown.Toggle variant="outline-dark">{selectedArea ? selectedArea.name : "Select an area"}</Dropdown.Toggle>
-          <Dropdown.Menu>
-            {areas && areas.map((area) => (
-              <Dropdown.Item key={area.id} eventKey={area.id}>
-                {area.name}
-              </Dropdown.Item>
-            ))}
-          </Dropdown.Menu>
-        </Dropdown>
+
+        {/* Menu per cambiare tipo di mappa */}
+        <div className="mb-4 mt-2 " >
+          <Button
+            type="button"
+            variant="outline-dark"
+            className={`btn ${mapType === "maptiler" ? "btn-dark" : "btn-outline-primary"} rounded-pill`}
+            style={{ color: `${mapType === "maptiler" ? "white" : "black"}`, fontSize: "12px" }}
+            onClick={() => setMapType("maptiler")}
+          >
+
+            MAPTILER
+          </Button>
+          <Button
+            type="button"
+            variant="outline-dark"
+
+            className={`ml-3 btn ${mapType === "satellite" ? "btn-dark" : "btn-outline-primary"} rounded-pill`}
+            style={{ color: `${mapType === "satellite" ? "white" : "black"}`, fontSize: "12px" }}
+            onClick={() => setMapType("satellite")}
+          >
+            SATELLITE
+          </Button>
+          <Button
+            type="button"
+            variant="outline-dark"
+
+            className={`ml-3 btn ${mapType === "dark" ? "btn-dark" : "btn-outline-primary"} rounded-pill`}
+            style={{ color: `${mapType === "dark" ? "white" : "black"}`, fontSize: "12px" }}
+            onClick={() => setMapType("dark")}
+          >
+            DARK
+          </Button>
+        </div>
+
+        {/* Dropdown per selezionare l'area */}
+        <div style={{marginTop:'40px', marginBottom:'40px'}}>
+          <Dropdown onSelect={(eventKey) => handleAreaChange(eventKey)} >
+            <Dropdown.Toggle variant="outline-dark">{selectedArea ? selectedArea.name : "Select an area"}</Dropdown.Toggle>
+            <Dropdown.Menu>
+              {areas && areas.map((area) => (
+                <Dropdown.Item key={area.id} eventKey={area.id}>
+                  {area.name}
+                </Dropdown.Item>
+              ))}
+            </Dropdown.Menu>
+          </Dropdown>
+
+        </div>
 
 
         {/* Barra di ricerca */}
@@ -768,15 +761,15 @@ const GeneralMap = () => {
             <Modal.Title>Document info</Modal.Title>
           </Modal.Header>
           <Modal.Body>
-            <p style={{marginBottom:'10px'}}><strong>Title:</strong> {selectedDocument.document_title}</p>
-            <p style={{marginBottom:'10px'}}><strong>Document Type:</strong> {selectedDocument.document_type}</p>
-            <p style={{marginBottom:'10px'}}><strong>Stakeholders:</strong> {selectedDocument.stakeholders.length>0? selectedDocument.stakeholders.join(', ') : selectedDocument.stakeholders}</p>
-            <p style={{marginBottom:'10px'}}><strong>Date:</strong> {selectedDocument.issuance_date}</p>
-            <p style={{marginBottom:'10px'}}><strong>Description:</strong> {selectedDocument.description}</p>
-            <p style={{marginBottom:'10px'}}><strong>Scale:</strong> {selectedDocument.scale}</p>
+            <p style={{ marginBottom: '10px' }}><strong>Title:</strong> {selectedDocument.document_title}</p>
+            <p style={{ marginBottom: '10px' }}><strong>Document Type:</strong> {selectedDocument.document_type}</p>
+            <p style={{ marginBottom: '10px' }}><strong>Stakeholders:</strong> {selectedDocument.stakeholders.length > 0 ? selectedDocument.stakeholders.join(', ') : selectedDocument.stakeholders}</p>
+            <p style={{ marginBottom: '10px' }}><strong>Date:</strong> {selectedDocument.issuance_date}</p>
+            <p style={{ marginBottom: '10px' }}><strong>Description:</strong> {selectedDocument.description}</p>
+            <p style={{ marginBottom: '10px' }}><strong>Scale:</strong> {selectedDocument.scale}</p>
             <>
-              {selectedDocument.language && <p style={{marginBottom:'10px'}}><strong>Language:</strong> {selectedDocument.language}</p>}
-              {selectedDocument.pages && <p style={{marginBottom:'10px'}}><strong>Pages:</strong> {selectedDocument.pages}</p>}
+              {selectedDocument.language && <p style={{ marginBottom: '10px' }}><strong>Language:</strong> {selectedDocument.language}</p>}
+              {selectedDocument.pages && <p style={{ marginBottom: '10px' }}><strong>Pages:</strong> {selectedDocument.pages}</p>}
             </>
           </Modal.Body>
           <Modal.Footer>

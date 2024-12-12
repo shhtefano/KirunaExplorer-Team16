@@ -40,7 +40,7 @@ export default function LoginForm() {
   };
 
   return (
-    <Card style={{ width: "400px", marginTop: "80px" }}>
+    <Card style={{ width: "400px", marginTop: "80px" }} className="bg-white/70">
       <CardHeader>
         <CardTitle className="text-2xl mb-2">Login</CardTitle>
 
