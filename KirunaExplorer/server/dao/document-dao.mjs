@@ -1202,9 +1202,95 @@ async deleteLink(parentId, childId, connectionType) {
   });
 }
 
+async updateDocument(documentId, { title, type, stakeholders, date, description, scale, language, pages }) {
+  return new Promise((resolve, reject) => {
+
+    db.serialize(() => {
+      // Query per aggiornare i campi nella tabella Documents
+      const documentQuery = `
+        UPDATE Documents
+        SET 
+          document_title = ?,
+          document_type = ?,
+          issuance_date = ?,
+          document_description = ?,
+          scale = ?,
+          language = ?,
+          pages = ?
+        WHERE document_id = ?;
+      `;
+
+      db.run(
+        documentQuery,
+        [title, type, date, description, scale, language, pages, documentId],
+        (err) => {
+          if (err) {
+            console.error("Error updating document fields:", err);
+            return reject(new Error("Error updating document fields."));
+          }
+        }
+      );
+
+      // Rimuove le associazioni precedenti con gli stakeholder
+      const deleteStakeholdersQuery = `DELETE FROM Document_Stakeholder WHERE document_id = ?;`;
+      db.run(deleteStakeholdersQuery, [documentId], (err) => {
+        if (err) {
+          console.error("Error removing previous stakeholders:", err);
+          return reject(new Error("Error removing previous stakeholders."));
+        }
+      });
+
+      // Inserisce i nuovi stakeholder
+      const insertStakeholdersQuery = `INSERT INTO Document_Stakeholder (document_id, stakeholder_id) VALUES (?, ?);`;
+      const insertStakeholderPromises = stakeholders.map((stakeholderId) => {
+        return new Promise((resolveStakeholder, rejectStakeholder) => {
+          db.run(insertStakeholdersQuery, [documentId, stakeholderId], (err) => {
+            if (err) {
+              console.error("Error inserting stakeholder:", err);
+              return rejectStakeholder(new Error("Error inserting stakeholder."));
+            }
+            resolveStakeholder();
+          });
+        });
+      });
+
+      // Attende il completamento di tutte le operazioni sugli stakeholder
+      Promise.all(insertStakeholderPromises)
+        .then(() => resolve("Document updated successfully."))
+        .catch((err) => reject(err));
+    });
+  });
+}
 
 
 }
+
+// Test function for updateDocument
+async function testUpdateDocument() {
+  const dao = new DocumentDAO(); // Replace with your actual DAO class instance
+
+  // Document details to update
+  const documentId = 2; // Assuming 'Kiruna workshops' has document_id = 2
+  const updatedDetails = {
+    title: "Kiruna workshops",
+    type: "Technical",
+    stakeholders: [1], // Assuming LKAB has stakeholder_id = 1
+    date: "2012/12/25",
+    description: "description",
+    scale: "1:1000",
+    language: "Italian",
+    pages: 10
+  };
+
+  try {
+    const result = await dao.updateDocument(documentId, updatedDetails);
+    console.log("Test passed: ", result);
+  } catch (error) {
+    console.error("Test failed: ", error);
+  }
+}
+
+//testUpdateDocument();
 
 
 export default DocumentDAO;

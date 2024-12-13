@@ -21,6 +21,7 @@ import 'leaflet.markercluster';
 import 'leaflet.markercluster/dist/MarkerCluster.css';
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 import * as turf from "@turf/turf";
+import EditDocument from "./EditDocument";
 
 // Configura l'icona di default di Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
@@ -91,6 +92,8 @@ const GeneralMap = () => {
   const [allDocs, setAllDocs] = useState([]);
   const [showModalLink, setShowModalLink] = useState(false); //modal per popup links
   const [showLinkInterface, setShowLinkInterface] = useState(false);
+  const [showEditDocumentModal, setShowEditDocumentModal] = useState(false);
+
 
   const ZOOM_LEVEL = 7;
   const WHOLE_AREA_CENTER = { lat: 67.85572, lng: 20.22513 }; // Definisci le coordinate per Kiruna Map
@@ -755,36 +758,70 @@ const GeneralMap = () => {
 
       )}
       {/* Modal per visualizzare i dettagli del documento */}
-      {selectedDocument && showModal && !showEditCoordinatesModal && !showModalLink && (
-        <Modal style={{ marginTop: '8%' }} show={showModal} onHide={() => setShowModal(false)}>
-          <Modal.Header closeButton>
-            <Modal.Title>Document info</Modal.Title>
-          </Modal.Header>
-          <Modal.Body>
-            <p style={{ marginBottom: '10px' }}><strong>Title:</strong> {selectedDocument.document_title}</p>
-            <p style={{ marginBottom: '10px' }}><strong>Document Type:</strong> {selectedDocument.document_type}</p>
-            <p style={{ marginBottom: '10px' }}><strong>Stakeholders:</strong> {selectedDocument.stakeholders.length > 0 ? selectedDocument.stakeholders.join(', ') : selectedDocument.stakeholders}</p>
-            <p style={{ marginBottom: '10px' }}><strong>Date:</strong> {selectedDocument.issuance_date}</p>
-            <p style={{ marginBottom: '10px' }}><strong>Description:</strong> {selectedDocument.description}</p>
-            <p style={{ marginBottom: '10px' }}><strong>Scale:</strong> {selectedDocument.scale}</p>
-            <>
-              {selectedDocument.language && <p style={{ marginBottom: '10px' }}><strong>Language:</strong> {selectedDocument.language}</p>}
-              {selectedDocument.pages && <p style={{ marginBottom: '10px' }}><strong>Pages:</strong> {selectedDocument.pages}</p>}
-            </>
-          </Modal.Body>
-          <Modal.Footer>
-            {user && user.role === "urban_planner" && <Button
-              variant="dark"
-              onClick={() => { setShowLinkInterface(true); setShowModal(false); }}
-            >
-              {`Link Documents to ${selectedDocument.document_title}`}
-            </Button>}
-            <Button variant="dark" onClick={() => setShowModal(false)}>
-              Close
-            </Button>
-          </Modal.Footer>
-        </Modal>
+{selectedDocument && showModal && !showEditCoordinatesModal && !showModalLink && (
+  <Modal style={{ marginTop: '8%' }} show={showModal} onHide={() => setShowModal(false)}>
+    <Modal.Header closeButton>
+      <Modal.Title>Document info</Modal.Title>
+    </Modal.Header>
+    <Modal.Body>
+      <p style={{ marginBottom: '10px' }}><strong>Title:</strong> {selectedDocument.document_title}</p>
+      <p style={{ marginBottom: '10px' }}><strong>Document Type:</strong> {selectedDocument.document_type}</p>
+      <p style={{ marginBottom: '10px' }}><strong>Stakeholders:</strong> {selectedDocument.stakeholders.length > 0 ? selectedDocument.stakeholders.join(', ') : selectedDocument.stakeholders}</p>
+      <p style={{ marginBottom: '10px' }}><strong>Date:</strong> {selectedDocument.issuance_date}</p>
+      <p style={{ marginBottom: '10px' }}><strong>Description:</strong> {selectedDocument.description}</p>
+      <p style={{ marginBottom: '10px' }}><strong>Scale:</strong> {selectedDocument.scale}</p>
+      <>
+        {selectedDocument.language && <p style={{ marginBottom: '10px' }}><strong>Language:</strong> {selectedDocument.language}</p>}
+        {selectedDocument.pages && <p style={{ marginBottom: '10px' }}><strong>Pages:</strong> {selectedDocument.pages}</p>}
+      </>
+    </Modal.Body>
+    <Modal.Footer>
+      {user && user.role === "urban_planner" && (
+        <>
+          <Button
+            variant="dark"
+            onClick={() => { setShowLinkInterface(true); setShowModal(false); }}
+          >
+            {`Link Documents to ${selectedDocument.document_title}`}
+          </Button>
+          <Button
+            variant="dark"
+            onClick={() => { setShowEditDocumentModal(true); setShowModal(false); }}
+          >
+            Edit
+          </Button>
+        </>
       )}
+      <Button variant="dark" onClick={() => setShowModal(false)}>
+        Close
+      </Button>
+    </Modal.Footer>
+  </Modal>
+)}
+
+{/* Modal per modificare il documento */}
+{selectedDocument && showEditDocumentModal && (
+  <Modal style={{ marginTop: '8%' }} show={showEditDocumentModal} onHide={() => setShowEditDocumentModal(false)}>
+    <Modal.Header closeButton>
+      <Modal.Title>Edit Document</Modal.Title>
+    </Modal.Header>
+    <Modal.Body>
+      <EditDocument
+        documentId={selectedDocument.id}
+        initialData={{
+          document_title: selectedDocument.document_title,
+          document_description: selectedDocument.description,
+          latitude: selectedDocument.coordinates[0]?.lat || "",
+          longitude: selectedDocument.coordinates[0]?.long || "",
+        }}
+        onSave={() => {
+          setShowEditDocumentModal(false);
+          // Ricarica i dati o aggiorna lo stato per riflettere le modifiche
+        }}
+      />
+    </Modal.Body>
+  </Modal>
+)}
       {/* Modal to link documents */}
       {selectedDocument && showLinkInterface && (
         <Modal show={showLinkInterface} onHide={() => setShowLinkInterface(false)} style={{ marginTop: '8%' }}>

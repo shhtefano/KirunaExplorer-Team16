@@ -369,4 +369,42 @@ router.delete('/api/links', async (req, res) => {
     });
   }
 });
+
+// Endpoint per aggiornare i dettagli di un documento
+router.put("/api/document/:document_id", async (req, res) => {
+
+  try {
+    // Estrae l'ID del documento dai parametri della richiesta
+    const { document_id } = req.params;
+
+    // Recupera i dettagli aggiornati dal corpo della richiesta
+    const updatedDetails = req.body;
+
+    
+    // Controlla se l'ID del documento è fornito
+    if (!document_id) {
+      return res.status(400).json({ message: "ID del documento mancante." });
+    }
+
+    // Controlla se i dettagli aggiornati sono forniti
+    if (!updatedDetails || Object.keys(updatedDetails).length === 0) {
+      return res.status(400).json({ message: "Dettagli del documento mancanti." });
+    }
+
+    // Esegue l'aggiornamento tramite il DAO
+    const updateResult = await documentDAO.updateDocument(parseInt(document_id, 10), updatedDetails);
+
+    // Controlla se l'aggiornamento ha avuto successo
+    if (!updateResult) {
+      return res.status(404).json({ message: "Documento non trovato o nessuna modifica effettuata." });
+    }
+
+    // Risponde con un messaggio di successo
+    res.status(200).json({ message: "Documento aggiornato con successo." });
+  } catch (error) {
+    console.error("Errore durante l'aggiornamento del documento:", error);
+    res.status(500).send("Si è verificato un errore durante l'aggiornamento del documento.");
+  }
+});
+
 export default router;

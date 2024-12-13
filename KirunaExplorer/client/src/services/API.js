@@ -605,6 +605,25 @@ console.log( parentId,
   }
 }
 
+async function updateDocument(documentId, updatedData) {
+  console.log("updateDocument", documentId, updatedData);
+
+  const response = await fetch(`${SERVER_URL}/api/document/${documentId}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(updatedData),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || "Errore durante l'aggiornamento del documento");
+  }
+
+  return await response.json();
+}
+
 const API = {
   logIn,
   logOut,
@@ -633,7 +652,8 @@ const API = {
   listFilesInSupabase,
   deleteDocument,
   getDocumentById,
-  deleteLink
+  deleteLink,
+  updateDocument
 };
 
 export default API;
