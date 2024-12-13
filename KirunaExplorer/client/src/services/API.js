@@ -118,7 +118,7 @@ async function deleteArea(areaName) {
 }
 
 async function getAreaCoordinates(area_id) {
-  const response = await fetch(`${SERVER_URL}/api/geo/:${area_id}`, {
+  const response = await fetch(`${SERVER_URL}/api/geo/${area_id}`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",

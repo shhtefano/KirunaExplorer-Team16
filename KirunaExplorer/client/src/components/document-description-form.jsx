@@ -356,9 +356,12 @@ const DocumentDescriptionForm = () => {
           <strong>Add new document</strong>        
           </h1>
           <div className="text-muted-foreground mt-4 mb-4">
+            <i>
+
             Fill out this form to add metadata to a document. Language and pages
-            are not mandatory. Please choose between 'Kiruna Map' OR a single
+            are not mandatory. Please choose between an already existing area OR a single
             point with coordinates.
+              </i>
           </div>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">

@@ -375,7 +375,7 @@ const DrawMap = () => {
 
                 {/* Modal per inserire il nome dell'area */}
                 <Modal show={showModal} onHide={() => setShowModal(false)}>
-                    <Modal.Header closeButton>
+                    <Modal.Header>
                         <Modal.Title>Insert area name</Modal.Title>
                     </Modal.Header>
                     <Modal.Body>
@@ -396,9 +396,9 @@ const DrawMap = () => {
                         </Form>
                     </Modal.Body>
                     <Modal.Footer>
-                        <Button type="button" variant="secondary" onClick={() => setShowModal(false)}>
+                        {/* <Button type="button" variant="secondary" onClick={() => setShowModal(false)}>
                             Delete
-                        </Button>
+                        </Button> */}
                         <Button type="button" variant="primary" onClick={saveArea}>
                             Save
                         </Button>
@@ -458,7 +458,7 @@ const DrawMap = () => {
                 <div style={{ width: '100%', textAlign: 'center', justifyContent: 'center', alignItems: 'center' }}>
 
                     <Button variant="dark" onClick={toggleSelectAll}
-                        style={{ width: '40%', textAlign: 'center', fontSize: '14px', marginTop: '20px', border: '1px solid black', borderRadius: '20px', padding: '10px' }}>
+                        style={{ width: '70%', textAlign: 'center', fontSize: '14px', marginTop: '20px', border: '1px solid black', borderRadius: '20px', padding: '10px' }}>
                         Select All
                         <Form.Check
                             type="checkbox"
@@ -519,9 +519,9 @@ const DrawMap = () => {
                 open={openSnackbar}
                 autoHideDuration={2000}
                 onClose={handleCloseSnackbar}
-                anchorOrigin={{ vertical: "top", horizontal: "center" }}
+                anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
             >
-                <Alert onClose={handleCloseSnackbar} severity={errorSeverity} sx={{ width: "100%" }}>
+                <Alert onClose={handleCloseSnackbar} severity={errorSeverity} sx={{ width: "40%" }}>
                     {snackbarMsg}
                 </Alert>
             </Snackbar>

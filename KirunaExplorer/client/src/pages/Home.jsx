@@ -188,12 +188,12 @@ const HomePage = () => {
         open={openSnackbar}
         autoHideDuration={2000}
         onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
       >
         <Alert
           onClose={handleCloseSnackbar}
           severity="error"
-          sx={{ width: "100%" }}
+          sx={{ width: "70%" }}
         >
           {snackbarMsg}
         </Alert>
@@ -202,12 +202,12 @@ const HomePage = () => {
         open={openSnackbar}
         autoHideDuration={2000}
         onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
       >
         <Alert
           onClose={handleCloseSnackbar}
           severity="error"
-          sx={{ width: "100%" }}
+          sx={{ width: "70%" }}
         >
           {snackbarMsg}
         </Alert>
