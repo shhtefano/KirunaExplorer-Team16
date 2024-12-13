@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { Stack, Typography } from "@mui/material";
+import { DocumentInfoModal } from "./link-list.jsx";
 import {
   Table,
   TableHeader,
@@ -56,6 +58,14 @@ export default function DocumentsTable() {
   const [dateFilterMode, setDateFilterMode] = useState("all");
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false); // To control Dialog for delete confirmation
   const [documentToDelete, setDocumentToDelete] = useState(null); // To store the document that needs to be deleted
+  const [selectedMapDocument, setSelectedMapDocument] = useState(null);
+  const [selectedDocument, setSelectedDocument] = useState(null);
+  const [showLinkInterface, setShowLinkInterface] = useState(false);
+  
+  const [showLinks, setShowLinks] = useState({})
+
+
+
   const { user } = useAuth();
 
   const [types, setTypes] = useState([]);
@@ -89,9 +99,7 @@ export default function DocumentsTable() {
 
   const languages = ["All", "English", "Swedish"];
 
-  const [selectedMapDocument, setSelectedMapDocument] = useState(null);
-  const [selectedDocument, setSelectedDocument] = useState(null);
-  const [showLinkInterface, setShowLinkInterface] = useState(false);
+
 
   useEffect(() => {
     const fetchDocuments = async () => {
@@ -107,7 +115,7 @@ export default function DocumentsTable() {
     };
     fetchDocuments();
   }, []);
-
+ 
   const filteredDocuments = documents.filter((doc) => {
     const matchesSearch = doc.document_title
       .toLowerCase()
@@ -423,7 +431,7 @@ export default function DocumentsTable() {
                             className="px-3 py-1 text-sm text-white rounded"
                             onClick={() => {
                               setSelectedDocument(doc);
-                              setShowLinkInterface(false);
+                              setShowLinks(true);
                             }}
                           >
                             Links
@@ -437,7 +445,10 @@ export default function DocumentsTable() {
                             {selectedDocument?.document_title + " Connections"}
                           </DialogTitle>
                           <DialogDescription className="text-gray-700">
-                           
+                         {selectedDocument && showLinks && <Links
+                          selectedDocument={selectedDocument}
+                           setSelectedDocument={setSelectedDocument}  
+                           />}
                           </DialogDescription>
                         </DialogContent>
                       </Dialog>
@@ -626,5 +637,113 @@ export default function DocumentsTable() {
         </Pagination>
       </div>
     </div>
+  );
+}
+
+export function Links({ selectedDocument, setSelectedDocument }) {
+  const [docToLink, setDocToLink] = useState(null);
+  const [linkType, setLinkType] = useState(null);
+  const [links, setLinks] = useState([]);
+  const [showDocInfo, setShowDocInfo] = useState(false);
+  const [documentDetails, setDocumentDetails] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const handleClickDoc = (docId, connectionType) => {
+    console.log("DOCUMENTO SELEZIONATO", docId); // Verifica che l'ID sia corretto
+    setDocToLink(docId); // Imposta prima il documento
+    setShowDocInfo(true); // Mostra il modal secondario
+    setLinkType(connectionType);
+    console.log("doc:", docToLink, "selectedDocument", selectedDocument);
+  };
+
+
+  useEffect(() => {
+    const fetchLinks = async () => {
+      if (selectedDocument) {
+        try {
+          const data = await API.getConnectionsByDocumentTitle(selectedDocument.document_title);
+          setLinks(data.data || []);
+        } catch (error) {
+          console.error("Error fetching links:", error);
+          setLinks([]);
+        }
+      }
+    };
+
+    fetchLinks();
+  }, [selectedDocument]);
+
+  const removeLink = () => {
+    console.log("Remove link functionality");
+    // Implementa la logica per rimuovere il link se necessario
+  };
+
+  return (
+    <>
+      {links.length > 0 ? (
+        <ul style={{ padding: 0, listStyle: "none" }}>
+          {links.map((link, index) => (
+            <li key={index} style={{ marginBottom: "0.5rem" }}>
+              <a
+                href={link.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ textDecoration: "none" }}
+              >
+                <Stack direction="row" spacing={1} alignItems="center">
+                  <button
+                    onClick={() => handleClickDoc(link.parent_id, link.connection_type)}
+                    style={{
+                      background: "none",
+                      border: "1px solid #ccc",
+                      padding: "6px 12px",
+                      borderRadius: "10px",
+                      color: "#333",
+                      fontSize: "14px",
+                      cursor: "pointer",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {link.parent_id}
+                  </button>
+                  <Typography variant="body2" style={{ color: "#555", textTransform: "lowercase" }}>
+                    →
+                  </Typography>
+                  <button
+                    onClick={() => handleClickDoc(link.children_id, link.connection_type)}
+                    style={{
+                      background: "none",
+                      border: "1px solid #ccc",
+                      padding: "6px 12px",
+                      borderRadius: "10px",
+                      color: "#333",
+                      fontSize: "14px",
+                      cursor: "pointer",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {link.children_id}
+                  </button>
+                  <Typography
+                    variant="body2"
+                    color="textSecondary"
+                    style={{ textTransform: "lowercase" }}
+                  >
+                    Type: <strong>{link.connection_type}</strong>
+                  </Typography>
+                </Stack>
+              </a>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p>No links available for this document.</p>
+      )}
+
+       {docToLink  && showDocInfo && 
+                  <DocumentInfoModal doc={docToLink} showDocInfo={showDocInfo} setShowDocInfo={setShowDocInfo} linkType={linkType} selectedDocument={selectedDocument}/>}
+                
+    </>
   );
 }
