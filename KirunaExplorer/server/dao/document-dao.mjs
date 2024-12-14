@@ -1205,9 +1205,9 @@ async deleteLink(parentId, childId, connectionType) {
 async updateDocument(body) {
   return new Promise((resolve, reject) => {
     console.log("Body ricevuto per update:", body);
-    const { document_title: title, document_type: type, issuance_date: date, document_description: description, scale: scale, language: language, pages: pages, stakeholders: stakeholders } = body;
+    const { oldTitle: oldTitle, document_title: title, document_type: type, issuance_date: date, document_description: description, scale: scale, language: language, pages: pages, stakeholders: stakeholders } = body;
     console.log("Valori ricevuti:", title, type, date, description, scale, language, pages, stakeholders);
-
+    
     db.serialize(() => {
       db.run("BEGIN TRANSACTION");
 
@@ -1215,6 +1215,7 @@ async updateDocument(body) {
       const documentQuery = `
         UPDATE Documents
         SET 
+          document_title = ?,
           document_type = ?,
           issuance_date = ?,
           document_description = ?,
@@ -1226,7 +1227,7 @@ async updateDocument(body) {
 
       db.run(
         documentQuery,
-        [type, date, description, scale, language, pages, title],
+        [title, type, date, description, scale, language, pages, oldTitle],
         (err) => {
           if (err) {
             console.error("Error updating document fields:", err);
@@ -1243,9 +1244,11 @@ async updateDocument(body) {
                 return reject(new Error("Document ID not found."));
               }
 
+              const actualDocumentId = documentId.document_id;
+
               // Rimuove le associazioni precedenti con gli stakeholder
               const deleteStakeholdersQuery = `DELETE FROM Document_Stakeholder WHERE document_id = ?;`;
-              db.run(deleteStakeholdersQuery, [documentId], (err) => {
+              db.run(deleteStakeholdersQuery, [actualDocumentId], (err) => {
                 if (err) {
                   console.error("Error removing previous stakeholders:", err);
                   db.run("ROLLBACK");
@@ -1261,7 +1264,7 @@ async updateDocument(body) {
 
                   const insertPromises = stakeholders.map((stakeholderName) => {
                     return new Promise((resolveStakeholder, rejectStakeholder) => {
-                      db.run(insertStakeholdersQuery, [documentId, stakeholderName], (err) => {
+                      db.run(insertStakeholdersQuery, [actualDocumentId, stakeholderName], (err) => {
                         if (err) {
                           console.error("Error inserting stakeholder:", err);
                           return rejectStakeholder(new Error("Error inserting stakeholder."));

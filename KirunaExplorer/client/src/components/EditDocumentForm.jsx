@@ -62,17 +62,17 @@ import {
   //   "Others",
   // ];
   
-  const EditDocumentForm = () => {
+  const EditDocumentForm = (props) => {
     const [types, setTypes] = useState([]);
     const [isWholeArea, setIsWholeArea] = useState(false);
     const [isPending, startTransition] = useTransition();
-    const [showPopupMap, setShowPopupMap] = useState(false); // New state for the popup for linking document
-    const [showPopupLink, setShowPopupLink] = useState(false); // New state for the popup for showing map
-    const [stakeholders, setStakeholders] = useState([]); // Stato per gestire gli stakeholder esistenti
-    const [isLoading, setIsLoading] = useState(false); // Stato di caricamento
+    const [showPopupMap, setShowPopupMap] = useState(false);
+    const [showPopupLink, setShowPopupLink] = useState(false);
+    const [stakeholders, setStakeholders] = useState([]);
+    const [isLoading, setIsLoading] = useState(false);
     const [stakeholderInput, setStakeholderInput] = useState('');
-    const [newDocumentType, setNewDocumentType] = useState(""); //stato per tipo documento
-   const [documentDetails, setDocumentDetails] = useState(null);
+    const [newDocumentType, setNewDocumentType] = useState("");
+    const [documentDetails, setDocumentDetails] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [documentId, setDocumentId] = useState(null);
@@ -82,7 +82,7 @@ import {
       message: "",
       severity: "success",
     });
-
+  
     const form = useForm({
       defaultValues: {
         document_title: "",
@@ -95,15 +95,18 @@ import {
         pages: "",
       },
     });
+    const oldTitle = props.documentTitle;
+
     
     useEffect(() => {
       const fetchDocumentDetails = async () => {
         setLoading(true);
         setError(null);
         try {
-          const response = await API.getDocumentById("Kiruna buildings");
+          console.log(oldTitle)
+          const response = await API.getDocumentById(oldTitle);
           const documentData = response.data || null;
-    
+  
           if (documentData) {
             // Aggiorna i valori del modulo con i dettagli ricevuti
             form.reset({
@@ -117,7 +120,7 @@ import {
               pages: documentData.pages || "",
             });
           }
-    
+  
           setDocumentDetails(documentData);
           console.log(documentData);
         } catch (err) {
@@ -128,18 +131,16 @@ import {
           setLoading(false);
         }
       };
-    
+  
       fetchDocumentDetails();
-    }, [form]);
-    
-    
+    }, [props.documentTitle, form]);
+  
     // Aggiungere un nuovo tipo di documento
     const handleAddDocumentType = async () => {
       const trimmedType = newDocumentType.trim();
       try {
-        // Try to add the document type through the API
         const result = await API.addDocumentType(trimmedType);
-    
+  
         if (trimmedType && !types.some((doc) => doc.type === trimmedType)) {
           console.log(result?.data.type_name, 'aaaaa')
           setTypes((prev) => [...prev, { type: result?.data.type_name }]);
@@ -157,9 +158,7 @@ import {
           });
         }
       } catch (error) {
-        // Handle errors from the API or other issues
         console.error("Error adding document type:", error);
-    
         setToast({
           open: true,
           severity: "error",
@@ -167,45 +166,41 @@ import {
         });
       }
     };
-    
-    
+  
     const onSaveTemporaryLinks = () => {
       setShowPopupLink(false); // Close the dialog after saving links
     };
   
     const onSubmit = async (values) => {
+      // Verifica che i dati siano validi prima di continuare
+      if (!values.stakeholders || values.stakeholders.length === 0) {
+        setToast({
+          open: true,
+          message: "Stakeholders missing",
+          severity: "error",
+        });
+        return; // Fermati qui se manca qualcosa di obbligatorio
+      }
+    
       startTransition(async () => {
         const body = {
+          oldTitle,
           ...values,
           scale: values.scale.replace(/\s+/g, ""),
         };
-        // API request
+    
         try {
-  
-          if (body.stakeholders.length === 0) {
-            setToast({
-              open: true,
-              message: "Stakeholders missing",
-              severity: "error",
-            });
-            return;
-          }
-  
-  
-  
-  
           const response = await API.updateDocument(body);
-          // toast.success("Document description added");
-          setDocumentId(response.documentId); // Set the documentId
-  
+          setDocumentId(response.documentId);
+    
           // Save links only if there are any
           if (temporaryLinks.length > 0) {
             await onSaveLinks(response.documentId); // Pass the documentId directly
           }
-  
+    
           form.reset();
-  
-          // Check if response contains an error
+    
+          // Verifica la risposta
           if (response.error) {
             setToast({
               open: true,
@@ -215,24 +210,26 @@ import {
           } else {
             setToast({
               open: true,
-              message: "Added document description",
+              message: "Document description added",
               severity: "success",
             });
             form.reset();
+            
+            // Refresh della pagina solo se tutto è andato a buon fine
+            window.location.reload();
           }
         } catch (error) {
-          setToast({ open: true, message: error, severity: "error" });
+          setToast({ open: true, message: error.message, severity: "error" });
         }
-  
-        /* setTimeout(() => {
-          window.location.reload();
-        }, 1000);*/
+    
         setTemporaryLinks([]);
+        
+        // ** Chiudi il modal dopo il submit ** (anche se ci sono errori)
+        props.onClose(); // Chiama la funzione onClose per chiudere il modal
       });
     };
-  
- 
     
+  
     useEffect(() => {
       const fetchDocumentTypes = async () => {
         try {
@@ -245,10 +242,10 @@ import {
           console.error("Errore durante il recupero dei tipi di documento:", error);
         }
       };
-    
+  
       fetchDocumentTypes();
     }, []);
-    
+  
     const onSaveLinks = async (docId) => {
       for (const link of temporaryLinks) {
         try {
@@ -263,14 +260,7 @@ import {
             payload.to,
             payload.type
           );
-  
-          if (response.error) {
-            //  toast.error(`Error linking "${link.from}" to "${link.to}": ${response.error}`);
-          } else {
-            // toast.success(`Link saved: "${link.from}" to "${link.to}" (${link.type})`);
-          }
         } catch (error) {
-          // toast.error(`An error occurred while linking "${link.from}" to "${link.to}".`);
           console.error(`Error linking "${link.from}" to "${link.to}":`, error);
         }
       }
@@ -279,7 +269,6 @@ import {
     const handleCloseToast = () => {
       setToast((prev) => ({ ...prev, open: false }));
     };
-
   
     useEffect(() => {
       const fetchStakeholders = async () => {
@@ -297,11 +286,9 @@ import {
       };
       fetchStakeholders();
     }, []);
-    
   
     // Aggiungere un nuovo stakeholder
     const handleAddStakeholder = async (newStakeholderName) => {
-  
       try {
         if (newStakeholderName.trim() === '') {
           setToast({
@@ -311,12 +298,10 @@ import {
           });
           return;
         } else {
-  
           const result = await API.addNewStakeholder(newStakeholderName);
           if (result === 201) {
             setStakeholders((prev) => [...prev, newStakeholderName]);
             setStakeholderInput('');
-  
           }
         }
       } catch (error) {
@@ -324,8 +309,7 @@ import {
       }
     };
   
-    const [geoAreas, setGeoAreas] = useState([]); // Per salvare le aree geografiche
-    //const [selectedGeoArea, setSelectedGeoArea] = useState(""); // Per tracciare l'area selezionata
+    const [geoAreas, setGeoAreas] = useState([]);
   
     useEffect(() => {
       const fetchGeoAreas = async () => {
@@ -345,15 +329,6 @@ import {
   
         <Card className="min-w-[280px] max-w-[750px]">
           <CardContent>
-  
-          <h1 style={{marginTop:'20px', fontSize:'22px'}}>
-            <strong>Add new document</strong>        
-            </h1>
-            <div className="text-muted-foreground mt-4 mb-4">
-              Fill out this form to add metadata to a document. Language and pages
-              are not mandatory. Please choose between 'Kiruna Map' OR a single
-              point with coordinates.
-            </div>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 {/* Document Title */}
@@ -400,54 +375,56 @@ import {
                     </FormItem>
                   )}
                 />
-                {/* Document Type */}
                 <FormField
-                      control={form.control}
-                      name="document_type"
-                      rules={typeRules}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Document Type *</FormLabel>
-                          <div className="flex items-center space-x-4">
-                            <FormControl>
-                              <Select onValueChange={field.onChange} value={field.value}>
-                                <FormControl>
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Select a document type" />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  {types.map((document) => (
-                                    <SelectItem key={document.type} value={document.type}>
-                                      {document.type}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </FormControl>
-                            <div className="flex space-x-2 items-center">
-                              <Input
-                                type="text"
-                                value={newDocumentType}
-                                onChange={(e) => setNewDocumentType(e.target.value)}
-                                placeholder="New type"
-                                className="w-40"
-                              />
-                              <Button
-                                type="button"
-                                variant="outline"
-                                onClick={handleAddDocumentType}
-                              >
-                                Add
-                              </Button>
-                            </div>
-                          </div>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-  
-  
+  control={form.control}
+  name="document_type"
+  rules={typeRules}
+  render={({ field }) => (
+    <FormItem>
+      <FormLabel>Document Type *</FormLabel>
+      <div className="flex items-center space-x-4">
+        <FormControl>
+          <Select 
+            onValueChange={field.onChange} 
+            value={field.value}
+            style={{ zIndex: 9999 }} // Aggiungi z-index alto per la selezione
+          >
+            <FormControl>
+              <SelectTrigger>
+                <SelectValue placeholder="Select a document type" />
+              </SelectTrigger>
+            </FormControl>
+            <SelectContent style={{ zIndex: 9999 }}> {/* Imposta z-index anche per il contenuto */}
+              {types.map((document) => (
+                <SelectItem key={document.type} value={document.type}>
+                  {document.type}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </FormControl>
+        <div className="flex space-x-2 items-center">
+          <Input
+            type="text"
+            value={newDocumentType}
+            onChange={(e) => setNewDocumentType(e.target.value)}
+            placeholder="New type"
+            className="w-40"
+          />
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleAddDocumentType}
+          >
+            Add
+          </Button>
+        </div>
+      </div>
+      <FormMessage />
+    </FormItem>
+  )}
+/>
+
                 {/* Stakeholder */}
                 <FormField
                   control={form.control}
@@ -599,11 +576,18 @@ import {
                     
                   </div>
   
-                  <div style={{ textAlign: "center" }}>
-                    <Button type="submit" disabled={isPending} variant="outline" style={{ color: "white", backgroundColor: "black" }}>
-                      Add document description
-                    </Button>
-                  </div>
+                  <div className="flex flex-col gap-y-4 items-start" style={{ marginTop: "-0px" }}>
+                  <Button
+  type="submit"
+  disabled={isPending}
+  variant="outline"
+  style={{ color: "white", backgroundColor: "black" }}
+>
+  Confirm
+</Button>
+
+</div>
+
                 </div>
                       <div>
                 {temporaryLinks.length > 0 && (
