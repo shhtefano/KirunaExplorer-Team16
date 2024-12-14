@@ -11,6 +11,7 @@ import AddDocumentDescPage from "./pages/AddDocumentDesc";
 import ShowDocumentsPage from "./pages/ShowDocuments";
 import AreaMap from "./pages/AreaMap";
 import Resources from "./pages/Resources";
+import EditDocumentPage from "./pages/EditDocumentPage";
 
 function App() {
   return (
@@ -35,7 +36,14 @@ function App() {
               </ProtectedRoute>
             }
           />
-
+          <Route
+            path="/edit-document"
+            element={
+              <ProtectedRoute>
+                <EditDocumentPage />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/documents/list"
             element={

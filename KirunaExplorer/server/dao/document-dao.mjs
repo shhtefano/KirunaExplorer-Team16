@@ -1202,7 +1202,124 @@ async deleteLink(parentId, childId, connectionType) {
   });
 }
 
+async updateDocument(body) {
+  return new Promise((resolve, reject) => {
+    console.log("Body ricevuto per update:", body);
+    const { document_title: title, document_type: type, issuance_date: date, document_description: description, scale: scale, language: language, pages: pages, stakeholders: stakeholders } = body;
+    console.log("Valori ricevuti:", title, type, date, description, scale, language, pages, stakeholders);
 
+    db.serialize(() => {
+      db.run("BEGIN TRANSACTION");
+
+      // Query per aggiornare i campi nella tabella Documents
+      const documentQuery = `
+        UPDATE Documents
+        SET 
+          document_type = ?,
+          issuance_date = ?,
+          document_description = ?,
+          scale = ?,
+          language = ?,
+          pages = ?
+        WHERE document_title = ?;
+      `;
+
+      db.run(
+        documentQuery,
+        [type, date, description, scale, language, pages, title],
+        (err) => {
+          if (err) {
+            console.error("Error updating document fields:", err);
+            db.run("ROLLBACK");
+            return reject(new Error("Error updating document fields."));
+          }
+
+          console.log("Document updated successfully.", title);
+          // Recupera l'ID del documento aggiornato
+          this.getDocumentById(title)
+            .then((documentId) => {
+              if (!documentId) {
+                db.run("ROLLBACK");
+                return reject(new Error("Document ID not found."));
+              }
+
+              // Rimuove le associazioni precedenti con gli stakeholder
+              const deleteStakeholdersQuery = `DELETE FROM Document_Stakeholder WHERE document_id = ?;`;
+              db.run(deleteStakeholdersQuery, [documentId], (err) => {
+                if (err) {
+                  console.error("Error removing previous stakeholders:", err);
+                  db.run("ROLLBACK");
+                  return reject(new Error("Error removing previous stakeholders."));
+                }
+
+                // Inserisce i nuovi stakeholder
+                if (stakeholders && stakeholders.length > 0) {
+                  const insertStakeholdersQuery = `
+                    INSERT INTO Document_Stakeholder (document_id, stakeholder_id) 
+                    VALUES (?, (SELECT stakeholder_id FROM Stakeholders WHERE stakeholder_name = ?));
+                  `;
+
+                  const insertPromises = stakeholders.map((stakeholderName) => {
+                    return new Promise((resolveStakeholder, rejectStakeholder) => {
+                      db.run(insertStakeholdersQuery, [documentId, stakeholderName], (err) => {
+                        if (err) {
+                          console.error("Error inserting stakeholder:", err);
+                          return rejectStakeholder(new Error("Error inserting stakeholder."));
+                        }
+                        resolveStakeholder();
+                      });
+                    });
+                  });
+
+                  Promise.all(insertPromises)
+                    .then(() => {
+                      db.run("COMMIT");
+                      resolve("Document updated successfully.");
+                    })
+                    .catch((err) => {
+                      console.error("Error during stakeholder insertion:", err);
+                      db.run("ROLLBACK");
+                      reject(err);
+                    });
+                } else {
+                  db.run("COMMIT");
+                  resolve("Document updated successfully (no stakeholders).");
+                }
+              });
+            })
+            .catch((err) => {
+              console.error("Error fetching document ID:", err);
+              db.run("ROLLBACK");
+              reject(err);
+            });
+        }
+      );
+    });
+  });
+}
+
+
+// Metodo per recuperare un documento tramite il suo ID
+async getDocumentById(document_title) {
+  return new Promise((resolve, reject) => {
+    console.log("Ricerca del documento con ID:", document_title);
+    const query = `
+      SELECT document_id
+      FROM Documents
+      WHERE document_title = ?;
+    `;
+
+    db.get(query, [document_title], (err, row) => {
+      if (err) {
+        console.error("Errore durante il recupero del documento:", err);
+        return reject(new Error("Errore durante il recupero del documento."));
+      }
+      console.log("Risultato della query getDocumentById:", row); // Debug
+
+      resolve(row); // Restituisci solo l'ID
+    });
+  });
+}
 
 }
 

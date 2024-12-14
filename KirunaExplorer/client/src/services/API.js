@@ -605,6 +605,28 @@ console.log( parentId,
   }
 }
 
+const updateDocument = async (body) => {
+  console.log("body", body);
+  const res = await fetch(SERVER_URL + "/api/edit-document", {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+  if (res.ok) {
+    return res.status;
+  } else if (res.status === 403) {
+    return { error: "Document already exists." };
+  }
+  else if (res.status === 422) {
+    return { error: "Missing Latitude/Longitude or Municipal area" };
+  }
+  else {
+    return { error: "Server error" };
+  }
+};
+
 const API = {
   logIn,
   logOut,
@@ -633,7 +655,8 @@ const API = {
   listFilesInSupabase,
   deleteDocument,
   getDocumentById,
-  deleteLink
+  deleteLink,
+  updateDocument,
 };
 
 export default API;

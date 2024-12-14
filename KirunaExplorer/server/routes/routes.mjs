@@ -369,4 +369,20 @@ router.delete('/api/links', async (req, res) => {
     });
   }
 });
+
+router.put("/api/edit-document", async (req, res) => {
+  try {
+    console.log("Richiesta ricevuta con body:", req.body);
+    
+    const updateResult = await documentDAO.updateDocument(req.body);
+    console.log("Risultato dell'aggiornamento:", updateResult);
+
+    return res.status(200).json({ message: "Documento aggiornato con successo." });
+  } catch (error) {
+    console.error("Errore durante l'aggiornamento:", error);
+    res.status(500).send("Si è verificato un errore durante l'aggiornamento del documento.");
+  }
+});
+
+
 export default router;
