@@ -370,31 +370,53 @@ router.delete('/api/links', async (req, res) => {
   }
 });
 
-// Endpoint per aggiornare i dettagli di un documento
-router.put("/api/document/:document_id", async (req, res) => {
-
+router.put("/api/editDocument", async (req, res) => {
   try {
-    // Estrae l'ID del documento dai parametri della richiesta
-    const { document_id } = req.params;
-
-    // Recupera i dettagli aggiornati dal corpo della richiesta
+    // Recupera i dettagli del documento dal corpo della richiesta
     const updatedDetails = req.body;
+    const { document_title } = updatedDetails; // Estrai il titolo dal corpo
 
-    
-    // Controlla se l'ID del documento è fornito
-    if (!document_id) {
-      return res.status(400).json({ message: "ID del documento mancante." });
+    // Controlla se il titolo del documento è fornito
+    if (!document_title) {
+      return res.status(400).json({ message: "Titolo del documento mancante." });
     }
 
-    // Controlla se i dettagli aggiornati sono forniti
+    // Se i dettagli aggiornati non sono forniti o sono vuoti
     if (!updatedDetails || Object.keys(updatedDetails).length === 0) {
       return res.status(400).json({ message: "Dettagli del documento mancanti." });
     }
 
-    // Esegue l'aggiornamento tramite il DAO
-    const updateResult = await documentDAO.updateDocument(parseInt(document_id, 10), updatedDetails);
+    // Estrai i campi necessari dal corpo della richiesta
+    const {
+      document_type,   // tipo del documento
+      issuance_date,   // data di emissione
+      document_description, // descrizione del documento
+      scale,           // scala
+      language,        // lingua
+      pages,           // numero di pagine
+      stakeholders     // lista di stakeholder
+    } = updatedDetails;
 
-    // Controlla se l'aggiornamento ha avuto successo
+    // Se alcuni campi obbligatori non sono forniti, ritorna un errore
+    if (!document_type || !issuance_date || !document_description || !scale) {
+      return res.status(400).json({ message: "Alcuni campi obbligatori sono mancanti." });
+    }
+
+    // Esegui l'aggiornamento tramite il DAO
+    const updateResult = await documentDAO.updateDocument(
+      {
+        title: document_title,
+        type: document_type,
+        date: issuance_date,
+        description: document_description,
+        scale,
+        language, // opzionale, può essere null
+        pages,    // opzionale, può essere null
+        stakeholders // opzionale, può essere un array vuoto o null
+      }
+    );
+
+    // Se l'aggiornamento ha avuto successo
     if (!updateResult) {
       return res.status(404).json({ message: "Documento non trovato o nessuna modifica effettuata." });
     }
@@ -406,5 +428,7 @@ router.put("/api/document/:document_id", async (req, res) => {
     res.status(500).send("Si è verificato un errore durante l'aggiornamento del documento.");
   }
 });
+
+
 
 export default router;

@@ -1202,66 +1202,112 @@ async deleteLink(parentId, childId, connectionType) {
   });
 }
 
-async updateDocument(documentId, { title, type, stakeholders, date, description, scale, language, pages }) {
+async updateDocument({ title, type, stakeholders, date, description, scale, language, pages }) {
   return new Promise((resolve, reject) => {
-
     db.serialize(() => {
+      // Inizia una transazione
+      db.run('BEGIN TRANSACTION');
+
       // Query per aggiornare i campi nella tabella Documents
       const documentQuery = `
         UPDATE Documents
         SET 
-          document_title = ?,
           document_type = ?,
           issuance_date = ?,
           document_description = ?,
           scale = ?,
           language = ?,
           pages = ?
-        WHERE document_id = ?;
+        WHERE document_title = ?;
       `;
 
       db.run(
         documentQuery,
-        [title, type, date, description, scale, language, pages, documentId],
+        [type, date, description, scale, language, pages, title],
         (err) => {
           if (err) {
             console.error("Error updating document fields:", err);
+            db.run('ROLLBACK'); // Annulla la transazione in caso di errore
             return reject(new Error("Error updating document fields."));
           }
+
+          // Recupera l'ID del documento aggiornato
+          this.getDocumentById(title)
+            .then((documentId) => {
+              if (!documentId) {
+                db.run('ROLLBACK'); // Annulla la transazione se l'ID non viene trovato
+                return reject(new Error("Document ID not found."));
+              }
+
+              // Rimuove le associazioni precedenti con gli stakeholder
+              const deleteStakeholdersQuery = `DELETE FROM Document_Stakeholder WHERE document_id = ?;`;
+              db.run(deleteStakeholdersQuery, [documentId], (err) => {
+                if (err) {
+                  console.error("Error removing previous stakeholders:", err);
+                  db.run('ROLLBACK');
+                  return reject(new Error("Error removing previous stakeholders."));
+                }
+
+                // Inserisce i nuovi stakeholder se esistono
+                if (stakeholders && stakeholders.length > 0) {
+                  const insertStakeholdersQuery = `INSERT INTO Document_Stakeholder (document_id, stakeholder_id) VALUES (?, ?);`;
+                  const insertStakeholderPromises = stakeholders.map((stakeholderId) => {
+                    return new Promise((resolveStakeholder, rejectStakeholder) => {
+                      db.run(insertStakeholdersQuery, [documentId, stakeholderId], (err) => {
+                        if (err) {
+                          console.error("Error inserting stakeholder:", err);
+                          return rejectStakeholder(new Error("Error inserting stakeholder."));
+                        }
+                        resolveStakeholder();
+                      });
+                    });
+                  });
+
+                  Promise.all(insertStakeholderPromises)
+                    .then(() => {
+                      db.run('COMMIT'); // Concludi la transazione
+                      resolve("Document updated successfully.");
+                    })
+                    .catch((err) => {
+                      console.error("Error during stakeholder insertion:", err);
+                      db.run('ROLLBACK');
+                      reject(err);
+                    });
+                } else {
+                  db.run('COMMIT'); // Concludi la transazione anche se non ci sono stakeholder
+                  resolve("Document updated successfully.");
+                }
+              });
+            })
+            .catch((err) => {
+              console.error("Error fetching document ID:", err);
+              db.run('ROLLBACK');
+              reject(err);
+            });
         }
       );
-
-      // Rimuove le associazioni precedenti con gli stakeholder
-      const deleteStakeholdersQuery = `DELETE FROM Document_Stakeholder WHERE document_id = ?;`;
-      db.run(deleteStakeholdersQuery, [documentId], (err) => {
-        if (err) {
-          console.error("Error removing previous stakeholders:", err);
-          return reject(new Error("Error removing previous stakeholders."));
-        }
-      });
-
-      // Inserisce i nuovi stakeholder
-      const insertStakeholdersQuery = `INSERT INTO Document_Stakeholder (document_id, stakeholder_id) VALUES (?, ?);`;
-      const insertStakeholderPromises = stakeholders.map((stakeholderId) => {
-        return new Promise((resolveStakeholder, rejectStakeholder) => {
-          db.run(insertStakeholdersQuery, [documentId, stakeholderId], (err) => {
-            if (err) {
-              console.error("Error inserting stakeholder:", err);
-              return rejectStakeholder(new Error("Error inserting stakeholder."));
-            }
-            resolveStakeholder();
-          });
-        });
-      });
-
-      // Attende il completamento di tutte le operazioni sugli stakeholder
-      Promise.all(insertStakeholderPromises)
-        .then(() => resolve("Document updated successfully."))
-        .catch((err) => reject(err));
     });
   });
 }
 
+// Metodo per recuperare un documento tramite il suo ID
+async getDocumentById(document_title) {
+  return new Promise((resolve, reject) => {
+    const query = `
+      SELECT document_id
+      FROM Documents
+      WHERE document_title = ?;
+    `;
+
+    db.get(query, [document_title], (err, row) => {
+      if (err) {
+        console.error("Errore durante il recupero del documento:", err);
+        return reject(new Error("Errore durante il recupero del documento."));
+      }
+      resolve(row ? row.document_id : null); // Restituisci solo l'ID
+    });
+  });
+}
 
 }
 
@@ -1288,6 +1334,8 @@ async function testUpdateDocument() {
   } catch (error) {
     console.error("Test failed: ", error);
   }
+
+  
 }
 
 //testUpdateDocument();

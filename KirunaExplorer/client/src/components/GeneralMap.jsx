@@ -21,7 +21,6 @@ import 'leaflet.markercluster';
 import 'leaflet.markercluster/dist/MarkerCluster.css';
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 import * as turf from "@turf/turf";
-import EditDocument from "./EditDocument";
 
 // Configura l'icona di default di Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
@@ -92,12 +91,46 @@ const GeneralMap = () => {
   const [allDocs, setAllDocs] = useState([]);
   const [showModalLink, setShowModalLink] = useState(false); //modal per popup links
   const [showLinkInterface, setShowLinkInterface] = useState(false);
-  const [showEditDocumentModal, setShowEditDocumentModal] = useState(false);
-
 
   const ZOOM_LEVEL = 7;
   const WHOLE_AREA_CENTER = { lat: 67.85572, lng: 20.22513 }; // Definisci le coordinate per Kiruna Map
   const WHOLE_AREA_ZOOM = 12; // Definisci un livello di zoom per Kiruna Map
+
+
+  const [editedDocument, setEditedDocument] = useState({ ...selectedDocument });
+  const [showEditModal, setShowEditModal] = useState(false);  // Definisci lo stato per il modal di modifica
+
+  const handleSaveChanges = async () => {
+    try {
+      // Combina i dati preesistenti con quelli modificati
+      const updatedDocument = {
+        ...selectedDocument, // Dati originali
+        ...editedDocument,   // Sovrascrivi con i dati modificati
+      };
+  
+      // Log per debug
+      console.log('Dati inviati al backend:', updatedDocument);
+  
+      // Chiamata all'API per aggiornare il documento
+      const result = await API.updateDocument(selectedDocument.document_title, updatedDocument);
+  
+      // Mostra un messaggio di successo
+      console.log(result.message);
+  
+      // Chiudi il modal
+      setShowEditModal(false);
+  
+      // Aggiorna i dettagli del documento nello stato
+      setSelectedDocument(updatedDocument);
+  
+    } catch (error) {
+      console.error('Errore durante il salvataggio del documento:', error);
+      alert('Errore durante il salvataggio del documento');
+    }
+  };
+  
+  
+  
 
   useEffect(() => {
     const fetchAreas = async () => {
@@ -757,8 +790,7 @@ const GeneralMap = () => {
           setShowModalLink={setShowModalLink} />
 
       )}
-      {/* Modal per visualizzare i dettagli del documento */}
-{selectedDocument && showModal && !showEditCoordinatesModal && !showModalLink && (
+      {selectedDocument && showModal && !showEditCoordinatesModal && !showModalLink && (
   <Modal style={{ marginTop: '8%' }} show={showModal} onHide={() => setShowModal(false)}>
     <Modal.Header closeButton>
       <Modal.Title>Document info</Modal.Title>
@@ -786,7 +818,7 @@ const GeneralMap = () => {
           </Button>
           <Button
             variant="dark"
-            onClick={() => { setShowEditDocumentModal(true); setShowModal(false); }}
+            onClick={() => setShowEditModal(true)}  // Mostra il modal di modifica
           >
             Edit
           </Button>
@@ -798,30 +830,97 @@ const GeneralMap = () => {
     </Modal.Footer>
   </Modal>
 )}
-
-{/* Modal per modificare il documento */}
-{selectedDocument && showEditDocumentModal && (
-  <Modal style={{ marginTop: '8%' }} show={showEditDocumentModal} onHide={() => setShowEditDocumentModal(false)}>
+{showEditModal && (
+  <Modal style={{ marginTop: '8%' }} show={showEditModal} onHide={() => setShowEditModal(false)}>
     <Modal.Header closeButton>
-      <Modal.Title>Edit Document</Modal.Title>
+      <Modal.Title>Edit Document Info</Modal.Title>
     </Modal.Header>
     <Modal.Body>
-      <EditDocument
-        documentId={selectedDocument.id}
-        initialData={{
-          document_title: selectedDocument.document_title,
-          document_description: selectedDocument.description,
-          latitude: selectedDocument.coordinates[0]?.lat || "",
-          longitude: selectedDocument.coordinates[0]?.long || "",
-        }}
-        onSave={() => {
-          setShowEditDocumentModal(false);
-          // Ricarica i dati o aggiorna lo stato per riflettere le modifiche
-        }}
-      />
+      <form>
+      <div>
+  <label>Title:</label>
+  <input
+  type="text"
+  value={editedDocument.document_title || selectedDocument.document_title || ''} // Usa il valore originale come fallback
+  onChange={(e) => setEditedDocument({ ...editedDocument, document_title: e.target.value })}
+/>
+
+</div>
+<div>
+  <label>Document Type:</label>
+  <input
+  type="text"
+  value={editedDocument.document_title || selectedDocument.document_title || ''} // Usa il valore originale come fallback
+  onChange={(e) => setEditedDocument({ ...editedDocument, document_title: e.target.value })}
+/>
+
+</div>
+        <div>
+  <label>Stakeholders:</label>
+  <input
+  type="text"
+  value={editedDocument.document_title || selectedDocument.document_title || ''} // Usa il valore originale come fallback
+  onChange={(e) => setEditedDocument({ ...editedDocument, document_title: e.target.value })}
+/>
+
+</div>
+
+
+<div>
+  <label>Date:</label>
+  <input
+  type="text"
+  value={editedDocument.document_title || selectedDocument.document_title || ''} // Usa il valore originale come fallback
+  onChange={(e) => setEditedDocument({ ...editedDocument, document_title: e.target.value })}
+/>
+
+</div>
+<div>
+  <label>Description:</label>
+  <textarea
+    value={editedDocument.document_title || selectedDocument.document_title || ''} // Usa il valore originale come fallback
+    onChange={(e) => setEditedDocument({ ...editedDocument, document_title: e.target.value })}
+  />
+</div>
+<div>
+  <label>Scale:</label>
+  <input
+  type="text"
+  value={editedDocument.document_title || selectedDocument.document_title || ''} // Usa il valore originale come fallback
+  onChange={(e) => setEditedDocument({ ...editedDocument, document_title: e.target.value })}
+/>
+
+</div>
+<div>
+<input
+  type="text"
+  value={editedDocument.document_title || selectedDocument.document_title || ''} // Usa il valore originale come fallback
+  onChange={(e) => setEditedDocument({ ...editedDocument, document_title: e.target.value })}
+/>
+
+</div>
+<div>
+  <label>Pages:</label>
+  <input
+  type="text"
+  value={editedDocument.document_title || selectedDocument.document_title || ''} // Usa il valore originale come fallback
+  onChange={(e) => setEditedDocument({ ...editedDocument, document_title: e.target.value })}
+/>
+
+</div>
+      </form>
     </Modal.Body>
+    <Modal.Footer>
+      <Button variant="dark" onClick={handleSaveChanges}>
+        Save Changes
+      </Button>
+      <Button variant="dark" onClick={() => setShowEditModal(false)}>
+        Cancel
+      </Button>
+    </Modal.Footer>
   </Modal>
 )}
+
       {/* Modal to link documents */}
       {selectedDocument && showLinkInterface && (
         <Modal show={showLinkInterface} onHide={() => setShowLinkInterface(false)} style={{ marginTop: '8%' }}>

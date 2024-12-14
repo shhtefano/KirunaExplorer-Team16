@@ -62,7 +62,7 @@ import MapIcon from "@mui/icons-material/Map";
 //   "Others",
 // ];
 
-const DocumentDescriptionForm = () => {
+const lol = () => {
   const [types, setTypes] = useState([]);
   const [isWholeArea, setIsWholeArea] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -216,6 +216,35 @@ const DocumentDescriptionForm = () => {
     });
   };
 
+  useEffect(() => {
+    const fetchDocumentData = async (documentTitle) => {
+      try {
+        // Fai una richiesta GET per ottenere i dati del documento
+        const response = await API.getDocumentByTitle(documentTitle);
+        if (response.data) {
+          // Imposta i valori precompilati nei campi del form
+          form.setValue("document_title", response.data.document_title);
+          form.setValue("document_description", response.data.document_description);
+          form.setValue("document_type", response.data.document_type);
+          form.setValue("stakeholders", response.data.stakeholders);
+          form.setValue("scale", response.data.scale);
+          form.setValue("issuance_date", response.data.issuance_date);
+          form.setValue("language", response.data.language);
+          form.setValue("pages", response.data.pages);
+          form.setValue("area_name", response.data.area_name);
+          form.setValue("latitude", response.data.latitude || "");
+          form.setValue("longitude", response.data.longitude || "");
+        }
+      } catch (error) {
+        console.error("Errore durante il recupero del documento:", error);
+        setToast({ open: true, message: "Errore durante il recupero del documento.", severity: "error" });
+      }
+    };
+  
+    // Passa il titolo del documento per caricare i dati
+    const documentTitle = "Kiruna Buildings"; // Questo valore potrebbe essere dinamico
+    fetchDocumentData(documentTitle);
+  }, [form]);
 
   useEffect(() => {
     const fetchDocumentTypes = async () => {
@@ -346,29 +375,6 @@ const DocumentDescriptionForm = () => {
     fetchGeoAreas();
   }, []);
 
-
-  const handleSaveChanges = async () => {
-    try {
-      const response = await fetch(`/api/document/${selectedDocument.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(editedDocument), // Corpo della richiesta con i dati aggiornati
-      });
-  
-      if (!response.ok) {
-        throw new Error('Errore durante l\'aggiornamento del documento');
-      }
-  
-      const result = await response.json();
-      console.log(result.message); // "Documento aggiornato con successo."
-      // Puoi anche chiudere il modal e aggiornare lo stato del documento qui
-    } catch (error) {
-      console.error(error);
-    }
-  };
-  
   return (
     <div>
 
@@ -829,4 +835,4 @@ const DocumentDescriptionForm = () => {
   );
 };
 
-export default DocumentDescriptionForm;
+export default lol;

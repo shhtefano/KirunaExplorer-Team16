@@ -605,7 +605,7 @@ console.log( parentId,
   }
 }
 
-async function updateDocument(documentId, updatedData) {
+/*async function updateDocument(documentId, updatedData) {
   console.log("updateDocument", documentId, updatedData);
 
   const response = await fetch(`${SERVER_URL}/api/document/${documentId}`, {
@@ -622,7 +622,53 @@ async function updateDocument(documentId, updatedData) {
   }
 
   return await response.json();
+}*/
+async function updateDocument(documentTitle, updatedDetails) {
+  const url = `http://localhost:3001/api/editDocument`;
+
+  // Assicurati che il titolo sia incluso nei dettagli aggiornati
+  if (!documentTitle) {
+    throw new Error("Il titolo del documento è obbligatorio.");
+  }
+
+  // Include il titolo come parte del corpo della richiesta
+  const requestBody = {
+    ...updatedDetails, // Altri dettagli aggiornati
+    document_title: documentTitle, // Campo obbligatorio richiesto dal backend
+  };
+
+  console.log(requestBody)
+
+  // Impostazioni della richiesta
+  const options = {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json', // Il contenuto è in formato JSON
+    },
+    body: JSON.stringify(requestBody), // Corpo della richiesta
+  };
+
+  try {
+    // Esegui la richiesta PUT
+    const response = await fetch(url, options);
+
+    // Controlla se la risposta è OK (200-299)
+    if (response.ok) {
+      const data = await response.json(); // Risposta del backend
+      console.log('Documento aggiornato con successo:', data);
+      return data;
+    } else {
+      const errorData = await response.json();
+      console.error('Errore:', errorData.message);
+      throw new Error(errorData.message);
+    }
+  } catch (error) {
+    console.error("Errore durante l'aggiornamento del documento:", error);
+    throw error;
+  }
 }
+
+
 
 const API = {
   logIn,
