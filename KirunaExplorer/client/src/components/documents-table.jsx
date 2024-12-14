@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Stack, Typography } from "@mui/material";
 import { DocumentInfoModal } from "./link-list.jsx";
+import DeleteIcon from "@mui/icons-material/Delete"; // Importa l'icona
 import {
   Table,
   TableHeader,
@@ -432,6 +433,7 @@ export default function DocumentsTable() {
                             onClick={() => {
                               setSelectedDocument(doc);
                               setShowLinks(true);
+                              setShowLinkInterface(false);
                             }}
                           >
                             Links
@@ -446,6 +448,8 @@ export default function DocumentsTable() {
                           </DialogTitle>
                           <DialogDescription className="text-gray-700">
                          {selectedDocument && showLinks && <Links
+                         showLinkInterface={showLinkInterface} 
+                         setShowLinkInterface={setShowLinkInterface}
                           selectedDocument={selectedDocument}
                            setSelectedDocument={setSelectedDocument}  
                            />}
@@ -640,7 +644,7 @@ export default function DocumentsTable() {
   );
 }
 
-export function Links({ selectedDocument, setSelectedDocument }) {
+export function Links({ showLinkInterface, setShowLinkInterface, selectedDocument, setSelectedDocument }) {
   const [docToLink, setDocToLink] = useState(null);
   const [linkType, setLinkType] = useState(null);
   const [links, setLinks] = useState([]);
@@ -648,7 +652,11 @@ export function Links({ selectedDocument, setSelectedDocument }) {
   const [documentDetails, setDocumentDetails] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-
+  useEffect(() => {
+    if (!selectedDocument) {
+      setShowLinkInterface(false);
+    }
+  }, [selectedDocument]);
   const handleClickDoc = (docId, connectionType) => {
     console.log("DOCUMENTO SELEZIONATO", docId); // Verifica che l'ID sia corretto
     setDocToLink(docId); // Imposta prima il documento
@@ -673,7 +681,28 @@ export function Links({ selectedDocument, setSelectedDocument }) {
 
     fetchLinks();
   }, [selectedDocument]);
+  const handleDeleteConnection = async (doc1_id, doc2_id, connection_type) => {
+    const result = await API.deleteConnection(doc1_id, doc2_id, connection_type);
 
+    if (result.success) {
+      // Rimuovi la connessione dalla lista
+      setLinks((prevConnections) =>
+        prevConnections.filter(
+          (conn) =>
+            !(conn.parent_id === doc1_id && conn.children_id === doc2_id && conn.connection_type === connection_type)
+        )
+      );
+
+      // Reset stato
+      setSnackbarMsg('Connection deleted successfully');
+      setOpenSnackbar(true);
+      setErrorSeverity('success');
+    } else {
+      setSnackbarMsg('Failed to delete connection');
+      setOpenSnackbar(true);
+      setErrorSeverity('error');
+    }
+  };
   const removeLink = () => {
     console.log("Remove link functionality");
     // Implementa la logica per rimuovere il link se necessario
@@ -725,6 +754,7 @@ export function Links({ selectedDocument, setSelectedDocument }) {
                   >
                     {link.children_id}
                   </button>
+                  
                   <Typography
                     variant="body2"
                     color="textSecondary"
@@ -732,8 +762,27 @@ export function Links({ selectedDocument, setSelectedDocument }) {
                   >
                     Type: <strong>{link.connection_type}</strong>
                   </Typography>
+                  <Button
+                      variant="outlined"
+                      size="small"
+                      color="error"
+                      onClick={() => handleDeleteConnection(link.parent_id, link.children_id, link.connection_type)}
+                    >
+                      <Trash2 /> {/* Aggiungi l'icona del cestino */}
+                    </Button>
                 </Stack>
               </a>
+              <Button
+                                    variant="outline"
+                                    style={{
+                                      backgroundColor: "black",
+                                      color: "white",
+                                    }}
+                                    className="px-4 py-2 mt-4 text-white bg-blue-500 rounded hover:bg-blue-600"
+                                    onClick={() => {setShowLinkInterface(true), setShowDocInfo(false)}}
+                                  >
+                                    Link Documents
+                                  </Button>
             </li>
           ))}
         </ul>
@@ -742,8 +791,22 @@ export function Links({ selectedDocument, setSelectedDocument }) {
       )}
 
        {docToLink  && showDocInfo && 
-                  <DocumentInfoModal doc={docToLink} showDocInfo={showDocInfo} setShowDocInfo={setShowDocInfo} linkType={linkType} selectedDocument={selectedDocument}/>}
-                
+       <>
+                  <DocumentInfoModal links={links} setLinks={setLinks} doc={docToLink} showDocInfo={showDocInfo} setShowDocInfo={setShowDocInfo} linkType={linkType} selectedDocument={selectedDocument}/>
+                  
+                                  </>
+                  }
+               
+              { showLinkInterface && (
+                              <div className="mt-6 border-t pt-4">
+                                <DocumentLink
+                                  initialDocument={selectedDocument}
+                                />
+                              </div>  ) }                    
+                              
+                              
+                               
+                                
     </>
   );
 }
