@@ -1324,6 +1324,58 @@ async getDocumentById(document_title) {
   });
 }
 
+async getDocumentById(document_title) {
+  return new Promise((resolve, reject) => {
+    console.log("Ricerca del documento con ID:", document_title);
+    const query = `
+      SELECT document_id
+      FROM Documents
+      WHERE document_title = ?;
+    `;
+
+    db.get(query, [document_title], (err, row) => {
+      if (err) {
+        console.error("Errore durante il recupero del documento:", err);
+        return reject(new Error("Errore durante il recupero del documento."));
+      }
+      console.log("Risultato della query getDocumentById:", row); // Debug
+
+      resolve(row); // Restituisci solo l'ID
+    });
+  });
+}
+
+async updateAreaName(area_id, new_area_name) {
+  return new Promise((resolve, reject) => {
+    console.log("Aggiornamento del nome dell'area con ID:", area_id);
+
+    // Prepara la query per aggiornare il nome dell'area
+    const query = `
+      UPDATE Geolocation
+      SET area_name = ?
+      WHERE area_id = ?;
+    `;
+
+    // Esegui la query
+    db.run(query, [new_area_name, area_id], function (err) {
+      if (err) {
+        console.error("Errore durante l'aggiornamento del nome dell'area:", err);
+        return reject(new Error("Errore durante l'aggiornamento del nome dell'area."));
+      }
+
+      // Log del risultato della query per il debug
+      if (this.changes > 0) {
+        console.log("Nome dell'area aggiornato con successo.");
+        resolve(this.changes); // Restituisci il numero di righe modificate
+      } else {
+        console.log("Nessuna area trovata con l'ID fornito.");
+        resolve(0); // Nessuna area trovata o aggiornata
+      }
+    });
+  });
+}
+
+
 }
 
 

@@ -627,6 +627,28 @@ const updateDocument = async (body) => {
   }
 };
 
+const updateArea = async (body) => {
+  console.log("body", body);
+
+  const res = await fetch(SERVER_URL + "/api/edit-area", {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (res.ok) {
+    return res.status; // restituisce lo status se l'aggiornamento è andato a buon fine
+  } else if (res.status === 404) {
+    return { error: "Area not found." }; // Gestisce caso in cui l'area non viene trovata
+  } else if (res.status === 400) {
+    return { error: "Invalid input. Please provide both area_id and new_area_name." }; // Gestisce caso di input non valido
+  } else if (res.status === 500) {
+    return { error: "Server error" }; // Gestisce errore server
+  }
+};
+
 const API = {
   logIn,
   logOut,
@@ -657,6 +679,7 @@ const API = {
   getDocumentById,
   deleteLink,
   updateDocument,
+  updateArea
 };
 
 export default API;

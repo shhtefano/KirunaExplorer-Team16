@@ -48,7 +48,9 @@ const DrawMap = () => {
     const [snackbarMsg, setSnackbarMsg] = useState("");
     const [errorSeverity, setErrorSeverity] = useState("");
     const featureGroupRef = useRef(); // Riferimento al FeatureGroup
-
+    const [showEditModal, setShowEditModal] = useState(false); // Stato per aprire/chiudere il modal
+    const [newAreaName, setNewAreaName] = useState(''); // Nuovo nome dell'area
+  
     useEffect(() => {
         const fetchMapLayers = async () => {
             try {
@@ -167,6 +169,51 @@ const DrawMap = () => {
     const handleSearchChange = (e) => {
         setSearchTerm(e.target.value);
     };
+
+
+  // Funzione per aprire il modal di editing
+  const handleEditClick = (layer) => {
+    setSelectedLayer(layer);
+    setNewAreaName(layer.name); // Imposta il nome attuale come valore predefinito nel campo di input
+    setShowEditModal(true); // Mostra il modal
+  };
+
+  // Funzione per gestire la modifica del nome dell'area
+  const handleEditSubmit = async () => {
+    if (newAreaName && newAreaName !== selectedLayer.name) {
+      const body = {
+        area_id: selectedLayer.id, 
+        new_area_name: newAreaName, 
+      };
+  
+      const result = await API.updateArea(body);
+  
+      if (result === 200) {
+  
+        // Aggiorna il nome dell'area in mapLayers
+        setMapLayers((prevLayers) =>
+          prevLayers.map((layer) =>
+            layer.id === selectedLayer.id ? { ...layer, name: newAreaName } : layer
+          )
+        );
+  
+        // Se hai anche un filtro su filteredLayers, aggiorna anche quello:
+        setFilteredLayers((prevFilteredLayers) =>
+          prevFilteredLayers.map((layer) =>
+            layer.id === selectedLayer.id ? { ...layer, name: newAreaName } : layer
+          )
+        );
+        
+      } else {
+        alert("Errore durante l'aggiornamento dell'area: " + result.error);
+      }
+  
+      setShowEditModal(false);
+    } else {
+      alert("Inserisci un nuovo nome per l'area.");
+    }
+  };
+  
 
     const toggleAreaSelection = (areaName) => {
         setSelectedAreas((prev) =>
@@ -472,47 +519,105 @@ const DrawMap = () => {
                     </Button>
                 </div>
                 <Form.Control
-                    type="text"
-                    placeholder="Search areas by name"
-                    value={searchTerm}
-                    onChange={handleSearchChange}
-                    style={{ marginTop: '30px' }}
-                />
-                <div className="mt-3" style={{ maxHeight: '53vh', overflowY: "auto" }} >
-                    {mapLayers
-                        .filter((layer) => layer.name.toLowerCase().includes(searchTerm.toLowerCase()))
-                        .map((layer) => (
-                            <Button variant={selectedAreas.includes(layer.name) ? "dark" : "outline"} onClick={() => toggleAreaSelection(layer.name)} style={{ width: '100%', border: '3px solid #303030', borderRadius: '20px', paddingLeft: '20px', paddingRight: '20px', paddingTop: '10px', paddingBottom: '10px', display: 'flex', justifyContent: 'space-between', fontSize: '16px', marginTop: '10px' }}>
-                                <Form.Check
-                                    key={layer.id}
-                                    type="checkbox"
-                                    label={layer.name}
-                                    checked={selectedAreas.includes(layer.name)}
-                                    onChange={() => toggleAreaSelection(layer.name)}
-                                    style={{ display: 'none' }} // Nasconde la checkbox
-                                />{layer.name}
-                                {layer.name === 'Kiruna Map' ? (<></>) : (<>
-                                    <Button
-                                        type="button"
-                                        variant="dark"
-                                        onClick={() => deleteArea(layer.name)}
-                                        style={{
-                                            // marginLeft:'0px',
-                                            // width:'10px',
-                                            overflow: "hidden",
-                                            padding: "4px 8px", // Regola il padding per adattarlo
-                                            color: "black", // Scritta rossa
-                                            backgroundColor: "transparent", // Sfondo trasparente
-                                            border: "none", // Rimuovi il bordo
-                                        }}
-                                    >
-                                        <Trash2 color={selectedAreas.includes(layer.name) ? "white" : "black"} size={18}></Trash2>
-                                    </Button>
-                                </>)}
+        type="text"
+        placeholder="Search areas by name"
+        value={searchTerm}
+        onChange={handleSearchChange}
+        style={{ marginTop: '30px' }}
+      />
+      <div className="mt-3" style={{ maxHeight: '53vh', overflowY: "auto" }}>
+        {mapLayers
+          .filter((layer) => layer.name.toLowerCase().includes(searchTerm.toLowerCase()))
+          .map((layer) => (
+            <Button
+              variant={selectedAreas.includes(layer.name) ? "dark" : "outline"}
+              onClick={() => toggleAreaSelection(layer.name)}
+              style={{
+                width: '100%',
+                border: '3px solid #303030',
+                borderRadius: '20px',
+                paddingLeft: '20px',
+                paddingRight: '20px',
+                paddingTop: '10px',
+                paddingBottom: '10px',
+                display: 'flex',
+                justifyContent: 'space-between',
+                fontSize: '16px',
+                marginTop: '10px'
+              }}
+            >
+              <Form.Check
+                key={layer.id}
+                type="checkbox"
+                label={layer.name}
+                checked={selectedAreas.includes(layer.name)}
+                onChange={() => toggleAreaSelection(layer.name)}
+                style={{ display: 'none' }} // Nasconde la checkbox
+              />
+              {layer.name}
 
-                            </Button>
+              {layer.name !== 'Kiruna Map' && (
+                <>
+                  {/* Bottone Edit */}
+                  <Button
+                    type="button"
+                    variant="outline-primary"
+                    onClick={() => handleEditClick(layer)} // Apre il modal per modificare il nome
+                    style={{
+                      marginLeft: '10px',
+                      padding: '4px 8px',
+                      color: "black",
+                      backgroundColor: "transparent",
+                      border: "none",
+                    }}
+                  >
+                    <span>Edit name</span>
+                  </Button>
+
+                  {/* Bottone Trash */}
+                  <Button
+                    type="button"
+                    variant="dark"
+                    onClick={() => deleteArea(layer.name)}
+                    style={{
+                      padding: "4px 8px",
+                      color: "black",
+                      backgroundColor: "transparent",
+                      border: "none",
+                    }}
+                  >
+                    <Trash2 color={selectedAreas.includes(layer.name) ? "white" : "black"} size={18} />
+                  </Button>
+                </>
+              )}
+            </Button>
                         ))}
                 </div>
+                {/* Modal per modificare il nome dell'area */}
+      <Modal show={showEditModal} onHide={() => setShowEditModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>New Area name</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form.Group controlId="newAreaName">
+            <Form.Label>New name</Form.Label>
+            <Form.Control
+              type="text"
+              value={newAreaName}
+              onChange={(e) => setNewAreaName(e.target.value)}
+              placeholder="Inserisci il nuovo nome dell'area"
+            />
+          </Form.Group>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowEditModal(false)}>
+           Cancel
+          </Button>
+          <Button variant="primary" onClick={handleEditSubmit}>
+            Confirm
+          </Button>
+        </Modal.Footer>
+      </Modal>
             </div>
 
             <Snackbar

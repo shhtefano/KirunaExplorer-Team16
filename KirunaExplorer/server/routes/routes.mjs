@@ -384,5 +384,30 @@ router.put("/api/edit-document", async (req, res) => {
   }
 });
 
+router.put("/api/edit-area", async (req, res) => {
+  try {
+    console.log("Richiesta ricevuta con body:", req.body);
+
+    // Verifica che il body contenga sia l'area_id che il nuovo area_name
+    const { area_id, new_area_name } = req.body;
+    if (!area_id || !new_area_name) {
+      return res.status(400).send("area_id e new_area_name sono richiesti.");
+    }
+
+    // Esegui l'aggiornamento usando il DAO
+    const updateResult = await documentDAO.updateAreaName(area_id, new_area_name);
+    console.log("Risultato dell'aggiornamento:", updateResult);
+
+    if (updateResult > 0) {
+      return res.status(200).json({ message: "Nome dell'area aggiornato con successo." });
+    } else {
+      return res.status(404).json({ message: "Area non trovata con l'ID specificato." });
+    }
+
+  } catch (error) {
+    console.error("Errore durante l'aggiornamento:", error);
+    res.status(500).send("Si è verificato un errore durante l'aggiornamento del nome dell'area.");
+  }
+});
 
 export default router;
