@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Save } from "lucide-react";
+import { ResetIcon } from "@radix-ui/react-icons";
 import {
   ResizableHandle,
   ResizablePanel,
@@ -194,7 +194,11 @@ export default function Diagram() {
           </ViewportPortal>
           <Background />
           <MiniMap />
-          <Controls />
+          <Controls>
+            <ControlButton>
+              <ResetIcon />
+            </ControlButton>
+          </Controls>
         </ReactFlow>
       </ResizablePanel>
     </ResizablePanelGroup>
