@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { useCallback, useEffect, useState } from "react";
 import { ResetIcon } from "@radix-ui/react-icons";
 import {
@@ -19,7 +20,6 @@ import {
 import "@xyflow/react/dist/style.css";
 import API from "../services/API";
 import { Node } from "../components/nodes/Node";
-import { typeColors } from "../components/nodes/types";
 import MapPage from "./Map";
 import Legend from "@/components/nodes/Legend";
 
@@ -154,7 +154,7 @@ export default function Diagram() {
               style={{
                 position: "absolute",
                 transform: "translate(0px, 150px)",
-                width: "100%",
+                width: "10000px", // To make timeline longer
                 height: "2px",
                 backgroundColor: "#ddd",
                 zIndex: -1,
