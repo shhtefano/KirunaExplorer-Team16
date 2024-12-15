@@ -34,7 +34,7 @@ const createCountIcon = (count) => {
   return new L.DivIcon({
     html: `
       <div style="
-        background-color: grey;
+        background-color: white;
         background-opacity: 0.5;
         color: black; 
         border: 2px solid white; 
@@ -44,7 +44,7 @@ const createCountIcon = (count) => {
         display: flex; 
         justify-content: center; 
         align-items: center; 
-        font-size: 14px;
+        font-size: 15px;
         font-weight: bold;">
         ${count}
       </div>`,
@@ -91,6 +91,7 @@ const GeneralMap = () => {
   const [allDocs, setAllDocs] = useState([]);
   const [showModalLink, setShowModalLink] = useState(false); //modal per popup links
   const [showLinkInterface, setShowLinkInterface] = useState(false);
+  const [selectedDocumentType, setSelectedDocumentType] = useState("All"); // Stato per il tipo di documento
 
   const ZOOM_LEVEL = 7;
   const WHOLE_AREA_CENTER = { lat: 67.85572, lng: 20.22513 }; // Definisci le coordinate per Kiruna Map
@@ -143,7 +144,7 @@ const GeneralMap = () => {
             const pointBasedDocuments = filteredMarkers.map((doc) => ({
               id: doc.document.document_id,
               document_title: doc.document.document_title,
-              description: doc.document.document_description,
+              document_description: doc.document.document_description,
               stakeholders: doc.document.stakeholders,
               scale: doc.document.scale,
               issuance_date: doc.document.issuance_date,
@@ -183,7 +184,7 @@ const GeneralMap = () => {
             const wholeAreaDocs = filteredMarkers.map((doc) => ({
               id: doc.document.document_id,
               document_title: doc.document.document_title,
-              description: doc.document.document_description,
+              document_description: doc.document.document_description,
               stakeholders: doc.document.stakeholders,
               scale: doc.document.scale,
               issuance_date: doc.document.issuance_date,
@@ -232,33 +233,30 @@ const GeneralMap = () => {
   const renderAreaMarkers = () => {
     const map = mapRef.current?.leafletElement || mapRef.current;
     if (!map) return;
-
+  
     // Rimuovi tutti i marker e cluster precedenti
     map.eachLayer((layer) => {
       if (layer instanceof L.Marker || layer instanceof L.MarkerClusterGroup) {
         map.removeLayer(layer);
       }
     });
-
+  
     // Aggiungi il marker dell'area solo se non è "Point-Based Documents"
     if (selectedArea && selectedArea.name !== "Point-Based Documents") {
       const documentsForArea = filteredDocuments.length;
-
+  
       if (selectedArea.latlngs && selectedArea.latlngs.length > 0) {
         let coordinates;
-
+  
         // Verifica se è un poligono o un multipoligono
         if (Array.isArray(selectedArea.latlngs[0])) {
-          // Multipoligono: latlngs è un array di array di punti
           coordinates = selectedArea.latlngs.map((polygon) =>
-            polygon.map((point) => [point.lng, point.lat]) // Inverti lat/lng
+            polygon.map((point) => [point.lng, point.lat])
           );
         } else {
-          // Poligono: latlngs è un array di punti
           coordinates = [selectedArea.latlngs.map((point) => [point.lng, point.lat])];
         }
-
-        // Crea un oggetto GeoJSON
+  
         const geojson = {
           type: "Feature",
           geometry: {
@@ -266,18 +264,15 @@ const GeneralMap = () => {
             coordinates,
           },
         };
-
+  
         try {
-          // Calcola il centroide usando Turf.js
           const center = turf.centerOfMass(geojson);
-
-          // Ottieni le coordinate del centroide
           const [lng, lat] = center.geometry.coordinates;
-
-          // Aggiungi il marker al centroide
+  
           const areaMarker = L.marker([lat, lng], {
             icon: createCountIcon(documentsForArea),
           });
+  
           map.addLayer(areaMarker);
         } catch (error) {
           console.error("Errore durante il calcolo del centroide:", error);
@@ -287,6 +282,7 @@ const GeneralMap = () => {
       }
     }
   };
+  
 
 
   // Funzione per renderizzare icone cluster documenti point-based
@@ -294,28 +290,52 @@ const GeneralMap = () => {
     if (selectedArea && selectedArea.name === "Point-Based Documents") {
       const map = mapRef.current?.leafletElement || mapRef.current;
       if (!map) return;
-
-      // Crea un gruppo di cluster
+  
       const markerClusterGroup = L.markerClusterGroup();
-
-      // Aggiungi i marker al gruppo
+  
       filteredMarkers.forEach((marker) => {
-        const leafletMarker = L.marker(marker.latlngs, { icon: getMarkerIcon(marker.id) })
-          .on("click", () => {
-            handleMarkerClick(marker.document);
-            setShowModal(true);
-          });
+        const leafletMarker = L.marker(marker.latlngs, {
+          icon: getMarkerIcon(marker.document.document_type.toLowerCase()), // Passa il tipo
+        }).on("click", () => {
+          handleMarkerClick(marker.document);
+          setShowModal(true);
+        });
         markerClusterGroup.addLayer(leafletMarker);
       });
-
-      // Rimuovi i cluster precedenti e aggiungi il nuovo gruppo alla mappa
+  
       map.eachLayer((layer) => {
         if (layer instanceof L.MarkerClusterGroup) {
           map.removeLayer(layer);
         }
       });
-
+  
       map.addLayer(markerClusterGroup);
+    }
+  };
+  
+  useEffect(() => {
+    if (selectedArea) {
+      if (selectedArea.name === "Point-Based Documents") {
+        renderMarkersWithClustering();
+      } else {
+        renderAreaMarkers();
+      }
+    }
+  }, [selectedDocumentType, filteredDocuments, selectedArea]);
+  
+
+  const handleDocumentTypeChange = (event) => {
+    const selectedType = event.target.value;
+    setSelectedDocumentType(selectedType);
+    console.log(selectedType);
+
+    if (selectedType === "All") {
+      setFilteredDocuments(allDocs.map((doc) => doc.document)); // Mostra tutti i documenti
+    } else {
+      const filtered = filteredMarkers.filter(
+        (doc) => doc.document.document_type === selectedType
+      );
+      setFilteredDocuments(filtered.map((doc) => doc.document));
     }
   };
 
@@ -346,24 +366,47 @@ const GeneralMap = () => {
     setFilteredMarkers((prevMarkers) => [...prevMarkers]);
   };
 
+  const ICON_MAP = {
+    design: "/icons/design-icon.png",
+    informative: "/icons/informative-icon.png",
+    technical: "/icons/technical-icon.png",
+    prescriptive: "/icons/prescriptive-icon.png",
+    material_effects: "/icons/material-effects-icon.png",
+    agreement: "/icons/agreement-icon.png",
+    conflict: "/icons/conflict-icon.png",
+    consultation: "/icons/consultation-icon.png",
+    default: "/icons/default-icon.png",
+  };
+
+  const COLOR_MAP = {
+    design: "#ff9999", // Rosso chiaro
+    informative: "#99ccff", // Blu chiaro
+    technical: "#66ff66", // Verde chiaro
+    prescriptive: "#ffcc66", // Arancione chiaro
+    material_effects: "#ff66cc", // Rosa
+    agreement: "#9999ff", // Viola chiaro
+    conflict: "#ff6666", // Rosso intenso
+    consultation: "#66cccc", // Turchese
+    default: "black", // Colore predefinito
+  };
 
   // Funzione per cambiare colore icona
-  const getMarkerIcon = (id) => {
-    return id === selectedMarkerId
-      ? new L.Icon({
-        iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png", // Icona rossa per il marker selezionato
-        iconSize: [25, 41],
-        iconAnchor: [12, 41],
-        popupAnchor: [1, -34],
-        shadowSize: [41, 41],
-      })
-      : new L.Icon({
-        iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.3.1/images/marker-icon.png", // Icona blu per gli altri marker
-        iconSize: [25, 41],
-        iconAnchor: [12, 41],
-        popupAnchor: [1, -34],
-        shadowSize: [41, 41],
-      });
+  const getMarkerIcon = (type) => {
+    console.log(type);
+
+    const iconUrl = ICON_MAP[type] || ICON_MAP.default;
+    const iconColor = COLOR_MAP[type] || COLOR_MAP.default;
+
+    return new L.DivIcon({
+      html: `
+
+        <img src="${iconUrl}" style="width: 50px; height: 50px; border-radius: 50%; border:3px solid ${iconColor}; padding: 2px; background-color: white" />
+    `,
+      className: "", // Non aggiungere classi CSS extra
+      iconSize: [70, 70], // Dimensioni complessive del contenitore
+      iconAnchor: [20, 20], // Centra l'icona
+      popupAnchor: [0, -20], // Popup sopra il marker
+    });
   };
 
   // Funzione per gestire la ricerca
@@ -479,7 +522,7 @@ const GeneralMap = () => {
   const handleAreaChange = (areaId) => {
     const selected = areas.find((area) => area.id === parseInt(areaId, 10));
     setSelectedArea(selected);
-
+    setSelectedDocumentType("All");
     // Centra la mappa se l'area ha coordinate
     if (selected.latlngs && selected.latlngs.length > 0) {
       // Controlla se `selected.latlngs[0]` è un array (per multipoligoni)
@@ -502,7 +545,7 @@ const GeneralMap = () => {
     <div className="row" style={{ padding: '0px', width: '100%', marginLeft: '10px', height: '88vh' }}>
 
       {/* Mappa */}
-      <div className="col-12 col-md-9 text-center " style={{border: '7px solid #242424', padding:'0', borderRadius: '20px'}}>
+      <div className="col-8 col-md-8 text-center " style={{ padding: '0' }}>
 
 
         <MapContainer ref={mapRef} center={center} zoom={ZOOM_LEVEL} style={{ height: "100%", width: "100%", maxHeight: "88vh", borderRadius: '10px' }}>
@@ -558,11 +601,11 @@ const GeneralMap = () => {
       </div>
 
       {/* Sidebar con Dropdown, Search e Lista dei Documenti */}
-      <div className="col-12 col-md-3 text-center">
+      <div className="col-4 col-md-4 text-center">
 
 
         {/* Menu per cambiare tipo di mappa */}
-        <div className="mb-4 mt-2 " >
+        <div className="mb-1 mt-2 " >
           <Button
             type="button"
             variant="outline-dark"
@@ -595,20 +638,46 @@ const GeneralMap = () => {
           </Button>
         </div>
 
-        {/* Dropdown per selezionare l'area */}
-        <div style={{marginTop:'40px', marginBottom:'40px'}}>
-          <Dropdown onSelect={(eventKey) => handleAreaChange(eventKey)} >
-            <Dropdown.Toggle variant="outline-dark">{selectedArea ? selectedArea.name : "Select an area"}</Dropdown.Toggle>
-            <Dropdown.Menu>
-              {areas && areas.map((area) => (
-                <Dropdown.Item key={area.id} eventKey={area.id}>
-                  {area.name}
-                </Dropdown.Item>
-              ))}
-            </Dropdown.Menu>
-          </Dropdown>
+
+        <div className="d-flex text-center align-center justify-center flex-row gap-4">
+
+          {/* Dropdown per selezionare l'area */}
+          <div style={{ marginTop: '40px', marginBottom: '40px' }}>
+            <Dropdown onSelect={(eventKey) => handleAreaChange(eventKey)} >
+              <Dropdown.Toggle variant="outline-dark">{selectedArea ? selectedArea.name : "Select an area"}</Dropdown.Toggle>
+              <Dropdown.Menu>
+                {areas && areas.map((area) => (
+                  <Dropdown.Item key={area.id} eventKey={area.id}>
+                    {area.name}
+                  </Dropdown.Item>
+                ))}
+              </Dropdown.Menu>
+            </Dropdown>
+
+          </div>
+
+          {/* Dropdown per selezionare il tipo di documento */}
+          <div style={{ marginTop: '40px', marginBottom: '40px' }}>
+            <Dropdown onSelect={(eventKey) => handleDocumentTypeChange({ target: { value: eventKey } })}>
+              <Dropdown.Toggle variant="outline-dark">
+                {selectedDocumentType !== "All" ? selectedDocumentType.charAt(0).toUpperCase() + selectedDocumentType.slice(1) : "Document Type"}
+              </Dropdown.Toggle>
+              <Dropdown.Menu>
+                <Dropdown.Item eventKey="All">All</Dropdown.Item>
+                <Dropdown.Item eventKey="Design">Design</Dropdown.Item>
+                <Dropdown.Item eventKey="Informative">Informative</Dropdown.Item>
+                <Dropdown.Item eventKey="Technical">Technical</Dropdown.Item>
+                <Dropdown.Item eventKey="Prescriptive">Prescriptive</Dropdown.Item>
+                <Dropdown.Item eventKey="Material Effects">Material Effects</Dropdown.Item>
+                <Dropdown.Item eventKey="Agreement">Agreement</Dropdown.Item>
+                <Dropdown.Item eventKey="Conflict">Conflict</Dropdown.Item>
+                <Dropdown.Item eventKey="Consultation">Consultation</Dropdown.Item>
+              </Dropdown.Menu>
+            </Dropdown>
+          </div>
 
         </div>
+
 
 
         {/* Barra di ricerca */}
@@ -765,7 +834,7 @@ const GeneralMap = () => {
             <p style={{ marginBottom: '10px' }}><strong>Document Type:</strong> {selectedDocument.document_type}</p>
             <p style={{ marginBottom: '10px' }}><strong>Stakeholders:</strong> {selectedDocument.stakeholders.length > 0 ? selectedDocument.stakeholders.join(', ') : selectedDocument.stakeholders}</p>
             <p style={{ marginBottom: '10px' }}><strong>Date:</strong> {selectedDocument.issuance_date}</p>
-            <p style={{ marginBottom: '10px' }}><strong>Description:</strong> {selectedDocument.description}</p>
+            <p style={{ marginBottom: '10px' }}><strong>Description:</strong> {selectedDocument.document_description}</p>
             <p style={{ marginBottom: '10px' }}><strong>Scale:</strong> {selectedDocument.scale}</p>
             <>
               {selectedDocument.language && <p style={{ marginBottom: '10px' }}><strong>Language:</strong> {selectedDocument.language}</p>}
@@ -935,7 +1004,7 @@ const GeneralMap = () => {
         onClose={() => setSnackbarOpen(false)}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >
-        <Alert onClose={() => setSnackbarOpen(false)} severity={snackbarSeverity} sx={{ width: '100%' }}>
+        <Alert onClose={() => setSnackbarOpen(false)} severity={snackbarSeverity} sx={{ width: '40%' }}>
           {snackbarMessage}
         </Alert>
       </Snackbar>

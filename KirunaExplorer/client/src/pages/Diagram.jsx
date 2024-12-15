@@ -32,10 +32,13 @@ export default function Diagram() {
 
   const transformDocumentsToNodes = (documents) => {
     // Basic sorting by date
+
     const sortedDocs = [...documents].sort((a, b) => {
       if (!a.issuance_date) return 1; // No date goes to end
       if (!b.issuance_date) return -1; // No date goes to end
-      return a.issuance_date.localeCompare(b.issuance_date);
+      return (a.issuance_date?.toString() || "").localeCompare(
+        b.issuance_date?.toString() || ""
+      );
     });
 
     console.log("Sorted documents:", sortedDocs);
