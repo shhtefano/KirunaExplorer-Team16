@@ -57,7 +57,7 @@ export default function Diagram() {
         data: {
           label: doc.document_title,
           id: doc.document_id,
-          type: doc.type_name,
+          type: doc.document_type,
           date: doc.issuance_date,
         },
       };
