@@ -40,8 +40,8 @@ const data = {
       icon: LandPlot,
     },
     {
-      title: "Graph",
-      url: "/graph",
+      title: "Diagram",
+      url: "/diagram",
       icon: GanttChart,
     },
     {
@@ -93,11 +93,11 @@ export function AppSidebar({ ...props }) {
           .filter((item) => item.title === "Map" || item.title === "Documents");
 
   return (
-    <Sidebar collapsible="icon" {...props} style={{ overflow: "hidden"}}>
+    <Sidebar collapsible="icon" {...props} style={{ overflow: "hidden" }}>
       <SidebarHeader>
         <TeamSwitcher teams={data.teams} />
       </SidebarHeader>
-      <SidebarContent style={{ overflow: "hidden"}}>
+      <SidebarContent style={{ overflow: "hidden" }}>
         <NavMain items={navItems} />
       </SidebarContent>
       <SidebarFooter style={{ overflow: "hidden", margin: 0, padding: 0 }}>
