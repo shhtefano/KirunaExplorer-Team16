@@ -1,15 +1,5 @@
 import { Handle, Position } from "@xyflow/react";
-
-const typeColors = {
-  Design: "bg-amber-100",
-  Informative: "bg-blue-100",
-  Technical: "bg-green-100",
-  Prescriptive: "bg-purple-100",
-  "Material Effects": "bg-red-100",
-  Agreement: "bg-teal-100",
-  Conflict: "bg-slate-100",
-  default: "bg-white",
-};
+import { typeColors } from "./types";
 
 export function Node({ data }) {
   const bgColorClass = typeColors[data.type] || typeColors.default;
