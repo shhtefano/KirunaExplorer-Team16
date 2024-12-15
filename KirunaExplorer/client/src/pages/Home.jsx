@@ -67,7 +67,9 @@ const HomePage = () => {
       <div className=" flex flex-col w-full h-full items-center justify-center p-2 space-y-4 text-center">
         <Card className="min-w-[750px] max-w-1400px] bg-white/60 backdrop-blur-sm">
           <CardHeader>
-            <CardTitle><h3>Kiruna Explorer</h3></CardTitle>
+            <CardTitle>
+              <h3>Kiruna Explorer</h3>
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4 text-left mt-2">
@@ -138,7 +140,7 @@ const HomePage = () => {
                       style={{ minWidth: "200px" }}
                       variant="outline"
                       className="flex items-center"
-                      onClick={(e) => handleRestrictedAction(e, "/graph")}
+                      onClick={(e) => handleRestrictedAction(e, "/diagram")}
                     >
                       <GanttChart className="mr-2" />
                       <span>See Graph</span>
@@ -161,8 +163,7 @@ const HomePage = () => {
                       <span>See Resources</span>
                     </Button>
                     <p className="text-sm text-black w-2/3">
-                    View or upload original resources or attachments.
-
+                      View or upload original resources or attachments.
                     </p>
                   </div>
                 </>
@@ -177,7 +178,7 @@ const HomePage = () => {
             </div>
           )}
           {user && (
-            <div style={{ display: "flex", justifyContent: "center" }} >
+            <div style={{ display: "flex", justifyContent: "center" }}>
               <UserProfileCard user={user} className="bg-white/60" />
             </div>
           )}
