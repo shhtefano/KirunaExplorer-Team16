@@ -1267,7 +1267,7 @@ async updateDocument(body) {
                       db.run(insertStakeholdersQuery, [actualDocumentId, stakeholderName], (err) => {
                         if (err) {
                           console.error("Error inserting stakeholder:", err);
-                          return rejectStakeholder(new Error("Error inserting stakeholder."));
+                          return rejectStakeholder(new Error("Error inserting stakeholders"));
                         }
                         resolveStakeholder();
                       });
