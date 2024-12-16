@@ -793,9 +793,9 @@ const GeneralMap = () => {
           </Button>
         </>
       )}
-      <Button variant="dark" onClick={() => setShowModal(false)}>
+      {/* <Button variant="dark" onClick={() => setShowModal(false)}>
         Close
-      </Button>
+      </Button> */}
     </Modal.Footer>
   </Modal>
 )}
@@ -808,8 +808,8 @@ const GeneralMap = () => {
     size="lg"  // Modal molto largo
     style={{
       marginTop: '0%', // Allinea il modal in alto
-      height: '100vh', // Modal che occupa tutta l'altezza della finestra
-      maxHeight: '100vh', // Evita che il modal superi l'altezza della finestra
+      height: '95vh', // Modal che occupa tutta l'altezza della finestra
+      maxHeight: '95vh', // Evita che il modal superi l'altezza della finestra
     }}
   >
     <Modal.Header closeButton>
@@ -817,8 +817,8 @@ const GeneralMap = () => {
     </Modal.Header>
     <Modal.Body
       style={{
-        height: 'calc(100vh - 56px)',  // Calcola l'altezza disponibile (escludendo l'header)
-        overflowY: 'auto',  // Abilita la scrollbar verticale
+        height: '80vh',  // Calcola l'altezza disponibile (escludendo l'header)
+        overflowY: 'hidden',  // Abilita la scrollbar verticale
       }}
     >
       {/* Passa solo document_title alla componente EditDocumentForm */}
@@ -827,11 +827,11 @@ const GeneralMap = () => {
         onClose={() => setShowEditModal(false)}  // Passa la funzione per chiudere il modal
       />
     </Modal.Body>
-    <Modal.Footer>
+    {/* <Modal.Footer>
       <Button variant="dark" onClick={() => setShowEditModal(false)}>
         Close
       </Button>
-    </Modal.Footer>
+    </Modal.Footer> */}
   </Modal>
 )}
 
