@@ -51,6 +51,7 @@ import DocumentLinkOnCreation from "./creation-document-link.jsx";
 import Snackbar from "@mui/material/Snackbar";
 import Alert from "@mui/material/Alert";
 import MapIcon from "@mui/icons-material/Map";
+import { RestorePageOutlined } from "@mui/icons-material";
 
 
 // const stakeholders = [
@@ -215,8 +216,11 @@ const EditDocumentForm = (props) => {
           });
           form.reset();
 
+          if(response.error === "A document with the same title already exists."){
+            setToast({ open: true, message: error.message, severity: "error" });
+          } else {
           // Refresh della pagina solo se tutto è andato a buon fine
-          window.location.reload();
+          window.location.reload();}
         }
       } catch (error) {
         setToast({ open: true, message: error.message, severity: "error" });
@@ -224,10 +228,15 @@ const EditDocumentForm = (props) => {
 
       setTemporaryLinks([]);
 
+      if(response.error === "A document with the same title already exists."){
+        setToast({ open: true, message: error.message, severity: "error" });
+      } else {
       // ** Chiudi il modal dopo il submit ** (anche se ci sono errori)
       props.onClose(); // Chiama la funzione onClose per chiudere il modal
+      }
     });
   };
+  
 
 
   useEffect(() => {

@@ -9,7 +9,7 @@ import { Popup } from "react-leaflet";
 import API from "../../src/services/API";
 import { Snackbar, Alert } from "@mui/material";
 import { Marker } from "react-leaflet";
-import { Crop, MapPin, Trash2 } from "lucide-react";
+import { Crop, MapPin, Trash2, Edit } from "lucide-react";
 // Configura l'icona di default di Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
 
@@ -182,37 +182,51 @@ const DrawMap = () => {
   const handleEditSubmit = async () => {
     if (newAreaName && newAreaName !== selectedLayer.name) {
       const body = {
-        area_id: selectedLayer.id, 
-        new_area_name: newAreaName, 
+        area_id: selectedLayer.id,
+        new_area_name: newAreaName,
       };
   
       const result = await API.updateArea(body);
   
-      if (result === 200) {
-  
-        // Aggiorna il nome dell'area in mapLayers
+      
+        // Handle error based on the error returned by the API
+        if (result.error === "The area name is already in use. Please choose a different name.") {
+          setSnackbarMsg(result.error);
+          setErrorSeverity("error");
+          setOpenSnackbar(true);
+        } else {
+          // Update the area's name in mapLayers
         setMapLayers((prevLayers) =>
-          prevLayers.map((layer) =>
-            layer.id === selectedLayer.id ? { ...layer, name: newAreaName } : layer
-          )
-        );
-  
-        // Se hai anche un filtro su filteredLayers, aggiorna anche quello:
-        setFilteredLayers((prevFilteredLayers) =>
-          prevFilteredLayers.map((layer) =>
-            layer.id === selectedLayer.id ? { ...layer, name: newAreaName } : layer
-          )
-        );
-        
-      } else {
-        alert("Errore durante l'aggiornamento dell'area: " + result.error);
-      }
+            prevLayers.map((layer) =>
+              layer.id === selectedLayer.id ? { ...layer, name: newAreaName } : layer
+            )
+          );
+    
+          // If filteredLayers is in use, update it as well
+          setFilteredLayers((prevFilteredLayers) =>
+            prevFilteredLayers.map((layer) =>
+              layer.id === selectedLayer.id ? { ...layer, name: newAreaName } : layer
+            )
+          );
+    
+          // Show success message
+          setSnackbarMsg("Area name updated successfully!");
+          setErrorSeverity("success");
+          setOpenSnackbar(true);
+        }
+      
   
       setShowEditModal(false);
     } else {
-      alert("Inserisci un nuovo nome per l'area.");
+      // Show validation message
+      setSnackbarMsg("Please enter a new name for the area.");
+      setErrorSeverity("warning");
+      setOpenSnackbar(true);
     }
   };
+  
+  
+  
   
 
     const toggleAreaSelection = (areaName) => {
@@ -558,36 +572,39 @@ const DrawMap = () => {
 
               {layer.name !== 'Kiruna Map' && (
                 <>
-                  {/* Bottone Edit */}
-                  <Button
-                    type="button"
-                    variant="outline-primary"
-                    onClick={() => handleEditClick(layer)} // Apre il modal per modificare il nome
-                    style={{
-                      marginLeft: '10px',
-                      padding: '4px 8px',
-                      color: "black",
-                      backgroundColor: "transparent",
-                      border: "none",
-                    }}
-                  >
-                    <span>Edit name</span>
-                  </Button>
+<div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '8px' }}>
+  {/* Bottone Edit */}
+  <Button
+    type="button"
+    variant="outline-primary"
+    onClick={() => handleEditClick(layer)} // Apre il modal per modificare il nome
+    style={{
+      padding: '4px 8px',
+      color: "black",
+      backgroundColor: "transparent",
+      border: "none",
+    }}
+  >
+    <Edit color={selectedAreas.includes(layer.name) ? "white" : "black"} size={18} />
+  </Button>
 
-                  {/* Bottone Trash */}
-                  <Button
-                    type="button"
-                    variant="dark"
-                    onClick={() => deleteArea(layer.name)}
-                    style={{
-                      padding: "4px 8px",
-                      color: "black",
-                      backgroundColor: "transparent",
-                      border: "none",
-                    }}
-                  >
-                    <Trash2 color={selectedAreas.includes(layer.name) ? "white" : "black"} size={18} />
-                  </Button>
+  {/* Bottone Trash */}
+  <Button
+    type="button"
+    variant="dark"
+    onClick={() => deleteArea(layer.name)}
+    style={{
+      padding: "4px 8px",
+      color: "black",
+      backgroundColor: "transparent",
+      border: "none",
+    }}
+  >
+    <Trash2 color={selectedAreas.includes(layer.name) ? "white" : "black"} size={18} />
+  </Button>
+</div>
+
+
                 </>
               )}
             </Button>
