@@ -283,37 +283,67 @@ const GeneralMap = ({selectedDocumentId}) => {
     }
   };
   
+// Funzione per renderizzare icone cluster documenti point-based
+const renderMarkersWithClustering = () => {
+  if (selectedArea && selectedArea.name === "Point-Based Documents") {
+    const map = mapRef.current?.leafletElement || mapRef.current;
+    if (!map) return;
 
+    const markerClusterGroup = L.markerClusterGroup();
 
-  // Funzione per renderizzare icone cluster documenti point-based
-  const renderMarkersWithClustering = () => {
-    if (selectedArea && selectedArea.name === "Point-Based Documents") {
-      const map = mapRef.current?.leafletElement || mapRef.current;
-      if (!map) return;
-  
-      const markerClusterGroup = L.markerClusterGroup();
-  
-      filteredMarkers.forEach((marker) => {
-        const isHighlighted = marker.document.document_id === selectedDocumentId; // Controlla se l'ID corrisponde
-        const leafletMarker = L.marker(marker.latlngs, {
-          icon: getMarkerIcon(marker.document.document_type.toLowerCase(), isHighlighted), // Passa il flag
-        }).on("click", () => {
+    filteredMarkers.forEach((marker) => {
+      const isHighlighted = marker.document.document_id === selectedDocumentId; // Controlla se l'ID corrisponde
+      const leafletMarker = L.marker(marker.latlngs, {
+        icon: getMarkerIcon(marker.document.document_type.toLowerCase(), isHighlighted), // Passa il flag
+      })
+        .on("click", () => {
           handleMarkerClick(marker.document);
           setShowModal(true);
+        })
+        .on("mouseover", (e) => {
+          const selectedDocument = marker.document; // Ottieni il documento selezionato
+
+          const popupContent = `
+            <div>
+              <p style="margin-bottom: 10px;"><strong>Title:</strong> ${selectedDocument.document_title}</p>
+              <p style="margin-bottom: 10px;"><strong>Document Type:</strong> ${selectedDocument.document_type}</p>
+              <p style="margin-bottom: 10px;"><strong>Stakeholders:</strong> ${
+                selectedDocument.stakeholders.length > 0
+                  ? selectedDocument.stakeholders.join(', ')
+                  : selectedDocument.stakeholders
+              }</p>
+              <p style="margin-bottom: 10px;"><strong>Date:</strong> ${selectedDocument.issuance_date}</p>
+              <p style="margin-bottom: 10px;"><strong>Scale:</strong> ${selectedDocument.scale}</p>
+              ${selectedDocument.language ? `<p style="margin-bottom: 10px;"><strong>Language:</strong> ${selectedDocument.language}</p>` : ''}
+              ${selectedDocument.pages ? `<p style="margin-bottom: 10px;"><strong>Pages:</strong> ${selectedDocument.pages}</p>` : ''}
+              <p style="margin-bottom: 10px;"><strong>Description:</strong> ${selectedDocument.document_description}</p>
+
+              </div>
+          `;
+
+          const popup = L.popup()
+            .setLatLng(e.latlng)
+            .setContent(popupContent);
+          popup.openOn(map); // Apri il popup sulla mappa
+        })
+        .on("mouseout", () => {
+          map.closePopup(); // Chiudi il popup quando il mouse lascia il marker
         });
-  
-        markerClusterGroup.addLayer(leafletMarker);
-      });
-  
-      map.eachLayer((layer) => {
-        if (layer instanceof L.MarkerClusterGroup) {
-          map.removeLayer(layer);
-        }
-      });
-  
-      map.addLayer(markerClusterGroup);
-    }
-  };
+
+      markerClusterGroup.addLayer(leafletMarker);
+    });
+
+    // Rimuovi eventuali cluster precedenti
+    map.eachLayer((layer) => {
+      if (layer instanceof L.MarkerClusterGroup) {
+        map.removeLayer(layer);
+      }
+    });
+
+    map.addLayer(markerClusterGroup);
+  }
+};
+
   
   useEffect(() => {
     if (selectedArea) {

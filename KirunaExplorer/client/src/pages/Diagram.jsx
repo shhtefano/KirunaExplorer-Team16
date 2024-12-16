@@ -1,3 +1,5 @@
+// src/pages/Diagram.jsx
+
 import { useCallback, useEffect, useState } from "react";
 import { ResetIcon } from "@radix-ui/react-icons";
 import {
@@ -31,7 +33,7 @@ export default function Diagram() {
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [loading, setLoading] = useState(true);
   const [selectedDocumentId, setSelectedDocumentId] = useState(null);
-
+  const [hoveredDocument, setHoveredDocument] = useState(null);
 
   const transformDocumentsToNodes = (documents) => {
     const sortedDocs = [...documents].sort((a, b) => {
@@ -169,7 +171,23 @@ export default function Diagram() {
     setSelectedDocumentId(node.data.id);
     console.log("Document clicked:", node.data.id);
   };
+  const handleNodeMouseEnter = async (event, node) => {
+    try {
+      const documentId = node.data.label;
+      const response = await API.getDocumentById(documentId);
   
+      if (response.success && response.data) {
+        const fullDocument = response.data;
+        setHoveredDocument(fullDocument);
+      }
+    } catch (error) {
+      console.error("Error fetching document details:", error);
+    }
+  };
+
+  const handleNodeMouseLeave = () => {
+    setHoveredDocument(null);
+  };
 
   if (loading) {
     return <div>Loading diagram...</div>;
@@ -190,6 +208,8 @@ export default function Diagram() {
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
           onNodeClick={handleNodeClick}
+          onNodeMouseEnter={handleNodeMouseEnter}
+          onNodeMouseLeave={handleNodeMouseLeave}
           fitView
           direction="LR"
         >
@@ -240,6 +260,10 @@ export default function Diagram() {
               ))}
             </div>
           </ViewportPortal>
+
+          {/* Usa il componente DocumentInfo per visualizzare i dettagli del documento hoverato */}
+          <DocumentInfo document={hoveredDocument} />
+
           <Legend />
           <Background />
           <MiniMap />
@@ -253,3 +277,56 @@ export default function Diagram() {
     </ResizablePanelGroup>
   );
 }
+
+// src/components/nodes/DocumentInfo.jsx
+
+export const DocumentInfo = ({ document }) => {
+  if (!document) return null;
+
+  return (
+    <div
+      style={{
+        position: "absolute",
+        top: "10px",
+        left: "10px",
+        padding: "10px",
+        backgroundColor: "#fff",
+        border: "1px solid #ddd",
+        boxShadow: "0 0 10px rgba(0, 0, 0, 0.1)",
+        zIndex: 10,
+        maxWidth: "300px",
+        fontSize: "12px",
+      }}
+    >
+      <p style={{ marginBottom: "10px" }}>
+        <strong>Title:</strong> {document.document_title}
+      </p>
+      <p style={{ marginBottom: "10px" }}>
+        <strong>Document Type:</strong> {document.document_type}
+      </p>
+      <p style={{ marginBottom: "10px" }}>
+        <strong>Stakeholders:</strong> {document.stakeholders.length > 0 ? document.stakeholders.join(', ') : 'N/A'}
+      </p>
+      <p style={{ marginBottom: "10px" }}>
+        <strong>Date:</strong> {document.issuance_date}
+      </p>
+      <p style={{ marginBottom: "10px" }}>
+        <strong>Scale:</strong> {document.scale}
+      </p>
+      {document.language && (
+        <p style={{ marginBottom: "10px" }}>
+          <strong>Language:</strong> {document.language}
+        </p>
+      )}
+      {document.pages && (
+        <p style={{ marginBottom: "10px" }}>
+          <strong>Pages:</strong> {document.pages}
+        </p>
+      )}
+      <p style={{ marginBottom: "10px" }}>
+        <strong>Description:</strong> {document.document_description}
+      </p>
+    </div>
+  );
+};
+
