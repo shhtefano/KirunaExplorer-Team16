@@ -341,8 +341,8 @@ export default function DocumentsTable() {
                 <TableCell className="py-2 px-4">{doc.document_type}</TableCell>
                 <TableCell className="py-2 px-4">{doc.language}</TableCell>
                 <TableCell className="py-2 px-4">
-                  <div className="flex">
-                    <div>
+                  <div className="flex"    >
+                    <div style={{ overflowY: "auto"}}>
                       <Dialog>
                         <DialogTrigger asChild>
                           <button
@@ -372,7 +372,7 @@ export default function DocumentsTable() {
                                 />
                               </div>
                             ) : (
-                              <div style={{ fontSize: "16px", margin: "10px" }}>
+                              <div style={{ fontSize: "16px", margin: "10px",    overflowY: "auto" }}>
                                 <p className="m-2">
                                   <strong>Stakeholders:</strong>{" "}
                                   {selectedDocument?.stakeholders?.length > 0
@@ -440,19 +440,26 @@ export default function DocumentsTable() {
                           </button>
                         </DialogTrigger>
                         <DialogContent
-                          className=" p-6 bg-white rounded-lg shadow-lg"
-                          style={{ maxHeight: "140vh", overflowY: "auto" }}
+                          className="p-6 bg-white rounded-lg shadow-lg"
+                          style={{
+                            maxHeight: "80vh", // Altezza massima del dialog responsivo
+                            overflowY: "auto", // Abilita lo scorrimento verticale
+                            width: "90vw", // Larghezza massima (per i dispositivi mobili)
+                            maxWidth: "600px", // Larghezza massima per desktop
+                          }}
                         >
                           <DialogTitle className="text-xl font-bold text-gray-800">
                             {selectedDocument?.document_title + " Connections"}
                           </DialogTitle>
                           <DialogDescription className="text-gray-700">
-                         {selectedDocument && showLinks && <Links
-                         showLinkInterface={showLinkInterface} 
-                         setShowLinkInterface={setShowLinkInterface}
-                          selectedDocument={selectedDocument}
-                           setSelectedDocument={setSelectedDocument}  
-                           />}
+                            {selectedDocument && showLinks && (
+                              <Links
+                                showLinkInterface={showLinkInterface}
+                                setShowLinkInterface={setShowLinkInterface}
+                                selectedDocument={selectedDocument}
+                                setSelectedDocument={setSelectedDocument}
+                              />
+                            )}
                           </DialogDescription>
                         </DialogContent>
                       </Dialog>
@@ -707,10 +714,9 @@ export function Links({ showLinkInterface, setShowLinkInterface, selectedDocumen
     console.log("Remove link functionality");
     // Implementa la logica per rimuovere il link se necessario
   };
-
   return (
     <>
-      {links.length > 0 ? (
+      {!showLinkInterface && (links.length > 0 ? (
         <ul style={{ padding: 0, listStyle: "none" }}>
           {links.map((link, index) => (
             <li key={index} style={{ marginBottom: "0.5rem" }}>
@@ -754,7 +760,7 @@ export function Links({ showLinkInterface, setShowLinkInterface, selectedDocumen
                   >
                     {link.children_id}
                   </button>
-                  
+  
                   <Typography
                     variant="body2"
                     color="textSecondary"
@@ -763,50 +769,77 @@ export function Links({ showLinkInterface, setShowLinkInterface, selectedDocumen
                     Type: <strong>{link.connection_type}</strong>
                   </Typography>
                   <Button
-                      variant="outlined"
-                      size="small"
-                      color="error"
-                      onClick={() => handleDeleteConnection(link.parent_id, link.children_id, link.connection_type)}
-                    >
-                      <Trash2 /> {/* Aggiungi l'icona del cestino */}
-                    </Button>
+                    variant="outlined"
+                    size="small"
+                    color="error"
+                    onClick={() => handleDeleteConnection(link.parent_id, link.children_id, link.connection_type)}
+                  >
+                    <Trash2 /> {/* Icona del cestino */}
+                  </Button>
                 </Stack>
               </a>
-              <Button
-                                    variant="outline"
-                                    style={{
-                                      backgroundColor: "black",
-                                      color: "white",
-                                    }}
-                                    className="px-4 py-2 mt-4 text-white bg-blue-500 rounded hover:bg-blue-600"
-                                    onClick={() => {setShowLinkInterface(true), setShowDocInfo(false)}}
-                                  >
-                                    Link Documents
-                                  </Button>
             </li>
           ))}
         </ul>
       ) : (
         <p>No links available for this document.</p>
+      ))}
+  
+      {/* Pulsante per mostrare l'interfaccia di linking */}
+      {!showLinkInterface && (
+        <Button
+          variant="outline"
+          style={{
+            backgroundColor: "black",
+            color: "white",
+          }}
+          className="px-4 py-2 mt-4 text-white bg-blue-500 rounded hover:bg-blue-600"
+          onClick={() => {
+            setShowLinkInterface(true);
+            setShowDocInfo(false);
+          }}
+        >
+          Link Documents
+        </Button>
       )}
+  
+      {/* Modal o interfaccia secondaria */}
+      {docToLink && showDocInfo && (
+        <DocumentInfoModal
+          links={links}
+          setLinks={setLinks}
+          doc={docToLink}
+          showDocInfo={showDocInfo}
+          setShowDocInfo={setShowDocInfo}
+          linkType={linkType}
+          selectedDocument={selectedDocument}
+        />
+      )}
+  
+      {/* Interfaccia per linkare documenti con pulsante indietro */}
+      {showLinkInterface && (
+          <div className="mt-6 border-t pt-1">
+            {/* Pulsante per tornare alla lista dei link */}
+            <Button
+              variant="outline"
+              style={{
+                backgroundColor: "black",
+                color: "white",
+              }}
+              className="px-4 py-2 mt-4 text-white bg-blue-500 rounded hover:bg-blue-600"
+              onClick={() => setShowLinkInterface(false)}
+            >
+              ← Back to Links
+            </Button>
 
-       {docToLink  && showDocInfo && 
-       <>
-                  <DocumentInfoModal links={links} setLinks={setLinks} doc={docToLink} showDocInfo={showDocInfo} setShowDocInfo={setShowDocInfo} linkType={linkType} selectedDocument={selectedDocument}/>
-                  
-                                  </>
-                  }
-               
-              { showLinkInterface && (
-                              <div className="mt-6 border-t pt-4">
-                                <DocumentLink
-                                  initialDocument={selectedDocument}
-                                />
-                              </div>  ) }                    
-                              
-                              
-                               
-                                
+            {/* Componente per il linking dei documenti */}
+            <div className="mt-6 p-4 bg-white shadow-lg rounded-lg">
+              <DocumentLink initialDocument={selectedDocument} />
+            </div>
+          </div>
+        )}
+
     </>
   );
+  
 }
