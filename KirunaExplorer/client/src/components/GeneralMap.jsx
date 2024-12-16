@@ -294,12 +294,14 @@ const GeneralMap = ({selectedDocumentId}) => {
       const markerClusterGroup = L.markerClusterGroup();
   
       filteredMarkers.forEach((marker) => {
+        const isHighlighted = marker.document.document_id === selectedDocumentId; // Controlla se l'ID corrisponde
         const leafletMarker = L.marker(marker.latlngs, {
-          icon: getMarkerIcon(marker.document.document_type.toLowerCase()), // Passa il tipo
+          icon: getMarkerIcon(marker.document.document_type.toLowerCase(), isHighlighted), // Passa il flag
         }).on("click", () => {
           handleMarkerClick(marker.document);
           setShowModal(true);
         });
+  
         markerClusterGroup.addLayer(leafletMarker);
       });
   
@@ -321,7 +323,7 @@ const GeneralMap = ({selectedDocumentId}) => {
         renderAreaMarkers();
       }
     }
-  }, [selectedDocumentType, filteredDocuments, selectedArea]);
+  }, [selectedDocumentType, filteredDocuments, selectedArea, selectedDocumentId]);
   
 
   const handleDocumentTypeChange = (event) => {
@@ -391,21 +393,25 @@ const GeneralMap = ({selectedDocumentId}) => {
   };
 
   // Funzione per cambiare colore icona
-  const getMarkerIcon = (type) => {
-    console.log(type);
-
+  const getMarkerIcon = (type, isHighlighted) => {
     const iconUrl = ICON_MAP[type] || ICON_MAP.default;
-    const iconColor = COLOR_MAP[type] || COLOR_MAP.default;
-
+    const iconColor = isHighlighted ? "red" : (COLOR_MAP[type] || COLOR_MAP.default);
+  
     return new L.DivIcon({
       html: `
-
-        <img src="${iconUrl}" style="width: 50px; height: 50px; border-radius: 50%; border:3px solid ${iconColor}; padding: 2px; background-color: white" />
-    `,
-      className: "", // Non aggiungere classi CSS extra
-      iconSize: [70, 70], // Dimensioni complessive del contenitore
-      iconAnchor: [20, 20], // Centra l'icona
-      popupAnchor: [0, -20], // Popup sopra il marker
+        <img src="${iconUrl}" style="
+          width: 50px; 
+          height: 50px; 
+          border-radius: 50%; 
+          border: 3px solid ${iconColor}; 
+          padding: 2px; 
+          background-color: white" 
+        />
+      `,
+      className: "",
+      iconSize: [70, 70],
+      iconAnchor: [20, 20],
+      popupAnchor: [0, -20],
     });
   };
 
