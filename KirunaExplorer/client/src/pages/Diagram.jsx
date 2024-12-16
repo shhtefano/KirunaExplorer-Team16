@@ -30,6 +30,8 @@ export default function Diagram() {
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedDocumentId, setSelectedDocumentId] = useState(null);
+
 
   const transformDocumentsToNodes = (documents) => {
     const sortedDocs = [...documents].sort((a, b) => {
@@ -163,6 +165,12 @@ export default function Diagram() {
     [setEdges]
   );
 
+  const handleNodeClick = (event, node) => {
+    setSelectedDocumentId(node.data.id);
+    console.log("Document clicked:", node.data.id);
+  };
+  
+
   if (loading) {
     return <div>Loading diagram...</div>;
   }
@@ -170,7 +178,7 @@ export default function Diagram() {
   return (
     <ResizablePanelGroup direction="vertical">
       <ResizablePanel>
-        <MapPage />
+        <MapPage selectedDocumentId={selectedDocumentId} />
       </ResizablePanel>
       <ResizableHandle withHandle={true} />
       <ResizablePanel>
@@ -181,6 +189,7 @@ export default function Diagram() {
           edges={edges}
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
+          onNodeClick={handleNodeClick}
           fitView
           direction="LR"
         >

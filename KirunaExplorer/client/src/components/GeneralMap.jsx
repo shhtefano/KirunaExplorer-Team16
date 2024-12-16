@@ -67,7 +67,7 @@ const tileLayers = {
 };
 
 
-const GeneralMap = () => {
+const GeneralMap = ({selectedDocumentId}) => {
   const [center, setCenter] = useState({ lat: 67.85572, lng: 20.22513 });
   const [filteredMarkers, setFilteredMarkers] = useState([]);
   const [selectedArea, setSelectedArea] = useState();
