@@ -21,6 +21,9 @@ import API from "../services/API";
 import { Node } from "../components/nodes/Node";
 import MapPage from "./Map";
 import Legend from "@/components/nodes/Legend";
+import { Card, CardHeader, CardTitle, CardContent } from "../components/ui/card";
+import { Button } from "../components/ui/button";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "../components/ui/select";
 
 const nodeTypes = {
   node: Node,
@@ -31,20 +34,19 @@ export default function Diagram() {
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [loading, setLoading] = useState(true);
   const [selectedDocumentId, setSelectedDocumentId] = useState(null);
-
+  const [showLinkPopup, setShowLinkPopup] = useState(false);
+  const [newLinkData, setNewLinkData] = useState({ source: null, target: null, type: "" });
+  const [linkError, setLinkError] = useState("");
 
   const transformDocumentsToNodes = (documents) => {
     const sortedDocs = [...documents].sort((a, b) => {
-      if (!a.issuance_date) return 1; 
-      if (!b.issuance_date) return -1; 
+      if (!a.issuance_date) return 1;
+      if (!b.issuance_date) return -1;
       return (a.issuance_date?.toString() || "").localeCompare(
         b.issuance_date?.toString() || ""
       );
     });
 
-    console.log("Sorted documents:", sortedDocs);
-
-    // Group documents by date to make the view more clear
     const groupedByDate = sortedDocs.reduce((acc, doc) => {
       const date = doc.issuance_date || "no_date";
       if (!acc[date]) acc[date] = [];
@@ -55,20 +57,14 @@ export default function Diagram() {
     const nodes = [];
     let xPos = 0;
 
-    // Transform to nodes with adjusted positions
     Object.entries(groupedByDate).forEach(([date, docs]) => {
       docs.forEach((doc, index) => {
-        const yPos = index * 150; // Vertical spacing for documents with the same date
-
-        console.log(`Creating node for ${doc.document_title} at position:`, {
-          x: xPos,
-          y: yPos,
-        });
+        const yPos = index * 150;
 
         nodes.push({
           id: doc.document_title,
           type: "node",
-          position: { x: xPos, y: yPos + 100 }, // Offset for better spacing
+          position: { x: xPos, y: yPos + 100 },
           data: {
             label: doc.document_title,
             id: doc.document_id,
@@ -77,8 +73,7 @@ export default function Diagram() {
           },
         });
       });
-
-      xPos += 300; // Increased horizontal spacing for better clarity
+      xPos += 300;
     });
 
     return nodes;
@@ -104,30 +99,28 @@ export default function Diagram() {
 
   const adjustNodePositionsForLinks = (nodes, edges) => {
     const adjustedNodes = [...nodes];
-  
+
     edges.forEach((edge) => {
       const sourceNode = adjustedNodes.find((node) => node.id === edge.source);
       const targetNode = adjustedNodes.find((node) => node.id === edge.target);
-  
+
       if (sourceNode && targetNode) {
-        // Check if there are documents between them
         const blockingNodes = adjustedNodes.filter(
           (node) =>
             node.position.x > sourceNode.position.x &&
             node.position.x < targetNode.position.x &&
             node.position.y === sourceNode.position.y
         );
-  
+
         if (blockingNodes.length > 0) {
-          // If document are in the middle of the link -> Vertical shift
-          targetNode.position.y += 200; // 200px vertical shift
+          targetNode.position.y += 200;
         }
       }
     });
-  
+
     return adjustedNodes;
   };
-  
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -135,19 +128,17 @@ export default function Diagram() {
         const documents = await API.getDocuments();
         const documentNodes = transformDocumentsToNodes(documents);
         const allConnections = [];
-  
+
         for (const doc of documents) {
           const response = await API.getConnectionsByDocumentTitle(doc.document_title);
           if (response.success && response.data) {
             allConnections.push(...response.data);
           }
         }
-  
+
         const documentEdges = transformConnectionsToEdges(allConnections);
-  
-        // Aggiusta le posizioni dei nodi per rendere più chiari i collegamenti
         const resolvedNodes = adjustNodePositionsForLinks(documentNodes, documentEdges);
-  
+
         setNodes(resolvedNodes);
         setEdges(documentEdges);
       } catch (error) {
@@ -156,20 +147,62 @@ export default function Diagram() {
         setLoading(false);
       }
     };
-  
+
     fetchData();
   }, []);
 
   const onConnect = useCallback(
-    (connection) => setEdges((edges) => addEdge(connection, edges)),
-    [setEdges]
+    (connection) => {
+      const existingEdge = edges.find(
+        (edge) => edge.source === connection.source && edge.target === connection.target
+      );
+
+      if (existingEdge) {
+        setEdges((edges) => addEdge(connection, edges));
+      } else {
+        setNewLinkData({ source: connection.source, target: connection.target, type: "" });
+        setShowLinkPopup(true);
+      }
+    },
+    [edges]
   );
+
+  const handleCreateLink = async () => {
+    if (!newLinkData.type) {
+      setLinkError("Please select a link type.");
+      return;
+    }
+  
+    // Call the API to link documents
+    const response = await API.linkDocuments(newLinkData.source, newLinkData.target, newLinkData.type);
+    
+    if (response.success) {
+      // If successful, create the new edge and update the edges state
+      const newEdge = {
+        id: `${newLinkData.source}-${newLinkData.target}-${newLinkData.type}`,
+        source: newLinkData.source,
+        target: newLinkData.target,
+        label: newLinkData.type,
+        animated: true,
+        style: { stroke: "#333", strokeWidth: 2 },
+        labelStyle: { fill: "#333", fontSize: 12 },
+      };
+  
+      setEdges((edges) => [...edges, newEdge]);
+      setShowLinkPopup(false);
+      setNewLinkData({ source: null, target: null, type: "" });
+      setLinkError("");
+    } else {
+      // If the API call fails, show the error message
+      setLinkError(response.message || "Failed to create link.");
+    }
+  };
+  
 
   const handleNodeClick = (event, node) => {
     setSelectedDocumentId(node.data.id);
     console.log("Document clicked:", node.data.id);
   };
-  
 
   if (loading) {
     return <div>Loading diagram...</div>;
@@ -194,19 +227,16 @@ export default function Diagram() {
           direction="LR"
         >
           <ViewportPortal>
-            {/* Timeline line */}
             <div
               style={{
                 position: "absolute",
                 transform: "translate(0px, 50px)",
-                width: "10000px", // To make timeline longer
+                width: "10000px",
                 height: "2px",
                 backgroundColor: "#ddd",
-                zIndex: 1, // Ensure it is above nodes
+                zIndex: 1,
               }}
             />
-
-            {/* Timeline markers and dates */}
             <div
               style={{
                 position: "absolute",
@@ -250,6 +280,45 @@ export default function Diagram() {
           </Controls>
         </ReactFlow>
       </ResizablePanel>
+
+      {showLinkPopup && (
+        <Card className="min-w-[300px] max-w-[400px] mx-auto">
+          <CardHeader>
+            <CardTitle>Create Link</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Select the type of link to create between the selected nodes.
+              </p>
+              <Select
+                onValueChange={(value) => setNewLinkData({ ...newLinkData, type: value })}
+                value={newLinkData.type}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select link type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Reference">Reference</SelectItem>
+                  <SelectItem value="Collateral Consequence">Collateral Consequence</SelectItem>
+                  <SelectItem value="Projection">Projection</SelectItem>
+                  <SelectItem value="Material Effects">Material Effects</SelectItem>
+                  <SelectItem value="Direct Consequence">Direct Consequence</SelectItem>
+                </SelectContent>
+              </Select>
+              {linkError && <p className="text-red-500 text-sm">{linkError}</p>}
+              <div className="flex space-x-2">
+                <Button onClick={handleCreateLink} disabled={!newLinkData.type}>
+                  Create Link
+                </Button>
+                <Button variant="outline" onClick={() => setShowLinkPopup(false)}>
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </ResizablePanelGroup>
   );
 }
