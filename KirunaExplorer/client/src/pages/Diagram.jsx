@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 import { useCallback, useEffect, useState } from "react";
 import { ResetIcon } from "@radix-ui/react-icons";
 import {
@@ -33,11 +32,9 @@ export default function Diagram() {
   const [loading, setLoading] = useState(true);
 
   const transformDocumentsToNodes = (documents) => {
-    // Basic sorting by date
-
     const sortedDocs = [...documents].sort((a, b) => {
-      if (!a.issuance_date) return 1; // No date goes to end
-      if (!b.issuance_date) return -1; // No date goes to end
+      if (!a.issuance_date) return 1; 
+      if (!b.issuance_date) return -1; 
       return (a.issuance_date?.toString() || "").localeCompare(
         b.issuance_date?.toString() || ""
       );
@@ -45,28 +42,44 @@ export default function Diagram() {
 
     console.log("Sorted documents:", sortedDocs);
 
-    // Transform to nodes with positions
-    return sortedDocs.map((doc, index) => {
-      const xPos = index * 200; // Horizontal spacing
-      const yPos = 0; // All on same row for now
+    // Group documents by date to make the view more clear
+    const groupedByDate = sortedDocs.reduce((acc, doc) => {
+      const date = doc.issuance_date || "no_date";
+      if (!acc[date]) acc[date] = [];
+      acc[date].push(doc);
+      return acc;
+    }, {});
 
-      console.log(`Creating node for ${doc.document_title} at position:`, {
-        x: xPos,
-        y: yPos,
+    const nodes = [];
+    let xPos = 0;
+
+    // Transform to nodes with adjusted positions
+    Object.entries(groupedByDate).forEach(([date, docs]) => {
+      docs.forEach((doc, index) => {
+        const yPos = index * 150; // Vertical spacing for documents with the same date
+
+        console.log(`Creating node for ${doc.document_title} at position:`, {
+          x: xPos,
+          y: yPos,
+        });
+
+        nodes.push({
+          id: doc.document_title,
+          type: "node",
+          position: { x: xPos, y: yPos + 100 }, // Offset for better spacing
+          data: {
+            label: doc.document_title,
+            id: doc.document_id,
+            type: doc.document_type,
+            date: doc.issuance_date,
+          },
+        });
       });
 
-      return {
-        id: doc.document_title,
-        type: "node",
-        position: { x: xPos, y: yPos },
-        data: {
-          label: doc.document_title,
-          id: doc.document_id,
-          type: doc.document_type,
-          date: doc.issuance_date,
-        },
-      };
+      xPos += 300; // Increased horizontal spacing for better clarity
     });
+
+    return nodes;
   };
 
   const transformConnectionsToEdges = (connections) => {
@@ -87,30 +100,53 @@ export default function Diagram() {
     });
   };
 
+  const adjustNodePositionsForLinks = (nodes, edges) => {
+    const adjustedNodes = [...nodes];
+  
+    edges.forEach((edge) => {
+      const sourceNode = adjustedNodes.find((node) => node.id === edge.source);
+      const targetNode = adjustedNodes.find((node) => node.id === edge.target);
+  
+      if (sourceNode && targetNode) {
+        // Check if there are documents between them
+        const blockingNodes = adjustedNodes.filter(
+          (node) =>
+            node.position.x > sourceNode.position.x &&
+            node.position.x < targetNode.position.x &&
+            node.position.y === sourceNode.position.y
+        );
+  
+        if (blockingNodes.length > 0) {
+          // If document are in the middle of the link -> Vertical shift
+          targetNode.position.y += 200; // 200px vertical shift
+        }
+      }
+    });
+  
+    return adjustedNodes;
+  };
+  
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
         const documents = await API.getDocuments();
-        console.log("Documents:", documents);
-
         const documentNodes = transformDocumentsToNodes(documents);
-        console.log("Nodes:", documentNodes);
-        setNodes(documentNodes);
-
         const allConnections = [];
+  
         for (const doc of documents) {
-          const response = await API.getConnectionsByDocumentTitle(
-            doc.document_title
-          );
+          const response = await API.getConnectionsByDocumentTitle(doc.document_title);
           if (response.success && response.data) {
             allConnections.push(...response.data);
           }
         }
-
-        console.log("Connections:", allConnections);
+  
         const documentEdges = transformConnectionsToEdges(allConnections);
-        console.log("Edges:", documentEdges);
+  
+        // Aggiusta le posizioni dei nodi per rendere più chiari i collegamenti
+        const resolvedNodes = adjustNodePositionsForLinks(documentNodes, documentEdges);
+  
+        setNodes(resolvedNodes);
         setEdges(documentEdges);
       } catch (error) {
         console.error("Error fetching diagram data:", error);
@@ -118,7 +154,7 @@ export default function Diagram() {
         setLoading(false);
       }
     };
-
+  
     fetchData();
   }, []);
 
@@ -153,11 +189,11 @@ export default function Diagram() {
             <div
               style={{
                 position: "absolute",
-                transform: "translate(0px, 150px)",
+                transform: "translate(0px, 50px)",
                 width: "10000px", // To make timeline longer
                 height: "2px",
                 backgroundColor: "#ddd",
-                zIndex: -1,
+                zIndex: 1, // Ensure it is above nodes
               }}
             />
 
@@ -165,14 +201,14 @@ export default function Diagram() {
             <div
               style={{
                 position: "absolute",
-                transform: "translate(0px, 160px)",
+                transform: "translate(0px, 30px)",
                 display: "flex",
-                gap: "200px",
+                gap: "300px",
               }}
             >
-              {nodes.map((node) => (
+              {nodes.map((node, index) => (
                 <div
-                  key={node.id}
+                  key={`timeline-${index}`}
                   style={{
                     transform: `translate(${node.position.x}px, 0px)`,
                     position: "absolute",
@@ -184,13 +220,11 @@ export default function Diagram() {
                 >
                   <div
                     style={{
-                      width: "2px",
-                      height: "10px",
-                      backgroundColor: "#ddd",
-                      marginBottom: "5px",
+                      fontSize: "14px",
+                      whiteSpace: "nowrap",
+                      fontWeight: "bold",
                     }}
-                  />
-                  <div style={{ fontSize: "12px", whiteSpace: "nowrap" }}>
+                  >
                     {node.data.date || "No date"}
                   </div>
                 </div>
