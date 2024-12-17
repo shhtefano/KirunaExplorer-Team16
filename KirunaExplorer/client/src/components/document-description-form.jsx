@@ -457,8 +457,64 @@ const DocumentDescriptionForm = () => {
                   />
 
 
+
+
               {/* Stakeholder */}
               <FormField
+                control={form.control}
+                name="stakeholders"
+                rules={stakeholderRules}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Stakeholders *</FormLabel>
+                    <div className="flex items-center space-x-4">
+                      <FormControl>
+                        <Select
+                          onValueChange={(selectedValue) => {
+                            if (!field.value.includes(selectedValue)) {
+                              field.onChange([...field.value, selectedValue]);
+                            }
+                          }}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a Stakeholder" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {stakeholders.map((stakeholder) => (
+                              <SelectItem key={stakeholder} value={stakeholder}>
+                                {stakeholder}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </FormControl>
+                      <div className="flex space-x-2 items-center">
+                        <Input
+                          type="text"
+                          value={stakeholderInput}
+                          onChange={(e) => setStakeholderInput(e.target.value)}
+                          placeholder="New Stakeholder"
+                          className="w-40"
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => {
+                            handleAddStakeholder(stakeholderInput);
+                          }}
+                        >
+                          Add
+                        </Button>
+                      </div>
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+
+              {/* Stakeholder */}
+               {/* <FormField
                 control={form.control}
                 name="stakeholders"
                 rules={stakeholderRules}
@@ -510,7 +566,9 @@ const DocumentDescriptionForm = () => {
                       >
                         <p style={{ textAlign: 'center' }}>Add</p>
                       </Button>
-                    </div>
+                    </div>  */}
+
+
 
               {/* Scale */}
               <FormField
