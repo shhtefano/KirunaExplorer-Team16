@@ -25,6 +25,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "../components/ui/card"
 import { Button } from "../components/ui/button";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "../components/ui/select";
 
+
 const nodeTypes = {
   node: Node,
 };
@@ -35,8 +36,13 @@ export default function Diagram() {
   const [loading, setLoading] = useState(true);
   const [selectedDocumentId, setSelectedDocumentId] = useState(null);
   const [showLinkPopup, setShowLinkPopup] = useState(false);
+  const [showDeletePopup, setShowDeletePopup] = useState(false); 
+  const [edgeToDelete, setEdgeToDelete] = useState(null);       
   const [newLinkData, setNewLinkData] = useState({ source: null, target: null, type: "" });
   const [linkError, setLinkError] = useState("");
+  const [isEdgeDeleted, setIsEdgeDeleted] = useState(false); 
+
+
 
   const transformDocumentsToNodes = (documents) => {
     const sortedDocs = [...documents].sort((a, b) => {
@@ -149,7 +155,7 @@ export default function Diagram() {
     };
 
     fetchData();
-  }, []);
+  }, [isEdgeDeleted]);
 
   const onConnect = useCallback(
     (connection) => {
@@ -167,17 +173,21 @@ export default function Diagram() {
     [edges]
   );
 
+  const onEdgeClick = (event, edge) => {
+    setEdgeToDelete(edge);     
+    setShowDeletePopup(true);  
+  };
+  
+
   const handleCreateLink = async () => {
     if (!newLinkData.type) {
       setLinkError("Please select a link type.");
       return;
     }
   
-    // Call the API to link documents
     const response = await API.linkDocuments(newLinkData.source, newLinkData.target, newLinkData.type);
     
     if (response.success) {
-      // If successful, create the new edge and update the edges state
       const newEdge = {
         id: `${newLinkData.source}-${newLinkData.target}-${newLinkData.type}`,
         source: newLinkData.source,
@@ -193,10 +203,41 @@ export default function Diagram() {
       setNewLinkData({ source: null, target: null, type: "" });
       setLinkError("");
     } else {
-      // If the API call fails, show the error message
       setLinkError(response.message || "Failed to create link.");
     }
   };
+
+  const handleDeleteEdge = async () => {
+    if (edgeToDelete && !isEdgeDeleted) {
+      const { source, target, label } = edgeToDelete;
+  
+      setIsEdgeDeleted(true); 
+  
+      try {
+       
+        const response = await API.deleteConnection(source, target, label);
+  
+        if (response.success) {
+          console.log("Cancellazione avvenuta correttamente");
+  
+          
+          setEdges((eds) => eds.filter((e) => e.id !== edgeToDelete.id));
+          setEdgeToDelete(null); 
+          setShowDeletePopup(false); 
+        } else {
+          console.error("Errore nella cancellazione dell'edge:", response.message);
+        }
+      } catch (error) {
+        console.error("Errore nella chiamata API:", error);
+      } finally {
+        setIsEdgeDeleted(false); // Reset della flag dopo il completamento
+      }
+    }
+  };
+  
+  
+
+  
   
 
   const handleNodeClick = (event, node) => {
@@ -225,6 +266,7 @@ export default function Diagram() {
           onNodeClick={handleNodeClick}
           fitView
           direction="LR"
+          onEdgeClick={onEdgeClick} 
         >
           <ViewportPortal>
             <div
@@ -319,6 +361,24 @@ export default function Diagram() {
           </CardContent>
         </Card>
       )}
+        {showDeletePopup && (
+  <Card className="min-w-[300px] max-w-[400px] mx-auto">
+    <CardHeader>
+      <CardTitle>Delete Link</CardTitle>
+    </CardHeader>
+    <CardContent>
+      <p>Are you sure you want to delete this link?</p>
+      <div className="flex space-x-2 mt-4">
+        <Button onClick={handleDeleteEdge} variant="destructive">
+          Delete
+        </Button>
+        <Button variant="outline" onClick={() => setShowDeletePopup(false)}>
+          Cancel
+        </Button>
+      </div>
+    </CardContent>
+  </Card>
+)}
     </ResizablePanelGroup>
   );
 }
