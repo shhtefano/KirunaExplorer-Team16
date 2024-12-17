@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { Stack, Typography } from "@mui/material";
 import { DocumentInfoModal } from "./link-list.jsx";
+import LinkIcon from "@mui/icons-material/Link";
+
 import DeleteIcon from "@mui/icons-material/Delete"; // Importa l'icona
 import {
   Table,
@@ -433,11 +435,12 @@ export default function DocumentsTable() {
                       </Dialog>
                     </div>
 
-                    <Dialog>
+                   <Dialog>
                         <DialogTrigger asChild>
-                          <button
-                            style={{ backgroundColor: "black", color: "white" }}
-                            className="px-3 py-1 text-sm text-white rounded"
+                        <button
+                            style={{ backgroundColor: "white", color: "black" }}
+                            className="px-2 ml-2"
+                            hover="Connections"
                             onClick={() => {
                               setSelectedDocument(doc);
                               setShowLinks(true);
@@ -445,7 +448,8 @@ export default function DocumentsTable() {
                               setRefreshLinks((prev) => !prev)
                             }}
                           >
-                            Connections
+                          <LinkIcon alt="Show Links" label="Show Links" />
+
                           </button>
                         </DialogTrigger>
                         <DialogContent
