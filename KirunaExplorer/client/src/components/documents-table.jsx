@@ -60,7 +60,39 @@ export default function DocumentsTable() {
   const [documentToDelete, setDocumentToDelete] = useState(null); // To store the document that needs to be deleted
   const [openEditDialog, setOpenEditDialog] = useState(false); // To control Dialog for Edit 
   const [documentToEdit, setDocumentToEdit] = useState(null); // To store the document that needs to be Edited
+  const [areaNames, setAreaNames] = useState({});
   const { user } = useAuth();
+
+
+
+
+
+
+  useEffect(() => {
+    // Fetch the area name for each document once the documents are loaded
+    const fetchAreaNames = async () => {
+      const newAreaNames = {};
+      for (const doc of documents) {
+        const areaNameResult = await API.getAreaNameByDocumentId(doc.document_id); // Assuming document_id exists in the document object
+        if (areaNameResult.success) {
+          newAreaNames[doc.document_id] = areaNameResult.area_name;
+        } else {
+          newAreaNames[doc.document_id] = "Unknown"; // Fallback if no area name is found
+        }
+      }
+      setAreaNames(newAreaNames);
+    };
+
+    if (documents.length > 0) {
+      fetchAreaNames();
+    }
+  }, [documents]); // Fetch area names when the documents state changes
+
+
+
+
+
+
 
   const [types, setTypes] = useState([]);
   useEffect(() => {
@@ -112,6 +144,11 @@ export default function DocumentsTable() {
     };
     fetchDocuments();
   }, []);
+
+
+
+
+
 
   const filteredDocuments = documents.filter((doc) => {
     const matchesSearch = doc.document_title
@@ -175,17 +212,6 @@ export default function DocumentsTable() {
 
 
 
-   //Handle the Edit Button Click
-  //  const handleEditDocument = async (id) => {
-  //   try {
-  //     const updatedDoc = await API.updateDocument(id);
-  //     setDocuments((prev) => prev.map((doc) => doc.document_id === id ? updatedDoc : doc));
-  //     console.log("Document updated successfully");
-  //     setOpenEditDialog(false);
-  //   } catch (error) {
-  //     console.error("Error updating document:", error);
-  //   }
-  // };
 
 
     //Handle the Delete Button Click
@@ -390,6 +416,7 @@ export default function DocumentsTable() {
             <TableHead className="w-1/5">Issuance Date</TableHead>
             <TableHead className="w-1/5">Type</TableHead>
             <TableHead className="w-1/5">Language</TableHead>
+            <TableHead className="w-1/5">Area</TableHead>
             <TableHead className="w-1/3">Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -403,6 +430,7 @@ export default function DocumentsTable() {
                 <TableCell className="py-2 px-4">{doc.issuance_date}</TableCell>
                 <TableCell className="py-2 px-4">{doc.document_type}</TableCell>
                 <TableCell className="py-2 px-4">{doc.language}</TableCell>
+                <TableCell className="py-2 px-4">{areaNames[doc.document_id] || "Loading..."}</TableCell>
                 <TableCell className="py-2 px-4">
                   <div className="flex">
                     <div>

@@ -449,4 +449,32 @@ router.put("/api/edit-area", async (req, res) => {
 });
 
 
+
+router.get("/api/get-area-name", async (req, res) => {
+  try {
+    const { document_id } = req.query;
+    if (!document_id) {
+      return res.status(400).send("document_id is required.");
+    }
+    const areaName = await documentDAO.getAreaNameByDocumentId(document_id);
+
+    if (areaName) {
+      return res.status(200).json({ area_name: areaName });
+    }
+
+  } catch (error) {
+    console.error("Error retrieving area name:", error);
+    if (error.message === "No area name associated with this document_id.") {
+      return res.status(404).json({ error: error.message });
+    }
+    res.status(500).send("An error occurred while retrieving the area name.");
+  }
+});
+
+
+
+
+
+
+
 export default router;
