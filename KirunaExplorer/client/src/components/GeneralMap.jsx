@@ -21,6 +21,7 @@ import 'leaflet.markercluster';
 import 'leaflet.markercluster/dist/MarkerCluster.css';
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 import * as turf from "@turf/turf";
+import EditDocumentForm from "./EditDocumentForm";
 
 // Configura l'icona di default di Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
@@ -91,6 +92,7 @@ const GeneralMap = ({selectedDocumentId}) => {
   const [allDocs, setAllDocs] = useState([]);
   const [showModalLink, setShowModalLink] = useState(false); //modal per popup links
   const [showLinkInterface, setShowLinkInterface] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [selectedDocumentType, setSelectedDocumentType] = useState("All"); // Stato per il tipo di documento
 
   const ZOOM_LEVEL = 7;
@@ -891,53 +893,88 @@ const renderMarkersWithClustering = () => {
           setShowModalLink={setShowModalLink} />
 
       )}
-      {/* Modal per visualizzare i dettagli del documento */}
-      {selectedDocument && showModal && !showEditCoordinatesModal && !showModalLink && (
-        <Modal style={{ marginTop: '8%' }} show={showModal} onHide={() => setShowModal(false)}>
-          <Modal.Header closeButton>
-            <Modal.Title>Document info</Modal.Title>
-          </Modal.Header>
-          <Modal.Body>
-            <p style={{ marginBottom: '10px' }}><strong>Title:</strong> {selectedDocument.document_title}</p>
-            <p style={{ marginBottom: '10px' }}><strong>Document Type:</strong> {selectedDocument.document_type}</p>
-            <p style={{ marginBottom: '10px' }}><strong>Stakeholders:</strong> {selectedDocument.stakeholders.length > 0 ? selectedDocument.stakeholders.join(', ') : selectedDocument.stakeholders}</p>
-            <p style={{ marginBottom: '10px' }}><strong>Date:</strong> {selectedDocument.issuance_date}</p>
-            <p style={{ marginBottom: '10px' }}><strong>Description:</strong> {selectedDocument.document_description}</p>
-            <p style={{ marginBottom: '10px' }}><strong>Scale:</strong> {selectedDocument.scale}</p>
-            <>
-              {selectedDocument.language && <p style={{ marginBottom: '10px' }}><strong>Language:</strong> {selectedDocument.language}</p>}
-              {selectedDocument.pages && <p style={{ marginBottom: '10px' }}><strong>Pages:</strong> {selectedDocument.pages}</p>}
-            </>
-          </Modal.Body>
-          <Modal.Footer>
-            {user && user.role === "urban_planner" && <Button
-              variant="dark"
-              onClick={() => { setShowLinkInterface(true); setShowModal(false); }}
-            >
-              {`Link Documents to ${selectedDocument.document_title}`}
-            </Button>}
-            <Button variant="dark" onClick={() => setShowModal(false)}>
-              Close
-            </Button>
-          </Modal.Footer>
-        </Modal>
+
+{/* Modal per visualizzare i dettagli del documento */}
+{selectedDocument && showModal && !showEditCoordinatesModal && !showModalLink && (
+  <Modal style={{ marginTop: '8%' }} show={showModal} onHide={() => setShowModal(false)}>
+    <Modal.Header closeButton>
+      <Modal.Title>Document info</Modal.Title>
+    </Modal.Header>
+    <Modal.Body>
+      <p style={{ marginBottom: '10px' }}><strong>Title:</strong> {selectedDocument.document_title}</p>
+      <p style={{ marginBottom: '10px' }}><strong>Document Type:</strong> {selectedDocument.document_type}</p>
+      <p style={{ marginBottom: '10px' }}><strong>Stakeholders:</strong> {selectedDocument.stakeholders.length > 0 ? selectedDocument.stakeholders.join(', ') : selectedDocument.stakeholders}</p>
+      <p style={{ marginBottom: '10px' }}><strong>Date:</strong> {selectedDocument.issuance_date}</p>
+      <p style={{ marginBottom: '10px' }}><strong>Description:</strong> {selectedDocument.description}</p>
+      <p style={{ marginBottom: '10px' }}><strong>Scale:</strong> {selectedDocument.scale}</p>
+      <>
+        {selectedDocument.language && <p style={{ marginBottom: '10px' }}><strong>Language:</strong> {selectedDocument.language}</p>}
+        {selectedDocument.pages && <p style={{ marginBottom: '10px' }}><strong>Pages:</strong> {selectedDocument.pages}</p>}
+      </>
+    </Modal.Body>
+    <Modal.Footer>
+      {user && user.role === "urban_planner" && (
+        <>
+          <Button
+            variant="dark"
+            onClick={() => { setShowLinkInterface(true); setShowModal(false); }}
+          >
+            {`Link Documents`}
+          </Button>
+          <Button
+            variant="dark"
+            onClick={() => { setShowEditModal(true); setShowModal(false); }}
+            style={{ marginLeft: '10px' }} // Aggiungi margine per separare i pulsanti
+          >
+            Edit
+          </Button>
+        </>
       )}
-      {/* Modal to link documents */}
-      {selectedDocument && showLinkInterface && (
-        <Modal show={showLinkInterface} onHide={() => setShowLinkInterface(false)} style={{ marginTop: '8%' }}>
-          <Modal.Header closeButton>
-            <Modal.Title>Links for {selectedDocument.document_title}</Modal.Title>
-          </Modal.Header>
-          <Modal.Body>
-            <DocumentLink initialDocument={selectedDocument} />
-          </Modal.Body>
-          <Modal.Footer>
-            <Button variant="dark" onClick={() => setShowLinkInterface(false)}>
-              Close
-            </Button>
-          </Modal.Footer>
-        </Modal>
-      )}
+      {/* <Button variant="dark" onClick={() => setShowModal(false)}>
+        Close
+      </Button> */}
+    </Modal.Footer>
+  </Modal>
+)}
+
+{/* Modal per modificare il documento */}
+{selectedDocument && showEditModal && (
+  <Modal
+    show={showEditModal}
+    onHide={() => setShowEditModal(false)}
+    size="lg"  // Modal molto largo
+    style={{
+      marginTop: '0%', // Allinea il modal in alto
+      height: '95vh', // Modal che occupa tutta l'altezza della finestra
+      maxHeight: '95vh', // Evita che il modal superi l'altezza della finestra
+    }}
+  >
+    <Modal.Header closeButton>
+      <Modal.Title>Edit {selectedDocument.document_title}</Modal.Title>
+    </Modal.Header>
+    <Modal.Body
+      style={{
+        height: '80vh',  // Calcola l'altezza disponibile (escludendo l'header)
+        overflowY: 'auto',  // Abilita la scrollbar verticale
+      }}
+    >
+      {/* Passa solo document_title alla componente EditDocumentForm */}
+      <EditDocumentForm 
+        documentTitle={selectedDocument.document_title} 
+        onClose={() => setShowEditModal(false)}  // Passa la funzione per chiudere il modal
+      />
+    </Modal.Body>
+    {/* <Modal.Footer>
+      <Button variant="dark" onClick={() => setShowEditModal(false)}>
+        Close
+      </Button>
+    </Modal.Footer> */}
+  </Modal>
+)}
+
+
+
+
       {/* Modal to change document position */}
       {selectedDocument && showEditCoordinatesModal && (
         <Modal

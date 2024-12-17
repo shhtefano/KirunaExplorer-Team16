@@ -38,6 +38,7 @@ import FileUpload from "./FileUpload2.jsx";
 import { MapIcon, Pencil, Trash2, Upload } from "lucide-react";
 import { Button } from "react-bootstrap";
 import { useAuth } from "../contexts/AuthContext";
+import EditDocumentForm from "./EditDocumentForm.jsx";
 
 
 
@@ -57,6 +58,8 @@ export default function DocumentsTable() {
   const [dateFilterMode, setDateFilterMode] = useState("exact");
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false); // To control Dialog for delete confirmation
   const [documentToDelete, setDocumentToDelete] = useState(null); // To store the document that needs to be deleted
+  const [openEditDialog, setOpenEditDialog] = useState(false); // To control Dialog for Edit 
+  const [documentToEdit, setDocumentToEdit] = useState(null); // To store the document that needs to be Edited
   const { user } = useAuth();
 
   const [types, setTypes] = useState([]);
@@ -170,16 +173,33 @@ export default function DocumentsTable() {
     );
   });
 
-  //Handle the Delete Button Click
-  const handleDeleteDocument = async (id) => {
-    try {
-      await API.deleteDocument(id);
-      console.log("Document deleted successfully");
-      setDocuments((prev) => prev.filter((doc) => doc.document_id !== id));
-    } catch (error) {
-      console.error("Error deleting document:", error);
-    }
-  };
+
+
+   //Handle the Edit Button Click
+  //  const handleEditDocument = async (id) => {
+  //   try {
+  //     const updatedDoc = await API.updateDocument(id);
+  //     setDocuments((prev) => prev.map((doc) => doc.document_id === id ? updatedDoc : doc));
+  //     console.log("Document updated successfully");
+  //     setOpenEditDialog(false);
+  //   } catch (error) {
+  //     console.error("Error updating document:", error);
+  //   }
+  // };
+
+
+    //Handle the Delete Button Click
+    const handleDeleteDocument = async (id) => {
+      try {
+        await API.deleteDocument(id);
+        console.log("Document deleted successfully");
+        setDocuments((prev) => prev.filter((doc) => doc.document_id !== id));
+      } catch (error) {
+        console.error("Error deleting document:", error);
+      }
+    };
+
+    
 
   //Pagination
   const totalPages = Math.ceil(filteredDocuments.length / itemsPerPage);
@@ -516,17 +536,64 @@ export default function DocumentsTable() {
                       </Dialog>
                     </div>
 
-                    {/* <div>
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <button
-                            style={{ backgroundColor: "white", color: "black" }}
-                          >
-                            <Pencil color="black" className="h-5 w-5 inline-block" />
-                          </button>
-                        </DialogTrigger>
-                      </Dialog>
-                    </div> */}
+
+                    <div>
+                      {user?.role === "urban_planner" && (
+                        <Dialog
+                          open={openEditDialog} 
+                          onOpenChange={setOpenEditDialog} // Update state when the dialog is closed via outside click or Cancel
+                        >
+                          <DialogTrigger asChild>
+                            <button
+                              style={{
+                                backgroundColor: "transparent",
+                                color: "black",
+                              }}
+                              onClick={() => {
+                                setDocumentToEdit(doc);
+                                setOpenEditDialog(true);
+                              }}
+                            >
+                              <Pencil
+                                color="black"
+                                className="h-5 w-5 inline-block"
+                              />
+                            </button>
+                          </DialogTrigger>
+                          <DialogContent className=" bg-white rounded-lg shadow-lg" style={{ maxHeight: "80vh", overflowY: "auto", maxWidth: "50vw" }}>
+                            <DialogTitle className="text-xl font-bold text-gray-800">
+                              Edit {documentToEdit?.document_title || ""}
+                            </DialogTitle>
+                            <EditDocumentForm documentTitle={documentToEdit?.document_title || ""}/>
+                            {/* <DialogFooter>
+                              <button
+                                style={{
+                                  backgroundColor: "black",
+                                  color: "white",
+                                }}
+                                className="px-3 pb-1 text-sm text-white rounded"
+                                onClick={() => {setOpenEditDialog(false);}} // Close dialog
+                              >
+                                Cancel
+                              </button>
+                              <button
+                                style={{
+                                  backgroundColor: "red",
+                                  color: "white",
+                                }}
+                                className="px-3 pb-1 text-sm text-white rounded"
+                                onClick={() => {
+                                  handleEditDocument(documentToEdit); // Call Edit function
+                                  setOpenEditDialog(false); // Close dialog
+                                }}
+                              >
+                                Save
+                              </button>
+                            </DialogFooter> */}
+                          </DialogContent>
+                        </Dialog>
+                      )}
+                    </div>
 
                     <div>
                       {user?.role === "urban_planner" && (
@@ -593,6 +660,8 @@ export default function DocumentsTable() {
                         </Dialog>
                       )}
                     </div>
+
+
                   </div>
                 </TableCell>
               </TableRow>
