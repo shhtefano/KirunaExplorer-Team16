@@ -173,28 +173,33 @@ export default function DocumentsTable() {
     );
   });
 
-  //Handle the Delete Button Click
-  const handleDeleteDocument = async (id) => {
-    try {
-      await API.deleteDocument(id);
-      console.log("Document deleted successfully");
-      setDocuments((prev) => prev.filter((doc) => doc.document_id !== id));
-    } catch (error) {
-      console.error("Error deleting document:", error);
-    }
-  };
+
 
    //Handle the Edit Button Click
    const handleEditDocument = async (id) => {
     try {
-      await API.updateDocument(id);
+      const updatedDoc = await API.updateDocument(id);
+      setDocuments((prev) => prev.map((doc) => doc.document_id === id ? updatedDoc : doc));
       console.log("Document updated successfully");
-      setDocuments((prev) => prev.filter((doc) => doc.document_id !== id));
+      setOpenEditDialog(false);
     } catch (error) {
       console.error("Error updating document:", error);
     }
   };
 
+
+    //Handle the Delete Button Click
+    const handleDeleteDocument = async (id) => {
+      try {
+        await API.deleteDocument(id);
+        console.log("Document deleted successfully");
+        setDocuments((prev) => prev.filter((doc) => doc.document_id !== id));
+      } catch (error) {
+        console.error("Error deleting document:", error);
+      }
+    };
+
+    
 
   //Pagination
   const totalPages = Math.ceil(filteredDocuments.length / itemsPerPage);
@@ -556,12 +561,12 @@ export default function DocumentsTable() {
                               />
                             </button>
                           </DialogTrigger>
-                          <DialogContent className="p-4 bg-white rounded-lg shadow-lg">
+                          <DialogContent className=" bg-white rounded-lg shadow-lg" style={{ maxHeight: "90vh", overflowY: "auto", maxWidth: "50vw" }}>
                             <DialogTitle className="text-xl font-bold text-gray-800">
                               Edit Document
                             </DialogTitle>
                             <DialogDescription className="text-gray-800 my-1">
-                              <EditDocumentForm selectedDocument={doc} />
+                              <EditDocumentForm selectedDocument={documentToEdit} />
                             </DialogDescription>
                             <DialogFooter>
                               <button
@@ -570,9 +575,7 @@ export default function DocumentsTable() {
                                   color: "white",
                                 }}
                                 className="px-3 pb-1 text-sm text-white rounded"
-                                onClick={() => {
-                                  setOpenEditDialog(false); // Close dialog
-                                }}
+                                onClick={() => {setOpenEditDialog(false);}} // Close dialog
                               >
                                 Cancel
                               </button>
@@ -583,9 +586,7 @@ export default function DocumentsTable() {
                                 }}
                                 className="px-3 pb-1 text-sm text-white rounded"
                                 onClick={() => {
-                                  handleEditDocument(
-                                    documentToEdit.document_id
-                                  ); // Call Edit function
+                                  handleEditDocument(documentToEdit); // Call Edit function
                                   setOpenEditDialog(false); // Close dialog
                                 }}
                               >
