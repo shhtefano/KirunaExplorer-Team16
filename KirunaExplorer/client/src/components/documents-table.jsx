@@ -43,6 +43,7 @@ import FileUpload from "./FileUpload2.jsx";
 import { MapIcon, Pencil, Trash2, Upload } from "lucide-react";
 import { Button } from "react-bootstrap";
 import { useAuth } from "../contexts/AuthContext";
+import EditDocumentForm from "./EditDocumentForm.jsx";
 
 
 
@@ -50,17 +51,20 @@ import { useAuth } from "../contexts/AuthContext";
 export default function DocumentsTable() {
   const [documents, setDocuments] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchKeyword, setSearchKeyword] = useState("");
   const [selectedType, setSelectedType] = useState("");
   const [selectedStakeholder, setSelectedStakeholder] = useState("");
   const [selectedLanguage, setSelectedLanguage] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 8;
+  const itemsPerPage = 7;
   const [year, setYear] = useState("");
   const [month, setMonth] = useState("");
   const [day, setDay] = useState("");
-  const [dateFilterMode, setDateFilterMode] = useState("all");
+  const [dateFilterMode, setDateFilterMode] = useState("exact");
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false); // To control Dialog for delete confirmation
   const [documentToDelete, setDocumentToDelete] = useState(null); // To store the document that needs to be deleted
+  const [openEditDialog, setOpenEditDialog] = useState(false); // To control Dialog for Edit 
+  const [documentToEdit, setDocumentToEdit] = useState(null); // To store the document that needs to be Edited
   const [selectedMapDocument, setSelectedMapDocument] = useState(null);
   const [selectedDocument, setSelectedDocument] = useState(null);
   const [showLinkInterface, setShowLinkInterface] = useState(false);
@@ -104,6 +108,9 @@ export default function DocumentsTable() {
   const languages = ["All", "English", "Swedish"];
 
 
+  const [selectedMapDocument, setSelectedMapDocument] = useState(null);
+  const [selectedDocument, setSelectedDocument] = useState(null);
+  const [showLinkInterface, setShowLinkInterface] = useState(false);
 
   useEffect(() => {
     const fetchDocuments = async () => {
@@ -124,6 +131,11 @@ export default function DocumentsTable() {
     const matchesSearch = doc.document_title
       .toLowerCase()
       .includes(searchQuery.toLowerCase());
+
+    const matchesDescription = doc.document_description
+      ?.toLowerCase()
+      .includes(searchKeyword.toLowerCase());
+
     const matchesType =
       selectedType && selectedType !== "All"
         ? doc.document_type === selectedType
@@ -164,16 +176,10 @@ export default function DocumentsTable() {
       return true; // Default to true if no specific condition matches
     })();
 
-    // Filter by year Only
-    // const matchesDate = (() => {
-    //   if (!year) return true; // No year filter applied
-    //   const docDate = new Date(doc.issuance_date);
-    //   console.log(doc.issuance_date);
-    //   return docDate.getFullYear() === parseInt(year);
-    // })();
 
     return (
       matchesSearch &&
+      matchesDescription &&
       matchesType &&
       matchesLanguage &&
       matchesDate &&
@@ -181,16 +187,33 @@ export default function DocumentsTable() {
     );
   });
 
-  //Handle the Delete Button Click
-  const handleDeleteDocument = async (id) => {
-    try {
-      await API.deleteDocument(id);
-      console.log("Document deleted successfully");
-      setDocuments((prev) => prev.filter((doc) => doc.document_id !== id));
-    } catch (error) {
-      console.error("Error deleting document:", error);
-    }
-  };
+
+
+   //Handle the Edit Button Click
+  //  const handleEditDocument = async (id) => {
+  //   try {
+  //     const updatedDoc = await API.updateDocument(id);
+  //     setDocuments((prev) => prev.map((doc) => doc.document_id === id ? updatedDoc : doc));
+  //     console.log("Document updated successfully");
+  //     setOpenEditDialog(false);
+  //   } catch (error) {
+  //     console.error("Error updating document:", error);
+  //   }
+  // };
+
+
+    //Handle the Delete Button Click
+    const handleDeleteDocument = async (id) => {
+      try {
+        await API.deleteDocument(id);
+        console.log("Document deleted successfully");
+        setDocuments((prev) => prev.filter((doc) => doc.document_id !== id));
+      } catch (error) {
+        console.error("Error deleting document:", error);
+      }
+    };
+
+    
 
   //Pagination
   const totalPages = Math.ceil(filteredDocuments.length / itemsPerPage);
@@ -198,6 +221,7 @@ export default function DocumentsTable() {
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
+
 
   useEffect(() => {
     if (!selectedDocument) {
@@ -208,122 +232,172 @@ export default function DocumentsTable() {
   }, [selectedDocument]);
 
   return (
-    <div className="max-w-6xl mx-auto p-6 pb-12 bg-white rounded shadow-md overflow-auto">
+    <div className="max-w-6xl mx-auto p-6 pb-6 bg-white rounded shadow-md overflow-auto">
 
 
-      <div style={{display: 'flex', justifyContent:'space-between'}}>
 
-      <div className="mb-6  text-gray-700" style={{width: '20%'}}>
-        <p className="font-semibold mb-2">Select Document Type:</p>
-        <Select onValueChange={setSelectedType} value={selectedType}>
-          <SelectTrigger className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400">
-            <SelectValue placeholder="All" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem key="All" value="All">
-              All
-            </SelectItem>
-            {types.map((type) => (
-              <SelectItem key={type.type_id} value={type.type_name}>
-                {type.type_name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+
+      <div className="text-gray-700">
+    
+
+        <div className="mb-3" style={{ display: 'flex', flexDirection:'row', gap: '28px' }}>
+
+          <div className="mt-1  text-gray-700" style={{ width: '20%' }}>
+            <p className="font-semibold mb-2">Document Type:</p>
+            <Select onValueChange={setSelectedType} value={selectedType}>
+              <SelectTrigger className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400">
+                <SelectValue placeholder="All" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem key="All" value="All">
+                  All
+                </SelectItem>
+                {types.map((type) => (
+                  <SelectItem key={type.type_id} value={type.type_name}>
+                    {type.type_name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+
+          <div className=" mt-1 text-gray-700" style={{ width: '20%' }}>
+            <p className="font-semibold mb-2">Language:</p>
+            <Select onValueChange={setSelectedLanguage} value={selectedLanguage}>
+              <SelectTrigger data-cy="language-select" className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400">
+                <SelectValue placeholder="All" />
+              </SelectTrigger>
+              <SelectContent>
+                {languages.map((lang) => (
+                  <SelectItem key={lang} value={lang}>
+                    {lang}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className=" mt-1 text-gray-700" style={{ width: '20%' }}>
+            <p className="font-semibold mb-2">Stakeholders:</p>
+            <Select
+              onValueChange={setSelectedStakeholder}
+              value={selectedStakeholder}
+            >
+              <SelectTrigger className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400">
+                <SelectValue placeholder="All" />
+              </SelectTrigger>
+              <SelectContent>
+                {stakeholderNames.map((stakeholder) => (
+                  <SelectItem key={stakeholder} value={stakeholder}>
+                    {stakeholder}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <p className="font-semibold mb-2 mt-6">Issuance Date:</p>
+        <div className="flex items-center gap-4">
+          <Select onValueChange={setDateFilterMode} defaultValue={dateFilterMode}>
+            <SelectTrigger className="w-32 p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400">
+              <SelectValue placeholder="Mode" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All</SelectItem>
+              <SelectItem value="year">Year</SelectItem>
+              <SelectItem value="month">Month & Year</SelectItem>
+              <SelectItem value="exact">Exact Date</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {dateFilterMode !== "all" && ( // Mostra i campi solo se non è selezionato "All"
+            <div className="flex flex-row gap-2">
+              <Input
+                placeholder="Year"
+                value={year}
+                onChange={(e) => setYear(e.target.value)}
+                className="p-2 border border-gray-300 rounded"
+              />
+              {dateFilterMode !== "year" && (
+                <Input
+                  placeholder="Month"
+                  value={month}
+                  onChange={(e) => setMonth(e.target.value)}
+                  className="p-2 border border-gray-300 rounded"
+                />
+              )}
+              {dateFilterMode === "exact" && (
+                <Input
+                  placeholder="Day"
+                  value={day}
+                  onChange={(e) => setDay(e.target.value)}
+                  className="p-2 border border-gray-300 rounded"
+                />
+              )}
+            </div>
+          )}
+        </div>
+
       </div>
 
-
-      <div className=" mb-6 text-gray-700" style={{width: '20%'}}>
-        <p className="font-semibold mb-2">Select Language:</p>
-        <Select onValueChange={setSelectedLanguage} value={selectedLanguage}>
-          <SelectTrigger data-cy="language-select" className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400">
-            <SelectValue placeholder="All" />
-          </SelectTrigger>
-          <SelectContent>
-            {languages.map((lang) => (
-              <SelectItem key={lang} value={lang}>
-                {lang}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className=" mb-6 text-gray-700" style={{width: '20%'}}>
-        <p className="font-semibold mb-2">Select Stakeholder:</p>
-        <Select
-          onValueChange={setSelectedStakeholder}
-          value={selectedStakeholder}
+      {/**search by title and keywords */}
+      <div className="mt-4 mb-2"
+        style={{
+          display: 'flex',
+          // justifyContent: 'center', // Centrare gli input
+          // alignItems: 'center',
+          width: '100%',
+          gap: '20px', // Spaziatura tra gli input
+          padding: '20px 0', // Aggiungi un po' di spazio verticale
+        }}
+      >
+        {/* Search by title of documents */}
+        <div
+          style={{
+            flex: 1, // Permette agli input di occupare lo stesso spazio disponibile
+            maxWidth: '300px', // Limita la larghezza massima
+          }}
         >
-          <SelectTrigger className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400">
-            <SelectValue placeholder="All" />
-          </SelectTrigger>
-          <SelectContent>
-            {stakeholderNames.map((stakeholder) => (
-              <SelectItem key={stakeholder} value={stakeholder}>
-                {stakeholder}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-      </div>
-
-
-      <div className="mb-6 text-gray-700">
-  <p className="font-semibold mb-2 mt-1">Select by Issuance Date:</p>
-  <div className="flex items-center gap-4">
-    <Select onValueChange={setDateFilterMode} defaultValue={dateFilterMode}>
-      <SelectTrigger className="w-32 p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400">
-        <SelectValue placeholder="Mode" />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectItem value="all">All</SelectItem>
-        <SelectItem value="year">Year</SelectItem>
-        <SelectItem value="month">Month & Year</SelectItem>
-        <SelectItem value="exact">Exact Date</SelectItem>
-      </SelectContent>
-    </Select>
-
-    {dateFilterMode !== "all" && ( // Mostra i campi solo se non è selezionato "All"
-      <div className="flex flex-row gap-2">
-        <Input
-          placeholder="Year"
-          value={year}
-          onChange={(e) => setYear(e.target.value)}
-          className="p-2 border border-gray-300 rounded"
-        />
-        {dateFilterMode !== "year" && (
           <Input
-            placeholder="Month"
-            value={month}
-            onChange={(e) => setMonth(e.target.value)}
-            className="p-2 border border-gray-300 rounded"
+            placeholder="Search by document title..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            style={{
+              width: '100%',
+              padding: '10px 15px',
+              border: '1px solid #ccc',
+              borderRadius: '8px',
+              boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+              fontSize: '14px',
+            }}
           />
-        )}
-        {dateFilterMode === "exact" && (
+        </div>
+
+        {/* Search based on keywords in the description of documents */}
+        <div
+          style={{
+            flex: 1,
+            maxWidth: '400px',
+          }}
+        >
           <Input
-            placeholder="Day"
-            value={day}
-            onChange={(e) => setDay(e.target.value)}
-            className="p-2 border border-gray-300 rounded"
+            placeholder="Search keywords in document description..."
+            value={searchKeyword}
+            onChange={(e) => setSearchKeyword(e.target.value)}
+            style={{
+              width: '100%',
+              padding: '10px 15px',
+              border: '1px solid #ccc',
+              borderRadius: '8px',
+              boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+              fontSize: '14px',
+            }}
           />
-        )}
+        </div>
       </div>
-    )}
-  </div>
-</div>
 
-
-      <div className="mb-6 mt-4 text-gray-700">
-        {/* <p className="font-semibold mb-2">Search Document Title:</p> */}
-        <Input
-          placeholder="Search by document title"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
-        />
-      </div>
 
       <Table className="border rounded table-fixed w-full">
         <TableHeader>
@@ -534,17 +608,64 @@ export default function DocumentsTable() {
                       </Dialog>
                     </div>
 
-                    {/* <div>
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <button
-                            style={{ backgroundColor: "white", color: "black" }}
-                          >
-                            <Pencil color="black" className="h-5 w-5 inline-block" />
-                          </button>
-                        </DialogTrigger>
-                      </Dialog>
-                    </div> */}
+
+                    <div>
+                      {user?.role === "urban_planner" && (
+                        <Dialog
+                          open={openEditDialog} 
+                          onOpenChange={setOpenEditDialog} // Update state when the dialog is closed via outside click or Cancel
+                        >
+                          <DialogTrigger asChild>
+                            <button
+                              style={{
+                                backgroundColor: "transparent",
+                                color: "black",
+                              }}
+                              onClick={() => {
+                                setDocumentToEdit(doc);
+                                setOpenEditDialog(true);
+                              }}
+                            >
+                              <Pencil
+                                color="black"
+                                className="h-5 w-5 inline-block"
+                              />
+                            </button>
+                          </DialogTrigger>
+                          <DialogContent className=" bg-white rounded-lg shadow-lg" style={{ maxHeight: "80vh", overflowY: "auto", maxWidth: "50vw" }}>
+                            <DialogTitle className="text-xl font-bold text-gray-800">
+                              Edit {documentToEdit?.document_title || ""}
+                            </DialogTitle>
+                            <EditDocumentForm documentTitle={documentToEdit?.document_title || ""}/>
+                            {/* <DialogFooter>
+                              <button
+                                style={{
+                                  backgroundColor: "black",
+                                  color: "white",
+                                }}
+                                className="px-3 pb-1 text-sm text-white rounded"
+                                onClick={() => {setOpenEditDialog(false);}} // Close dialog
+                              >
+                                Cancel
+                              </button>
+                              <button
+                                style={{
+                                  backgroundColor: "red",
+                                  color: "white",
+                                }}
+                                className="px-3 pb-1 text-sm text-white rounded"
+                                onClick={() => {
+                                  handleEditDocument(documentToEdit); // Call Edit function
+                                  setOpenEditDialog(false); // Close dialog
+                                }}
+                              >
+                                Save
+                              </button>
+                            </DialogFooter> */}
+                          </DialogContent>
+                        </Dialog>
+                      )}
+                    </div>
 
                     <div>
                       {user?.role === "urban_planner" && (
@@ -611,6 +732,8 @@ export default function DocumentsTable() {
                         </Dialog>
                       )}
                     </div>
+
+
                   </div>
                 </TableCell>
               </TableRow>
@@ -625,7 +748,7 @@ export default function DocumentsTable() {
         </TableBody>
       </Table>
 
-      <div className="mt-8 flex justify-center items-center">
+      <div className="mt-4 flex justify-center items-center">
         <Pagination>
           <PaginationContent>
             <PaginationItem>

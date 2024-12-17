@@ -236,10 +236,10 @@ export default function DocumentLink({ initialDocument , refreshLinks, setRefres
         open={openSnackbar}
         autoHideDuration={2000}
         onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
         style={{ marginTop: "60px" }}
       >
-        <Alert onClose={handleCloseSnackbar} severity={errorSeverity} sx={{ width: "100%" }}>
+        <Alert onClose={handleCloseSnackbar} severity={errorSeverity} sx={{ width: "70%" }}>
           {snackbarMsg}
         </Alert>
       </Snackbar>

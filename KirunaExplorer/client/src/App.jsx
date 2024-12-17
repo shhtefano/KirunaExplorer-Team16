@@ -5,12 +5,13 @@ import AuthRoute from "@/routes/AuthRoute";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import HomePage from "./pages/Home";
 import MapPage from "./pages/Map";
-import GraphPage from "./pages/Graph";
+import Diagram from "./pages/Diagram";
 import LoginPage from "./pages/Login";
 import AddDocumentDescPage from "./pages/AddDocumentDesc";
 import ShowDocumentsPage from "./pages/ShowDocuments";
 import AreaMap from "./pages/AreaMap";
 import Resources from "./pages/Resources";
+import EditDocumentPage from "./pages/EditDocumentPage";
 
 function App() {
   return (
@@ -20,10 +21,10 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/map" element={<MapPage />} />
           <Route
-            path="/graph"
+            path="/diagram"
             element={
               <ProtectedRoute>
-                <GraphPage />
+                <Diagram />
               </ProtectedRoute>
             }
           />
@@ -35,7 +36,14 @@ function App() {
               </ProtectedRoute>
             }
           />
-
+          <Route
+            path="/edit-document"
+            element={
+              <ProtectedRoute>
+                <EditDocumentPage />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/documents/list"
             element={
@@ -62,12 +70,12 @@ function App() {
               </AuthRoute>
             }
           />
-           <Route
+          <Route
             path="/addresources"
-            element={  
-              <ProtectedRoute>  
-                <Resources/>
-              </ProtectedRoute>  
+            element={
+              <ProtectedRoute>
+                <Resources />
+              </ProtectedRoute>
             }
           />
         </Routes>

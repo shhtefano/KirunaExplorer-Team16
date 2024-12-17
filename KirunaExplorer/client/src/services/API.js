@@ -118,7 +118,7 @@ async function deleteArea(areaName) {
 }
 
 async function getAreaCoordinates(area_id) {
-  const response = await fetch(`${SERVER_URL}/api/geo/:${area_id}`, {
+  const response = await fetch(`${SERVER_URL}/api/geo/${area_id}`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
@@ -134,6 +134,32 @@ async function getAreaCoordinates(area_id) {
 
   return data;
 }
+
+async function getAreaByDocumentTitle(document_title) {
+  try {
+    // Effettua la chiamata API per ottenere l'area del documento tramite il suo titolo
+    const response = await fetch(`${SERVER_URL}/api/document/title/${document_title}/area`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    // Gestisce eventuali errori HTTP
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || "Errore durante il recupero dell'area del documento");
+    }
+
+    // Se la risposta è valida, restituisce i dettagli dell'area
+    const data = await response.json();
+    return { success: true, data };
+  } catch (error) {
+    console.error("Errore durante la chiamata API:", error);
+    return { success: false, message: error.message || "Errore di rete o server non raggiungibile." };
+  }
+}
+
 
 async function updateDocumentCoordinates(document_id, lat, lng) {
 
@@ -605,6 +631,60 @@ console.log( parentId,
   }
 }
 
+const updateDocument = async (body) => {
+  console.log("body", body);
+  const res = await fetch(SERVER_URL + "/api/edit-document", {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (res.ok) {
+    return res.status;
+  } else if (res.status === 400) {
+    return { error: "A document with the same title already exists." };
+  } else if (res.status === 500) {
+    const errorData = await res.json();
+    return { error: errorData.error || "An error occurred while updating the document." };
+  } else {
+    return { error: "Server error" };
+  }
+};
+
+
+const updateArea = async (body) => {
+  console.log("Request body:", body);
+
+  try {
+    const res = await fetch(SERVER_URL + "/api/edit-area", {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    });
+
+    if (res.ok) {
+      return res.status; // Return status if the update is successful
+    } else if (res.status === 404) {
+      return { error: "Area not found. Please check the provided ID." }; // Handle area not found
+    } else if (res.status === 400) {
+      return { error: "Invalid input. Both area ID and name are required." }; // Handle missing input
+    } else if (res.status === 409) {
+      return { error: "The area name is already in use. Please choose a different name." }; // Handle duplicate name conflict
+    } else if (res.status === 500) {
+      return { error: "An internal server error occurred. Please try again later." }; // Handle server errors
+    } else {
+      return { error: "Unexpected error occurred. Please contact support." }; // Catch-all for unexpected statuses
+    }
+  } catch (err) {
+    console.error("Error during API call:", err);
+    return { error: "Unable to connect to the server. Please check your internet connection." }; // Handle network errors
+  }
+};
+
 const API = {
   logIn,
   logOut,
@@ -618,6 +698,7 @@ const API = {
   getStakeholders,
   updateDocumentCoordinates,
   updateDocumentArea,
+  getAreaByDocumentTitle,
   deleteArea,
   addDocumentDescription,
   addNewStakeholder,
@@ -633,7 +714,9 @@ const API = {
   listFilesInSupabase,
   deleteDocument,
   getDocumentById,
-  deleteLink
+  deleteLink,
+  updateDocument,
+  updateArea
 };
 
 export default API;
