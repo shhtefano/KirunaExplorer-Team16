@@ -588,7 +588,7 @@ const EditDocumentForm = (props) => {
               </div>
 
 
-              {/* <div className="flex items-center justify-center">
+              <div className="flex items-center justify-center">
 
                 <div className="flex flex-col gap-y-2 items-start" >
                   <Button
@@ -602,7 +602,7 @@ const EditDocumentForm = (props) => {
 
                 </div>
 
-              </div> */}
+              </div>
               <div>
                 {temporaryLinks.length > 0 && (
                   <div >

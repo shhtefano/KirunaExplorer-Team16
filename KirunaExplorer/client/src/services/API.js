@@ -631,7 +631,6 @@ console.log( parentId,
   }
 }
 
-
 const updateDocument = async (body) => {
   console.log("body", body);
   const res = await fetch(SERVER_URL + "/api/edit-document", {
@@ -654,6 +653,37 @@ const updateDocument = async (body) => {
   }
 };
 
+
+const updateArea = async (body) => {
+  console.log("Request body:", body);
+
+  try {
+    const res = await fetch(SERVER_URL + "/api/edit-area", {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    });
+
+    if (res.ok) {
+      return res.status; // Return status if the update is successful
+    } else if (res.status === 404) {
+      return { error: "Area not found. Please check the provided ID." }; // Handle area not found
+    } else if (res.status === 400) {
+      return { error: "Invalid input. Both area ID and name are required." }; // Handle missing input
+    } else if (res.status === 409) {
+      return { error: "The area name is already in use. Please choose a different name." }; // Handle duplicate name conflict
+    } else if (res.status === 500) {
+      return { error: "An internal server error occurred. Please try again later." }; // Handle server errors
+    } else {
+      return { error: "Unexpected error occurred. Please contact support." }; // Catch-all for unexpected statuses
+    }
+  } catch (err) {
+    console.error("Error during API call:", err);
+    return { error: "Unable to connect to the server. Please check your internet connection." }; // Handle network errors
+  }
+};
 
 const API = {
   logIn,
@@ -685,7 +715,8 @@ const API = {
   deleteDocument,
   getDocumentById,
   deleteLink,
-  updateDocument
+  updateDocument,
+  updateArea
 };
 
 export default API;
