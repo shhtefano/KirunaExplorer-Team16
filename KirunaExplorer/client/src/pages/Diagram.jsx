@@ -40,7 +40,27 @@ export default function Diagram() {
   const [newLinkData, setNewLinkData] = useState({ source: null, target: null, type: "" });
   const [linkError, setLinkError] = useState("");
   const [hoveredDocument, setHoveredDocument] = useState(null);
+  const [hoveredEdge, setHoveredEdge] = useState(null); // Added state for hovered edge
 
+  const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 }); // Posizione del mouse
+
+  const handleEdgeMouseEnter = (event, edge) => {
+    const mouseX = event.pageX;
+    const mouseY = event.pageY;
+  
+    console.log("Mouse X (page):", mouseX, "Mouse Y (page):", mouseY);
+  
+    setHoveredEdge(edge);
+    setPopupPosition({ x: mouseX, y: mouseY });
+  
+    console.log("Popup position set (page):", { x: mouseX, y: mouseY });
+  };
+  
+  
+
+  const handleEdgeMouseLeave = () => {
+    setHoveredEdge(null);
+  };
   const transformDocumentsToNodes = (documents) => {
     const sortedDocs = [...documents].sort((a, b) => {
       if (!a.issuance_date) return 1;
@@ -245,6 +265,8 @@ export default function Diagram() {
           onNodeClick={handleNodeClick}
           onNodeMouseEnter={handleNodeMouseEnter}
           onNodeMouseLeave={handleNodeMouseLeave}
+          onEdgeMouseEnter={handleEdgeMouseEnter} 
+          onEdgeMouseLeave={handleEdgeMouseLeave} 
           fitView
           direction="LR"
         >
@@ -295,6 +317,26 @@ export default function Diagram() {
 
           {/* Usa il componente DocumentInfo per visualizzare i dettagli del documento hoverato */}
           <DocumentInfo document={hoveredDocument} />
+
+          {/*show hov ered connection type */}
+          {hoveredEdge && (
+            <div
+            style={{
+              position: "absolute",
+              top: 100,
+              left:100,
+              padding: "5px 10px",
+              backgroundColor: "#fff",
+              border: "1px solid #ddd",
+              boxShadow: "0 0 5px rgba(0, 0, 0, 0.1)",
+              zIndex: 100,  // Aumenta il valore di zIndex per garantire che sia sopra ad altri elementi
+              fontSize: "14px",
+            }}
+          >
+            <strong>Connection Type:</strong> {hoveredEdge.label}
+          </div>
+          
+          )}
 
           <Legend />
           <Background />
