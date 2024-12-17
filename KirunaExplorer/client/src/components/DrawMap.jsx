@@ -641,9 +641,9 @@ const DrawMap = () => {
                 open={openSnackbar}
                 autoHideDuration={2000}
                 onClose={handleCloseSnackbar}
-                anchorOrigin={{ vertical: "top", horizontal: "center" }}
+                anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
             >
-                <Alert onClose={handleCloseSnackbar} severity={errorSeverity} sx={{ width: "100%" }}>
+                <Alert onClose={handleCloseSnackbar} severity={errorSeverity} sx={{ width: "40%" }}>
                     {snackbarMsg}
                 </Alert>
             </Snackbar>

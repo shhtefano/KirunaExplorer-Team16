@@ -782,7 +782,7 @@ const GeneralMap = () => {
             variant="dark"
             onClick={() => { setShowLinkInterface(true); setShowModal(false); }}
           >
-            {`Link Documents to ${selectedDocument.document_title}`}
+            {`Link Documents`}
           </Button>
           <Button
             variant="dark"
