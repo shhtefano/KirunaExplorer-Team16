@@ -176,16 +176,16 @@ export default function DocumentsTable() {
 
 
    //Handle the Edit Button Click
-   const handleEditDocument = async (id) => {
-    try {
-      const updatedDoc = await API.updateDocument(id);
-      setDocuments((prev) => prev.map((doc) => doc.document_id === id ? updatedDoc : doc));
-      console.log("Document updated successfully");
-      setOpenEditDialog(false);
-    } catch (error) {
-      console.error("Error updating document:", error);
-    }
-  };
+  //  const handleEditDocument = async (id) => {
+  //   try {
+  //     const updatedDoc = await API.updateDocument(id);
+  //     setDocuments((prev) => prev.map((doc) => doc.document_id === id ? updatedDoc : doc));
+  //     console.log("Document updated successfully");
+  //     setOpenEditDialog(false);
+  //   } catch (error) {
+  //     console.error("Error updating document:", error);
+  //   }
+  // };
 
 
     //Handle the Delete Button Click
@@ -549,10 +549,9 @@ export default function DocumentsTable() {
                                 backgroundColor: "transparent",
                                 color: "black",
                               }}
-                              className="px-2"
                               onClick={() => {
-                                setDocumentToEdit(doc); // Set the document to edit
-                                setOpenEditDialog(true); // Open the Edit dialog
+                                setDocumentToEdit(doc);
+                                setOpenEditDialog(true);
                               }}
                             >
                               <Pencil
@@ -561,14 +560,12 @@ export default function DocumentsTable() {
                               />
                             </button>
                           </DialogTrigger>
-                          <DialogContent className=" bg-white rounded-lg shadow-lg" style={{ maxHeight: "90vh", overflowY: "auto", maxWidth: "50vw" }}>
+                          <DialogContent className=" bg-white rounded-lg shadow-lg" style={{ maxHeight: "80vh", overflowY: "auto", maxWidth: "50vw" }}>
                             <DialogTitle className="text-xl font-bold text-gray-800">
-                              Edit Document
+                              Edit {documentToEdit?.document_title || ""}
                             </DialogTitle>
-                            <DialogDescription className="text-gray-800 my-1">
-                              <EditDocumentForm selectedDocument={documentToEdit} />
-                            </DialogDescription>
-                            <DialogFooter>
+                            <EditDocumentForm documentTitle={documentToEdit?.document_title || ""}/>
+                            {/* <DialogFooter>
                               <button
                                 style={{
                                   backgroundColor: "black",
@@ -592,7 +589,7 @@ export default function DocumentsTable() {
                               >
                                 Save
                               </button>
-                            </DialogFooter>
+                            </DialogFooter> */}
                           </DialogContent>
                         </Dialog>
                       )}

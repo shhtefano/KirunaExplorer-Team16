@@ -955,7 +955,7 @@ const renderMarkersWithClustering = () => {
     <Modal.Body
       style={{
         height: '80vh',  // Calcola l'altezza disponibile (escludendo l'header)
-        overflowY: 'hidden',  // Abilita la scrollbar verticale
+        overflowY: 'auto',  // Abilita la scrollbar verticale
       }}
     >
       {/* Passa solo document_title alla componente EditDocumentForm */}
