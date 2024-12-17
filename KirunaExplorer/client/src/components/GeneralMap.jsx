@@ -94,7 +94,6 @@ const GeneralMap = ({selectedDocumentId}) => {
   const [showLinkInterface, setShowLinkInterface] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedDocumentType, setSelectedDocumentType] = useState("All"); // Stato per il tipo di documento
-const [refreshLinks, setRefreshLinks] = usestate(false);
   const ZOOM_LEVEL = 7;
   const WHOLE_AREA_CENTER = { lat: 67.85572, lng: 20.22513 }; // Definisci le coordinate per Kiruna Map
   const WHOLE_AREA_ZOOM = 12; // Definisci un livello di zoom per Kiruna Map
