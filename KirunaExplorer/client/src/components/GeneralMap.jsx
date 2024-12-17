@@ -229,6 +229,32 @@ const GeneralMap = ({selectedDocumentId}) => {
     }
   }, [filteredMarkers, selectedArea]);
 
+
+  //Permette di selezionare automaticamente l'area corretta quando clicchi sul documento sul diagramma
+  useEffect(() => {
+    console.log("selezionato documento", selectedDocumentId);
+    if (selectedDocumentId) {
+      // Chiamata all'API per ottenere l'area basata sul documento
+      API.getAreaByDocumentTitle(selectedDocumentId)
+        .then((response) => {
+          console.log("area ottenuta"+response.data);
+          // Assicurati che areaId sia un intero
+          const areaId = parseInt(response.data);
+  
+          // Verifica che areaId sia un numero valido
+          if (isNaN(areaId)) {
+            console.error("areaId non è un numero valido.");
+          } else {
+            handleAreaChange(areaId);       
+          }
+        })
+        .catch((error) => {
+          console.error("Errore nel recupero dell'area:", error);
+        });
+    }
+  }, [selectedDocumentId]);
+  
+
   // Funzione per renderizzare icone cluster aree
   const renderAreaMarkers = () => {
     const map = mapRef.current?.leafletElement || mapRef.current;
@@ -282,6 +308,7 @@ const GeneralMap = ({selectedDocumentId}) => {
       }
     }
   };
+
   
 
 
@@ -526,7 +553,12 @@ const GeneralMap = ({selectedDocumentId}) => {
   };
 
   const handleAreaChange = (areaId) => {
-    const selected = areas.find((area) => area.id === parseInt(areaId, 10));
+    var selected = areas.find((area) => area.id === parseInt(areaId, 10));
+    console.log("selected"+selected);
+    if (!selected) {
+      console.log(`Nessuna area trovata per areaId: ${areaId}. Impostando come "Point-Based Documents"`);
+      selected = areas.find((area) => area.name === "Point-Based Documents");
+    }
     setSelectedArea(selected);
     setSelectedDocumentType("All");
     // Centra la mappa se l'area ha coordinate
