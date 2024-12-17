@@ -69,7 +69,6 @@ export default function DocumentsTable() {
   const [selectedDocument, setSelectedDocument] = useState(null);
   const [showLinkInterface, setShowLinkInterface] = useState(false);
   const [refreshLinks, setRefreshLinks] = useState(false);
-
   const [showLinks, setShowLinks] = useState({})
 
 
@@ -108,9 +107,7 @@ export default function DocumentsTable() {
   const languages = ["All", "English", "Swedish"];
 
 
-  const [selectedMapDocument, setSelectedMapDocument] = useState(null);
-  const [selectedDocument, setSelectedDocument] = useState(null);
-  const [showLinkInterface, setShowLinkInterface] = useState(false);
+
 
   useEffect(() => {
     const fetchDocuments = async () => {
@@ -427,6 +424,8 @@ export default function DocumentsTable() {
                           <button
                             style={{ backgroundColor: "black", color: "white" }}
                             className="px-3 py-1 text-sm text-white rounded"
+                            title="Open Document"
+
                             onClick={() => {
                               setSelectedDocument(doc);
                               setShowLinkInterface(false);
@@ -511,10 +510,10 @@ export default function DocumentsTable() {
 
                    <Dialog>
                         <DialogTrigger asChild>
-                        <button
+                        {user?.role === "urban_planner" && ( <button
                             style={{ backgroundColor: "white", color: "black" }}
                             className="px-2 ml-2"
-                            hover="Connections"
+                            title="Connections"
                             onClick={() => {
                               setSelectedDocument(doc);
                               setShowLinks(true);
@@ -524,7 +523,7 @@ export default function DocumentsTable() {
                           >
                           <LinkIcon alt="Show Links" label="Show Links" />
 
-                          </button>
+                          </button>)}
                         </DialogTrigger>
                         <DialogContent
                           className="p-6 bg-white rounded-lg shadow-lg"
@@ -563,7 +562,9 @@ export default function DocumentsTable() {
                       {user?.role === "urban_planner" && (
                         <Dialog>
                           <DialogTrigger asChild>
-                            <button className="px-3 py-1 text-sm border border-black rounded hover:bg-gray-100">
+                            <button className="px-3 py-1 text-sm border border-black rounded hover:bg-gray-100"
+                                                        title="Upload Resources"
+>
                               <Upload className="w-4 h-4" />
                             </button>
                           </DialogTrigger>
@@ -583,6 +584,8 @@ export default function DocumentsTable() {
                           <button
                             style={{ backgroundColor: "white", color: "black" }}
                             className="px-2 ml-2"
+                            title="Map"
+
                             onClick={() => {
                               setSelectedMapDocument(doc);
                             }}
@@ -591,7 +594,7 @@ export default function DocumentsTable() {
                               color="black"
                               alt="Open Map"
                               label="Open Map"
-                            ></MapIcon>
+                            />
                           </button>
                         </DialogTrigger>
                         <DialogContent className="max-w-2xl p-6 bg-white rounded-lg shadow-lg">
@@ -621,6 +624,7 @@ export default function DocumentsTable() {
                                 backgroundColor: "transparent",
                                 color: "black",
                               }}
+                              title="Edit Document"
                               onClick={() => {
                                 setDocumentToEdit(doc);
                                 setOpenEditDialog(true);
@@ -679,6 +683,7 @@ export default function DocumentsTable() {
                                 backgroundColor: "transparent",
                                 color: "black",
                               }}
+                              title="Delete Document"
                               className="px-2"
                               onClick={() => {
                                 setDocumentToDelete(doc); // Set the document to delete
