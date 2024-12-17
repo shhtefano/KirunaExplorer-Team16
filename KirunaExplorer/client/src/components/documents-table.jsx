@@ -38,6 +38,7 @@ import FileUpload from "./FileUpload2.jsx";
 import { MapIcon, Pencil, Trash2, Upload } from "lucide-react";
 import { Button } from "react-bootstrap";
 import { useAuth } from "../contexts/AuthContext";
+import EditDocumentForm from "./EditDocumentForm.jsx";
 
 
 
@@ -57,6 +58,8 @@ export default function DocumentsTable() {
   const [dateFilterMode, setDateFilterMode] = useState("exact");
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false); // To control Dialog for delete confirmation
   const [documentToDelete, setDocumentToDelete] = useState(null); // To store the document that needs to be deleted
+  const [openEditDialog, setOpenEditDialog] = useState(false); // To control Dialog for Edit 
+  const [documentToEdit, setDocumentToEdit] = useState(null); // To store the document that needs to be Edited
   const { user } = useAuth();
 
   const [types, setTypes] = useState([]);
@@ -180,6 +183,18 @@ export default function DocumentsTable() {
       console.error("Error deleting document:", error);
     }
   };
+
+   //Handle the Edit Button Click
+   const handleEditDocument = async (id) => {
+    try {
+      await API.updateDocument(id);
+      console.log("Document updated successfully");
+      setDocuments((prev) => prev.filter((doc) => doc.document_id !== id));
+    } catch (error) {
+      console.error("Error updating document:", error);
+    }
+  };
+
 
   //Pagination
   const totalPages = Math.ceil(filteredDocuments.length / itemsPerPage);
@@ -516,17 +531,71 @@ export default function DocumentsTable() {
                       </Dialog>
                     </div>
 
-                    {/* <div>
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <button
-                            style={{ backgroundColor: "white", color: "black" }}
-                          >
-                            <Pencil color="black" className="h-5 w-5 inline-block" />
-                          </button>
-                        </DialogTrigger>
-                      </Dialog>
-                    </div> */}
+
+                    <div>
+                      {user?.role === "urban_planner" && (
+                        <Dialog
+                          open={openEditDialog} 
+                          onOpenChange={setOpenEditDialog} // Update state when the dialog is closed via outside click or Cancel
+                        >
+                          <DialogTrigger asChild>
+                            <button
+                              style={{
+                                backgroundColor: "transparent",
+                                color: "black",
+                              }}
+                              className="px-2"
+                              onClick={() => {
+                                setDocumentToEdit(doc); // Set the document to edit
+                                setOpenEditDialog(true); // Open the Edit dialog
+                              }}
+                            >
+                              <Pencil
+                                color="black"
+                                className="h-5 w-5 inline-block"
+                              />
+                            </button>
+                          </DialogTrigger>
+                          <DialogContent className="p-4 bg-white rounded-lg shadow-lg">
+                            <DialogTitle className="text-xl font-bold text-gray-800">
+                              Edit Document
+                            </DialogTitle>
+                            <DialogDescription className="text-gray-800 my-1">
+                              <EditDocumentForm selectedDocument={doc} />
+                            </DialogDescription>
+                            <DialogFooter>
+                              <button
+                                style={{
+                                  backgroundColor: "black",
+                                  color: "white",
+                                }}
+                                className="px-3 pb-1 text-sm text-white rounded"
+                                onClick={() => {
+                                  setOpenEditDialog(false); // Close dialog
+                                }}
+                              >
+                                Cancel
+                              </button>
+                              <button
+                                style={{
+                                  backgroundColor: "red",
+                                  color: "white",
+                                }}
+                                className="px-3 pb-1 text-sm text-white rounded"
+                                onClick={() => {
+                                  handleEditDocument(
+                                    documentToEdit.document_id
+                                  ); // Call Edit function
+                                  setOpenEditDialog(false); // Close dialog
+                                }}
+                              >
+                                Save
+                              </button>
+                            </DialogFooter>
+                          </DialogContent>
+                        </Dialog>
+                      )}
+                    </div>
 
                     <div>
                       {user?.role === "urban_planner" && (
@@ -593,6 +662,8 @@ export default function DocumentsTable() {
                         </Dialog>
                       )}
                     </div>
+
+
                   </div>
                 </TableCell>
               </TableRow>

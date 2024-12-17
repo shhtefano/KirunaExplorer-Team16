@@ -631,6 +631,30 @@ console.log( parentId,
   }
 }
 
+
+const updateDocument = async (body) => {
+  console.log("body", body);
+  const res = await fetch(SERVER_URL + "/api/edit-document", {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (res.ok) {
+    return res.status;
+  } else if (res.status === 400) {
+    return { error: "A document with the same title already exists." };
+  } else if (res.status === 500) {
+    const errorData = await res.json();
+    return { error: errorData.error || "An error occurred while updating the document." };
+  } else {
+    return { error: "Server error" };
+  }
+};
+
+
 const API = {
   logIn,
   logOut,
@@ -660,7 +684,8 @@ const API = {
   listFilesInSupabase,
   deleteDocument,
   getDocumentById,
-  deleteLink
+  deleteLink,
+  updateDocument
 };
 
 export default API;

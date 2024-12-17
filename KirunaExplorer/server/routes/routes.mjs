@@ -395,4 +395,33 @@ router.delete('/api/links', async (req, res) => {
     });
   }
 });
+
+
+router.put("/api/edit-document", async (req, res) => {
+  try {
+    console.log("Request received with body:", req.body);
+    
+    // Call the function to update the document
+    const updateResult = await documentDAO.updateDocument(req.body);
+    console.log("Update result:", updateResult);
+
+    // If update is successful, send a success response
+    return res.status(200).json({ message: "Document updated successfully." });
+  } catch (error) {
+    console.error("Error during update:", error);
+    // Handle specific errors
+    if (error.message === "A document with the same title already exists.") {
+      return res.status(400).json({ error: "A document with the same title already exists." });
+    } else if (error.message === "Error updating document fields." || error.message === "Document ID not found." || error.message === "Error removing previous stakeholders." || error.message === "Error inserting stakeholders") {
+      return res.status(500).json({ error: "An error occurred while updating the document." });
+    }
+
+    // Generic error handling
+    return res.status(500).json({ error: "Internal server error." });
+  }
+});
+
+
+
+
 export default router;
