@@ -62,7 +62,8 @@ export default function DocumentsTable() {
   const [selectedMapDocument, setSelectedMapDocument] = useState(null);
   const [selectedDocument, setSelectedDocument] = useState(null);
   const [showLinkInterface, setShowLinkInterface] = useState(false);
-  
+  const [refreshLinks, setRefreshLinks] = useState(false);
+
   const [showLinks, setShowLinks] = useState({})
 
 
@@ -199,6 +200,8 @@ export default function DocumentsTable() {
   useEffect(() => {
     if (!selectedDocument) {
       setShowLinkInterface(false);
+      setRefreshLinks((prev) => !prev)
+
     }
   }, [selectedDocument]);
 
@@ -351,6 +354,8 @@ export default function DocumentsTable() {
                             onClick={() => {
                               setSelectedDocument(doc);
                               setShowLinkInterface(false);
+                              setRefreshLinks((prev) => !prev)
+
                             }}
                           >
                             Open
@@ -369,6 +374,9 @@ export default function DocumentsTable() {
                               <div className="mt-6 border-t pt-4">
                                 <DocumentLink
                                   initialDocument={selectedDocument}
+                                 refreshLinks={refreshLinks} 
+                                 setRefreshLinks={setRefreshLinks}
+                                  
                                 />
                               </div>
                             ) : (
@@ -434,9 +442,10 @@ export default function DocumentsTable() {
                               setSelectedDocument(doc);
                               setShowLinks(true);
                               setShowLinkInterface(false);
+                              setRefreshLinks((prev) => !prev)
                             }}
                           >
-                            Links
+                            Connections
                           </button>
                         </DialogTrigger>
                         <DialogContent
@@ -458,6 +467,8 @@ export default function DocumentsTable() {
                                 setShowLinkInterface={setShowLinkInterface}
                                 selectedDocument={selectedDocument}
                                 setSelectedDocument={setSelectedDocument}
+                                refreshLinks={refreshLinks}
+                                setRefreshLinks={setRefreshLinks}
                               />
                             )}
                           </DialogDescription>
@@ -651,14 +662,11 @@ export default function DocumentsTable() {
   );
 }
 
-export function Links({ showLinkInterface, setShowLinkInterface, selectedDocument, setSelectedDocument }) {
+export function Links({ showLinkInterface, setShowLinkInterface, selectedDocument, setSelectedDocument, refreshLinks, setRefreshLinks }) {
   const [docToLink, setDocToLink] = useState(null);
-  const [linkType, setLinkType] = useState(null);
   const [links, setLinks] = useState([]);
   const [showDocInfo, setShowDocInfo] = useState(false);
-  const [documentDetails, setDocumentDetails] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+
   useEffect(() => {
     if (!selectedDocument) {
       setShowLinkInterface(false);
@@ -687,7 +695,7 @@ export function Links({ showLinkInterface, setShowLinkInterface, selectedDocumen
     };
 
     fetchLinks();
-  }, [selectedDocument]);
+  }, [selectedDocument, refreshLinks]);
   const handleDeleteConnection = async (doc1_id, doc2_id, connection_type) => {
     const result = await API.deleteConnection(doc1_id, doc2_id, connection_type);
 
@@ -704,29 +712,36 @@ export function Links({ showLinkInterface, setShowLinkInterface, selectedDocumen
       setSnackbarMsg('Connection deleted successfully');
       setOpenSnackbar(true);
       setErrorSeverity('success');
+      setRefreshLinks((prev) => !prev);
+
     } else {
       setSnackbarMsg('Failed to delete connection');
       setOpenSnackbar(true);
       setErrorSeverity('error');
     }
   };
-  const removeLink = () => {
-    console.log("Remove link functionality");
-    // Implementa la logica per rimuovere il link se necessario
-  };
+
   return (
     <>
       {!showLinkInterface && (links.length > 0 ? (
         <ul style={{ padding: 0, listStyle: "none" }}>
-          {links.map((link, index) => (
-            <li key={index} style={{ marginBottom: "0.5rem" }}>
-              <a
-                href={link.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ textDecoration: "none" }}
+        {links.map((link, index) => (
+          <li key={index} style={{ marginBottom: "0.5rem" }}>
+            <a
+              href={link.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ textDecoration: "none", width: "100%" }}
+            >
+              <Stack
+                direction="row"
+                alignItems="center"
+                justifyContent="space-between" // Allinea il contenuto a sinistra e destra
+                spacing={1}
+                style={{ width: "100%" }}
               >
-                <Stack direction="row" spacing={1} alignItems="center">
+                {/* Contenitore principale per i bottoni e freccia */}
+                <Stack direction="row" alignItems="center" spacing={1}>
                   <button
                     onClick={() => handleClickDoc(link.parent_id, link.connection_type)}
                     style={{
@@ -742,7 +757,10 @@ export function Links({ showLinkInterface, setShowLinkInterface, selectedDocumen
                   >
                     {link.parent_id}
                   </button>
-                  <Typography variant="body2" style={{ color: "#555", textTransform: "lowercase" }}>
+                  <Typography
+                    variant="body2"
+                    style={{ color: "#555", textTransform: "lowercase" }}
+                  >
                     →
                   </Typography>
                   <button
@@ -760,11 +778,14 @@ export function Links({ showLinkInterface, setShowLinkInterface, selectedDocumen
                   >
                     {link.children_id}
                   </button>
-  
+                </Stack>
+      
+                {/* Tipo connessione e pulsante eliminazione */}
+                <Stack direction="row" alignItems="center" spacing={1}>
                   <Typography
                     variant="body2"
                     color="textSecondary"
-                    style={{ textTransform: "lowercase" }}
+                    style={{ textTransform: "lowercase", fontSize: "12px" }}
                   >
                     Type: <strong>{link.connection_type}</strong>
                   </Typography>
@@ -772,17 +793,22 @@ export function Links({ showLinkInterface, setShowLinkInterface, selectedDocumen
                     variant="outlined"
                     size="small"
                     color="error"
-                    onClick={() => handleDeleteConnection(link.parent_id, link.children_id, link.connection_type)}
+                    onClick={() =>
+                      handleDeleteConnection(link.parent_id, link.children_id, link.connection_type)
+                    }
+                    style={{ minWidth: "30px", padding: "4px 6px" }} // Ridotto
                   >
-                    <Trash2 /> {/* Icona del cestino */}
+                    <Trash2 size={14} /> {/* Icona più piccola */}
                   </Button>
                 </Stack>
-              </a>
-            </li>
-          ))}
-        </ul>
+              </Stack>
+            </a>
+          </li>
+        ))}
+      </ul>
+      
       ) : (
-        <p>No links available for this document.</p>
+        <p>No Connections available for this document.</p>
       ))}
   
       {/* Pulsante per mostrare l'interfaccia di linking */}
@@ -797,6 +823,8 @@ export function Links({ showLinkInterface, setShowLinkInterface, selectedDocumen
           onClick={() => {
             setShowLinkInterface(true);
             setShowDocInfo(false);
+            setRefreshLinks((prev) => !prev);
+
           }}
         >
           Link Documents
@@ -806,12 +834,10 @@ export function Links({ showLinkInterface, setShowLinkInterface, selectedDocumen
       {/* Modal o interfaccia secondaria */}
       {docToLink && showDocInfo && (
         <DocumentInfoModal
-          links={links}
-          setLinks={setLinks}
+         
           doc={docToLink}
           showDocInfo={showDocInfo}
           setShowDocInfo={setShowDocInfo}
-          linkType={linkType}
           selectedDocument={selectedDocument}
         />
       )}
@@ -827,14 +853,15 @@ export function Links({ showLinkInterface, setShowLinkInterface, selectedDocumen
                 color: "white",
               }}
               className="px-4 py-2 mt-4 text-white bg-blue-500 rounded hover:bg-blue-600"
-              onClick={() => setShowLinkInterface(false)}
+              onClick={() => {setShowLinkInterface(false);       setRefreshLinks((prev) => !prev);
+              }}
             >
-              ← Back to Links
+              ← Back to Connections
             </Button>
 
             {/* Componente per il linking dei documenti */}
             <div className="mt-6 p-4 bg-white shadow-lg rounded-lg">
-              <DocumentLink initialDocument={selectedDocument} />
+              <DocumentLink initialDocument={selectedDocument} refreshLinks={refreshLinks} setRefreshLinks={setRefreshLinks} />
             </div>
           </div>
         )}

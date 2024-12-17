@@ -13,7 +13,7 @@ import API from "../services/API.js";
 import { Snackbar, Alert } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete"; // Importa l'icona
 
-export default function DocumentLink({ initialDocument }) {
+export default function DocumentLink({ initialDocument , refreshLinks, setRefreshLinks}) {
   const [documents, setDocuments] = useState([]); // Documenti caricati
   const [connections, setConnections] = useState([]); // Collegamenti del documento
   const [selectedDocument, setSelectedDocument] = useState(null); // Documento selezionato
@@ -89,7 +89,9 @@ export default function DocumentLink({ initialDocument }) {
         setSnackbarMsg('Linked successfully');
         setOpenSnackbar(true);
         setErrorSeverity('success');
+        setRefreshLinks((prev) => !prev);
 
+       
         setSelectedDocument(null);
         setLinkType("");
       } else {
@@ -116,6 +118,8 @@ export default function DocumentLink({ initialDocument }) {
       // Reset stato
       setSnackbarMsg('Connection deleted successfully');
       setOpenSnackbar(true);
+      setRefreshLinks((prev) => !prev);
+
       setErrorSeverity('success');
     } else {
       setSnackbarMsg('Failed to delete connection');
@@ -205,7 +209,7 @@ export default function DocumentLink({ initialDocument }) {
                         <SelectItem value="Direct Consequence">Direct Consequence</SelectItem>
                       </SelectContent>
                     </Select>
-                    <Button variant="outline" onClick={handleLinkDocuments} disabled={!linkType}>
+                    <Button variant="outline" onClick={() => handleLinkDocuments()} disabled={!linkType}>
                       Link Documents
                     </Button>
                   </div>

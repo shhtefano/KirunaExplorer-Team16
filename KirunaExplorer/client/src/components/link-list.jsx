@@ -102,11 +102,11 @@ export default function DocumentLinksModal({ selectedDocument, showModalLink, se
                   ))}
                 </ul>
             ) : (
-              <p>No links available for this document.</p>
+              <p>No connections available for this document.</p>
             )}
 
             {doc && showDocInfo && 
-            <DocumentInfoModal links={links} setLinks={setLinks} doc={doc} showDocInfo={showDocInfo} setShowDocInfo={setShowDocInfo} linkType={linkType} selectedDocument={selectedDocument}/>}
+            <DocumentInfoModal doc={doc} showDocInfo={showDocInfo} setShowDocInfo={setShowDocInfo} selectedDocument={selectedDocument}/>}
           </Modal.Body>
           <Modal.Footer>
           <Button variant="dark" 
@@ -120,7 +120,7 @@ export default function DocumentLinksModal({ selectedDocument, showModalLink, se
   );
 }
 
-export function DocumentInfoModal({ links, setLinks, doc, showDocInfo, setShowDocInfo, linkType , selectedDocument}) {
+export function DocumentInfoModal({doc, showDocInfo, setShowDocInfo, selectedDocument}) {
   const [documentDetails, setDocumentDetails] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -145,36 +145,7 @@ export function DocumentInfoModal({ links, setLinks, doc, showDocInfo, setShowDo
 
     fetchDocumentDetails();
   }, [doc]);
-  // Funzione per rimuovere il link associato al documento
-  // Funzione per rimuovere il link associato al documento
-const removeLink = async () => {
-  try {
-    // Chiamata API per rimuovere il link
-    const response = await API.deleteLink(doc, selectedDocument.document_title, linkType); // Passa i parametri corretti
-    if (response.success) {
-      console.log(`Document link removed: ${doc}`);
-      setShowDocInfo(false); // Chiudi il modal dopo la rimozione
-       // Aggiorna lo stato filtrando la lista
-    setLinks((prevLinks) =>
-      prevLinks.filter(
-        (link) =>
-          !(
-            ((link.parent_id === doc && link.children_id === selectedDocument.document_title) ||
-              (link.children_id === doc && link.parent_id === selectedDocument.document_title)) &&
-            link.connection_type === linkType
-          )
-      )
-    );
-      alert("Link removed successfully!");
-    } else {
-      console.error("Error removing document link:", response.message);
-      setError(response.message || "Unable to remove document link.");
-    }
-  } catch (err) {
-    console.error("Error removing document link:", err);
-    setError("Unable to remove document link.");
-  }
-};
+
 
   return (
     <Modal
@@ -205,16 +176,8 @@ const removeLink = async () => {
           !loading && <p>No details available for this document.</p>
         )}
       </Modal.Body>
-      <li><strong>Link Type: </strong> {linkType}</li>
 
       <Modal.Footer>
-        {/* Bottone per rimuovere il link del documento */}
-        <Button
-          variant="danger"  // Puoi usare "danger" per il colore rosso
-          onClick={() => removeLink(selectedDocument, doc, linkType)}
-        >
-          Remove Link
-        </Button>
         <Button
           variant="dark"
           onClick={() => setShowDocInfo(false)}

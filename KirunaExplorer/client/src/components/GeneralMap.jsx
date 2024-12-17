@@ -91,7 +91,7 @@ const GeneralMap = () => {
   const [allDocs, setAllDocs] = useState([]);
   const [showModalLink, setShowModalLink] = useState(false); //modal per popup links
   const [showLinkInterface, setShowLinkInterface] = useState(false);
-
+const [refreshLinks, setRefreshLinks] = usestate(false);
   const ZOOM_LEVEL = 7;
   const WHOLE_AREA_CENTER = { lat: 67.85572, lng: 20.22513 }; // Definisci le coordinate per Kiruna Map
   const WHOLE_AREA_ZOOM = 12; // Definisci un livello di zoom per Kiruna Map
@@ -789,10 +789,10 @@ const GeneralMap = () => {
       {selectedDocument && showLinkInterface && (
         <Modal show={showLinkInterface} onHide={() => setShowLinkInterface(false)} style={{ marginTop: '8%' }}>
           <Modal.Header closeButton>
-            <Modal.Title>Links for {selectedDocument.document_title}</Modal.Title>
+            <Modal.Title>Connections for {selectedDocument.document_title}</Modal.Title>
           </Modal.Header>
           <Modal.Body>
-            <DocumentLink initialDocument={selectedDocument} />
+            <DocumentLink initialDocument={selectedDocument} refreshLinks={refreshLinks} setRefreshLinks={setRefreshLinks}/>
           </Modal.Body>
           <Modal.Footer>
             <Button variant="dark" onClick={() => setShowLinkInterface(false)}>
