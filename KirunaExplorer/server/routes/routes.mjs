@@ -125,6 +125,32 @@ router.get("/api/geo/:areaId", async (req, res) => {
   }
 });
 
+router.get("/api/document/title/:document_title/area", async (req, res) => {
+  try {
+    // Estrae il titolo del documento dai parametri della richiesta
+    const { document_title } = req.params;
+
+    // Controlla se il titolo del documento è fornito
+    if (!document_title) {
+      return res.status(400).json({ message: "Titolo del documento mancante." });
+    }
+
+    // Recupera l'area del documento dal database tramite il DAO
+    const documentArea = await documentDAO.getAreaIdByDocumentId(document_title);
+
+    // Controlla se l'area del documento esiste
+    if (!documentArea) {
+      return res.status(404).json({ message: "Area del documento non trovata." });
+    }
+
+    // Risponde con i dettagli dell'area del documento
+    res.status(200).json(documentArea);
+  } catch (error) {
+    console.error("Errore durante il recupero dell'area del documento:", error);
+    res.status(500).send("Si è verificato un errore durante il recupero dell'area del documento.");
+  }
+});
+
 router.get("/api/stakeholder", async (req, res) => {
   try {
     // Recupera tutti i documenti dal database

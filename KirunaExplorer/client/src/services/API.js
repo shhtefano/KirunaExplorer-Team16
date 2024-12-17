@@ -135,6 +135,32 @@ async function getAreaCoordinates(area_id) {
   return data;
 }
 
+async function getAreaByDocumentTitle(document_title) {
+  try {
+    // Effettua la chiamata API per ottenere l'area del documento tramite il suo titolo
+    const response = await fetch(`${SERVER_URL}/api/document/title/${document_title}/area`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    // Gestisce eventuali errori HTTP
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || "Errore durante il recupero dell'area del documento");
+    }
+
+    // Se la risposta è valida, restituisce i dettagli dell'area
+    const data = await response.json();
+    return { success: true, data };
+  } catch (error) {
+    console.error("Errore durante la chiamata API:", error);
+    return { success: false, message: error.message || "Errore di rete o server non raggiungibile." };
+  }
+}
+
+
 async function updateDocumentCoordinates(document_id, lat, lng) {
 
   const response = await fetch(`${SERVER_URL}/api/document/updatePointCoords`, {
@@ -618,6 +644,7 @@ const API = {
   getStakeholders,
   updateDocumentCoordinates,
   updateDocumentArea,
+  getAreaByDocumentTitle,
   deleteArea,
   addDocumentDescription,
   addNewStakeholder,

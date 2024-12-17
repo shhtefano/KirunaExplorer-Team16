@@ -784,6 +784,29 @@ class DocumentDAO {
     });
   }
 
+  async getAreaIdByDocumentId(document_id) {
+    return new Promise((resolve, reject) => {
+      const query = `
+        SELECT GD.area_id
+        FROM Geolocation_Documents GD
+        WHERE GD.document_id = ?;
+      `;
+
+      db.get(query, [document_id], (err, row) => {
+        if (err) {
+          console.error("Errore durante il recupero dell'area_id:", err);
+          return reject(new Error("Errore durante il recupero dell'area_id."));
+        }
+
+        if (row) {
+          resolve(row.area_id); // Restituisce l'area_id
+        } else {
+          reject(new Error("Nessuna area associata a questo document_id"));
+        }
+      });
+    });
+  }
+
 
   async updatePointCoordinates(document_id, long, lat) {
     return new Promise((resolve, reject) => {
