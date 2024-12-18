@@ -5,8 +5,8 @@
 This guide explains how to pull the Docker image from the repository and build the application.
 
 ---
-###Option 1: Pulling the Docker Image
-## Prerequisites
+
+## Option 1: Pulling the Docker Image
 
 1. **Docker Installed**  
    Ensure that Docker is installed on your machine. If not, download and install it from [Docker's official website](https://www.docker.com/).
@@ -18,7 +18,8 @@ This guide explains how to pull the Docker image from the repository and build t
    >docker images
 4. **Run the images:**  
    >docker run -d --name kirunaexplorer-client -p 5173:5173 shhtefano/kirunaexplorer-team16:client-latest ; docker run -d --name kirunaexplorer-server -p 3001:3001 shhtefano/kirunaexplorer-team16:server-latest
-###Option 2: Cloning the Repository and Building with Docker Compose
+
+## Option 2: Cloning the Repository and Building with Docker Compose
    
 1. **Clone the repository: First, clone the repository to your local machine by running:**  
    >git clone https://github.com/shhtefano/KirunaExplorer-Team16/
