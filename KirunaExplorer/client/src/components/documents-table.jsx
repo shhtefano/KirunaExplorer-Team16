@@ -831,7 +831,6 @@ export function Links({ showLinkInterface, setShowLinkInterface, selectedDocumen
     console.log("DOCUMENTO SELEZIONATO", docId); // Verifica che l'ID sia corretto
     setDocToLink(docId); // Imposta prima il documento
     setShowDocInfo(true); // Mostra il modal secondario
-    setLinkType(connectionType);
     console.log("doc:", docToLink, "selectedDocument", selectedDocument);
   };
 

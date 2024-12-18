@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import L from "leaflet";
@@ -96,6 +95,12 @@ const GeneralMap = ({selectedDocumentId}) => {
   const ZOOM_LEVEL = 7;
   const WHOLE_AREA_CENTER = { lat: 67.85572, lng: 20.22513 }; // Definisci le coordinate per Kiruna Map
   const WHOLE_AREA_ZOOM = 12; // Definisci un livello di zoom per Kiruna Map
+
+  useEffect(() => {
+    if (!selectedDocument) {
+      setShowLinkInterface(false);
+    }
+  }, [selectedDocument]);
 
   useEffect(() => {
     const fetchAreas = async () => {
@@ -380,7 +385,7 @@ const renderMarkersWithClustering = () => {
   const changeMapPosition = (doc) => {
     const map = mapRef.current;
     if (!map) return;
-
+  
     // Check if the document is Point-Based Documents-based
     if (doc.area_name === "Point-Based Documents") {
       // Use the document's updated coordinates for a Point-Based Documents-based location
@@ -444,7 +449,7 @@ const renderMarkersWithClustering = () => {
       popupAnchor: [0, -20],
     });
   };
-
+  
   // Funzione per gestire la ricerca
   const handleSearchChange = (event) => {
     const query = event.target.value;
@@ -934,10 +939,23 @@ const renderMarkersWithClustering = () => {
     </Modal.Footer> */}
   </Modal>
 )}
-
-
-
-
+  
+      {/* Modal to link documents */}
+      {selectedDocument && showLinkInterface && (
+        <Modal show={showLinkInterface} onHide={() => setShowLinkInterface(false)} style={{ marginTop: '8%' }}>
+          <Modal.Header closeButton>
+            <Modal.Title>Links for {selectedDocument.document_title}</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <DocumentLink initialDocument={selectedDocument} />
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="dark" onClick={() => setShowLinkInterface(false)}>
+              Close
+            </Button>
+          </Modal.Footer>
+        </Modal>
+      )}
       {/* Modal to change document position */}
       {selectedDocument && showEditCoordinatesModal && (
         <Modal

@@ -1,13 +1,11 @@
-// npm run c:open
-/* eslint-disable jest/no-disabled-tests */
-/* eslint-disable jest/expect-expect */
-/* eslint-disable no-undef */
+/// <reference types="cypress" />
 
+/* eslint-disable no-undef */
 describe("Map Page Tests", () => {
   const baseUrl = "http://localhost:5173";
 
   beforeEach(() => {
-    // Make an API request to log in
+    // Effettua login tramite API e salva il token in localStorage
     cy.request({
       method: "POST",
       url: "http://localhost:3001/api/sessions",
@@ -16,12 +14,14 @@ describe("Map Page Tests", () => {
         password: "urban_planner",
       },
     }).then((response) => {
-      // Save the token in localStorage or cookies for the session
+      expect(response.status).to.eq(201);
       window.localStorage.setItem("auth_token", response.body.token);
     });
 
+    // Visita la pagina della mappa
     cy.visit(`${baseUrl}/map`);
   });
+
   it("should load the map page correctly", () => {
     cy.contains("h1", "Kiruna Map").should("be.visible"); // Check the title
     cy.get(".leaflet-container").should("be.visible"); // Verify that the map is present
@@ -37,19 +37,20 @@ describe("Map Page Tests", () => {
   });
 
   it("allows the user to select an area from the dropdown", () => {
-    cy.get(".dropdown-toggle").click(); // Open the dropdown
-    cy.contains("Point-Based Documents").click(); // Select a specific option
-    cy.get(".dropdown-toggle").should("contain", "Point-Based Documents"); // Verify that it has been updated
+    // Apri il menu a tendina e seleziona un'area
+    cy.get(".dropdown-toggle", { timeout: 10000 }).click();
+    cy.contains("Point-Based Documents").click();
+
+    // Verifica che l'area selezionata sia corretta
+    cy.get(".dropdown-toggle").should("contain", "Point-Based Documents");
   });
 
   it("displays the correct markers when an area is selected", () => {
-    cy.get(".dropdown-toggle").click();
+    // Seleziona un'area
+    cy.get(".dropdown-toggle", { timeout: 10000 }).click();
     cy.contains("Point-Based Documents").click();
 
-    // Assuming there are visible filtered markers
-    cy.get(".leaflet-marker-icon").should("have.length.at.least", 1);
+    // Verifica che ci siano marker visibili
+    cy.get(".leaflet-marker-icon", { timeout: 10000 }).should("have.length.at.least", 1);
   });
-
 });
-
-/// <reference types="cypress" />
