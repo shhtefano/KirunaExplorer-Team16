@@ -78,22 +78,20 @@ INSERT INTO Stakeholders(stakeholder_name) VALUES ('LKAB');
 INSERT INTO Stakeholders(stakeholder_name) VALUES ('Kiruna kommun');
 INSERT INTO Stakeholders(stakeholder_name) VALUES ('White Arkitekter');
 
-INSERT INTO Type (type_name) VALUES ('Informative document');
-INSERT INTO Type (type_name) VALUES ('Prescriptive document');
-INSERT INTO Type (type_name) VALUES ('Design document');
-INSERT INTO Type (type_name) VALUES ('Technical document');
-INSERT INTO Type (type_name) VALUES ('Material effect');
+INSERT INTO Type (type_name) VALUES ('Informative');
+INSERT INTO Type (type_name) VALUES ('Prescriptive');
+INSERT INTO Type (type_name) VALUES ('Design');
+INSERT INTO Type (type_name) VALUES ('Technical');
+INSERT INTO Type (type_name) VALUES ('Material Effects');
+
+
+INSERT INTO Documents (document_title, scale, issuance_date, language, pages, document_type, document_description) VALUES('Town Hall demolition (64)', 'blueprints/effects', '04/2019', '','', 'Material Effects', 'After the construction of the new town hall wascompleted, the old building, nicknamed "The Igloo,"was demolished. The only elements preserved werethe door handles, a masterpiece of Sami art made ofwood and bone, and the clock tower, which oncestood on the roof of the old town hall. The clocktower was relocated to the central square of NewKiruna, in front of the new building.');
 
 INSERT INTO Documents (document_title, scale, issuance_date, language, pages, document_type, document_description) VALUES
-('Compilation of responses So what the people of Kiruna think?', 'Text', '2007-01-01', 'Swedish', NULL, 'Informative document', 'This document is a compilation of the responses to the survey "What is your impression of Kiruna?" From the citizens\' responses to this last part of the survey, it is evident that certain buildings, such as the Kiruna Church, the Hjalmar Lundbohmsgården, and the Town Hall, are considered of significant value to the population. The municipality views the experience of this survey positively, to the extent that over the years it will propose various consultation opportunities.');
-
-INSERT INTO Documents (document_title, scale, issuance_date, language, pages, document_type, document_description) VALUES('Town Hall demolition (64)', 'blueprints/effects', '04/2019', '','', 'Material effect', 'After the construction of the new town hall wascompleted, the old building, nicknamed "The Igloo,"was demolished. The only elements preserved werethe door handles, a masterpiece of Sami art made ofwood and bone, and the clock tower, which oncestood on the roof of the old town hall. The clocktower was relocated to the central square of NewKiruna, in front of the new building.');
+('Development Plan (41)', '1 : 7,500', '2014-03-17', 'Swedish', 111, 'Design', 'The development plan shapes the form of the new city. The document, unlike previous competition documents, is written entirely in Swedish, which reflects the target audience: the citizens of Kiruna. The plan obviously contains many elements of the winning masterplan from the competition, some recommended by the jury, and others that were deemed appropriate to integrate later. The document is divided into four parts, with the third part, spanning 80 pages, describing the shape the new city will take and the strategies to be implemented for its relocation through plans, sections, images, diagrams, and texts. The document also includes numerous studies aimed at demonstrating the future success of the project.');
 
 INSERT INTO Documents (document_title, scale, issuance_date, language, pages, document_type, document_description) VALUES
-('Development Plan (41)', '1 : 7,500', '2014-03-17', 'Swedish', 111, 'Design document', 'The development plan shapes the form of the new city. The document, unlike previous competition documents, is written entirely in Swedish, which reflects the target audience: the citizens of Kiruna. The plan obviously contains many elements of the winning masterplan from the competition, some recommended by the jury, and others that were deemed appropriate to integrate later. The document is divided into four parts, with the third part, spanning 80 pages, describing the shape the new city will take and the strategies to be implemented for its relocation through plans, sections, images, diagrams, and texts. The document also includes numerous studies aimed at demonstrating the future success of the project.');
-
-INSERT INTO Documents (document_title, scale, issuance_date, language, pages, document_type, document_description) VALUES
-('Deformation forecast (45)', '1 : 12,000', '2014-12-01', 'Swedish', 1, 'Technical document', 'The deformation forecast predicts the development of deformations affecting the urban area of Kiruna. The report includes visual aids and detailed technical descriptions of geological impacts and the measures to counteract them.');
+('Deformation forecast (45)', '1 : 12,000', '2014-12-01', 'Swedish', 1, 'Technical', 'The deformation forecast predicts the development of deformations affecting the urban area of Kiruna. The report includes visual aids and detailed technical descriptions of geological impacts and the measures to counteract them.');
 
 -- Associazioni documenti e stakeholder
 INSERT INTO Document_Stakeholder (stakeholder_id, document_id) VALUES (1, 1);
