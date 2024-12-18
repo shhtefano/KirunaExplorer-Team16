@@ -7,4 +7,12 @@
   .custom-modal .modal-content {
     height: auto;    /* Assicurati che il contenuto possa adattarsi senza limitazioni di altezza */
   }
+  .custom-modal-wide {
+    max-width: 900px; /* Aumenta la larghezza */
+    width: 90%; /* Opzione per la larghezza responsiva */
+  }
   
+  .custom-modal-body {
+    word-wrap: break-word; /* Evita di spezzare il testo */
+    overflow-x: auto; /* Scorrimento orizzontale per i contenuti ampi */
+  }

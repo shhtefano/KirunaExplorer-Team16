@@ -1,4 +1,9 @@
 import { useState, useEffect } from "react";
+import { Stack, Typography } from "@mui/material";
+import { DocumentInfoModal } from "./link-list.jsx";
+import LinkIcon from "@mui/icons-material/Link";
+
+import DeleteIcon from "@mui/icons-material/Delete"; // Importa l'icona
 import {
   Table,
   TableHeader,
@@ -61,6 +66,14 @@ export default function DocumentsTable() {
   const [openEditDialog, setOpenEditDialog] = useState(false); // To control Dialog for Edit 
   const [documentToEdit, setDocumentToEdit] = useState(null); // To store the document that needs to be Edited
   const [areaNames, setAreaNames] = useState({});
+  const [selectedMapDocument, setSelectedMapDocument] = useState(null);
+  const [selectedDocument, setSelectedDocument] = useState(null);
+  const [showLinkInterface, setShowLinkInterface] = useState(false);
+  const [refreshLinks, setRefreshLinks] = useState(false);
+  const [showLinks, setShowLinks] = useState({})
+
+
+
   const { user } = useAuth();
 
 
@@ -126,9 +139,7 @@ export default function DocumentsTable() {
   const languages = ["All", "English", "Swedish"];
 
 
-  const [selectedMapDocument, setSelectedMapDocument] = useState(null);
-  const [selectedDocument, setSelectedDocument] = useState(null);
-  const [showLinkInterface, setShowLinkInterface] = useState(false);
+
 
   useEffect(() => {
     const fetchDocuments = async () => {
@@ -144,12 +155,7 @@ export default function DocumentsTable() {
     };
     fetchDocuments();
   }, []);
-
-
-
-
-
-
+ 
   const filteredDocuments = documents.filter((doc) => {
     const matchesSearch = doc.document_title
       .toLowerCase()
@@ -238,6 +244,8 @@ export default function DocumentsTable() {
   useEffect(() => {
     if (!selectedDocument) {
       setShowLinkInterface(false);
+      setRefreshLinks((prev) => !prev)
+
     }
   }, [selectedDocument]);
 
@@ -432,16 +440,20 @@ export default function DocumentsTable() {
                 <TableCell className="py-2 px-4">{doc.language}</TableCell>
                 <TableCell className="py-2 px-4">{areaNames[doc.document_id] || "Loading..."}</TableCell>
                 <TableCell className="py-2 px-4">
-                  <div className="flex">
-                    <div>
+                  <div className="flex"    >
+                    <div style={{ overflowY: "auto"}}>
                       <Dialog>
                         <DialogTrigger asChild>
                           <button
                             style={{ backgroundColor: "black", color: "white" }}
                             className="px-3 py-1 text-sm text-white rounded"
+                            title="Open Document"
+
                             onClick={() => {
                               setSelectedDocument(doc);
                               setShowLinkInterface(false);
+                              setRefreshLinks((prev) => !prev)
+
                             }}
                           >
                             Open
@@ -460,10 +472,13 @@ export default function DocumentsTable() {
                               <div className="mt-6 border-t pt-4">
                                 <DocumentLink
                                   initialDocument={selectedDocument}
+                                 refreshLinks={refreshLinks} 
+                                 setRefreshLinks={setRefreshLinks}
+                                  
                                 />
                               </div>
                             ) : (
-                              <div style={{ fontSize: "16px", margin: "10px" }}>
+                              <div style={{ fontSize: "16px", margin: "10px",    overflowY: "auto" }}>
                                 <p className="m-2">
                                   <strong>Stakeholders:</strong>{" "}
                                   {selectedDocument?.stakeholders?.length > 0
@@ -515,11 +530,64 @@ export default function DocumentsTable() {
                         </DialogContent>
                       </Dialog>
                     </div>
+
+                   <Dialog>
+                        <DialogTrigger asChild>
+                        {user?.role === "urban_planner" && ( <button
+                            style={{ backgroundColor: "white", color: "black" }}
+                            className="px-2 ml-2"
+                            title="Connections"
+                            onClick={() => {
+                              setSelectedDocument(doc);
+                              setShowLinks(true);
+                              setShowLinkInterface(false);
+                              setRefreshLinks((prev) => !prev)
+                            }}
+                          >
+                          <LinkIcon alt="Show Links" label="Show Links" />
+
+                          </button>)}
+                        </DialogTrigger>
+                        <DialogContent
+                          className="p-6 bg-white rounded-lg shadow-lg"
+                          style={{
+                            maxHeight: "80vh", // Altezza massima del dialog responsivo
+                            overflowY: "auto", // Abilita lo scorrimento verticale
+                            width: "90vw", // Larghezza massima (per i dispositivi mobili)
+                            maxWidth: "600px", // Larghezza massima per desktop
+                          }}
+                        >
+                          <DialogTitle className="text-xl font-bold text-gray-800">
+                            {selectedDocument?.document_title + " Connections"}
+                          </DialogTitle>
+                          <DialogDescription className="text-gray-700">
+                            {selectedDocument && showLinks && (
+                              <Links
+                                showLinkInterface={showLinkInterface}
+                                setShowLinkInterface={setShowLinkInterface}
+                                selectedDocument={selectedDocument}
+                                setSelectedDocument={setSelectedDocument}
+                                refreshLinks={refreshLinks}
+                                setRefreshLinks={setRefreshLinks}
+                              />
+                            )}
+                          </DialogDescription>
+                        </DialogContent>
+                      </Dialog>
+
+
+
+
+
+
+
                     <div className="ml-2">
                       {user?.role === "urban_planner" && (
                         <Dialog>
                           <DialogTrigger asChild>
-                            <button className="px-3 py-1 text-sm border border-black rounded hover:bg-gray-100">
+                            <button className="px-3 py-1 text-sm border border-black rounded hover:bg-gray-100"
+                                                        title="Upload Resources"
+>
                               <Upload className="w-4 h-4" />
                             </button>
                           </DialogTrigger>
@@ -539,6 +607,8 @@ export default function DocumentsTable() {
                           <button
                             style={{ backgroundColor: "white", color: "black" }}
                             className="px-2 ml-2"
+                            title="Map"
+
                             onClick={() => {
                               setSelectedMapDocument(doc);
                             }}
@@ -547,7 +617,7 @@ export default function DocumentsTable() {
                               color="black"
                               alt="Open Map"
                               label="Open Map"
-                            ></MapIcon>
+                            />
                           </button>
                         </DialogTrigger>
                         <DialogContent className="max-w-2xl p-6 bg-white rounded-lg shadow-lg">
@@ -577,6 +647,7 @@ export default function DocumentsTable() {
                                 backgroundColor: "transparent",
                                 color: "black",
                               }}
+                              title="Edit Document"
                               onClick={() => {
                                 setDocumentToEdit(doc);
                                 setOpenEditDialog(true);
@@ -635,6 +706,7 @@ export default function DocumentsTable() {
                                 backgroundColor: "transparent",
                                 color: "black",
                               }}
+                              title="Delete Document"
                               className="px-2"
                               onClick={() => {
                                 setDocumentToDelete(doc); // Set the document to delete
@@ -743,4 +815,213 @@ export default function DocumentsTable() {
       </div>
     </div>
   );
+}
+
+export function Links({ showLinkInterface, setShowLinkInterface, selectedDocument, setSelectedDocument, refreshLinks, setRefreshLinks }) {
+  const [docToLink, setDocToLink] = useState(null);
+  const [links, setLinks] = useState([]);
+  const [showDocInfo, setShowDocInfo] = useState(false);
+
+  useEffect(() => {
+    if (!selectedDocument) {
+      setShowLinkInterface(false);
+    }
+  }, [selectedDocument]);
+  const handleClickDoc = (docId, connectionType) => {
+    console.log("DOCUMENTO SELEZIONATO", docId); // Verifica che l'ID sia corretto
+    setDocToLink(docId); // Imposta prima il documento
+    setShowDocInfo(true); // Mostra il modal secondario
+    setLinkType(connectionType);
+    console.log("doc:", docToLink, "selectedDocument", selectedDocument);
+  };
+
+
+  useEffect(() => {
+    const fetchLinks = async () => {
+      if (selectedDocument) {
+        try {
+          const data = await API.getConnectionsByDocumentTitle(selectedDocument.document_title);
+          setLinks(data.data || []);
+        } catch (error) {
+          console.error("Error fetching links:", error);
+          setLinks([]);
+        }
+      }
+    };
+
+    fetchLinks();
+  }, [selectedDocument, refreshLinks]);
+  const handleDeleteConnection = async (doc1_id, doc2_id, connection_type) => {
+    const result = await API.deleteConnection(doc1_id, doc2_id, connection_type);
+
+    if (result.success) {
+      // Rimuovi la connessione dalla lista
+      setLinks((prevConnections) =>
+        prevConnections.filter(
+          (conn) =>
+            !(conn.parent_id === doc1_id && conn.children_id === doc2_id && conn.connection_type === connection_type)
+        )
+      );
+
+      // Reset stato
+      setSnackbarMsg('Connection deleted successfully');
+      setOpenSnackbar(true);
+      setErrorSeverity('success');
+      setRefreshLinks((prev) => !prev);
+
+    } else {
+      setSnackbarMsg('Failed to delete connection');
+      setOpenSnackbar(true);
+      setErrorSeverity('error');
+    }
+  };
+
+  return (
+    <>
+      {!showLinkInterface && (links.length > 0 ? (
+        <ul style={{ padding: 0, listStyle: "none" }}>
+        {links.map((link, index) => (
+          <li key={index} style={{ marginBottom: "0.5rem" }}>
+            <a
+              href={link.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ textDecoration: "none", width: "70%" }}
+            >
+              <Stack
+                direction="row"
+                alignItems="center"
+                justifyContent="space-between" // Allinea il contenuto a sinistra e destra
+                spacing={1}
+                style={{ width: "100%" }}
+              >
+                {/* Contenitore principale per i bottoni e freccia */}
+                <Stack direction="row" alignItems="center" spacing={1}>
+                  <button
+                    onClick={() => handleClickDoc(link.parent_id, link.connection_type)}
+                    style={{
+                      background: "none",
+                      border: "1px solid #ccc",
+                      padding: "6px 12px",
+                      borderRadius: "10px",
+                      color: "#333",
+                      fontSize: "14px",
+                      cursor: "pointer",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {link.parent_id}
+                  </button>
+                  <Typography
+                    variant="body2"
+                    style={{ color: "#555", textTransform: "lowercase" }}
+                  >
+                    →
+                  </Typography>
+                  <button
+                    onClick={() => handleClickDoc(link.children_id, link.connection_type)}
+                    style={{
+                      background: "none",
+                      border: "1px solid #ccc",
+                      padding: "6px 12px",
+                      borderRadius: "10px",
+                      color: "#333",
+                      fontSize: "14px",
+                      cursor: "pointer",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {link.children_id}
+                  </button>
+                </Stack>
+      
+                {/* Tipo connessione e pulsante eliminazione */}
+                <Stack direction="row" alignItems="center" spacing={1}>
+                  <Typography
+                    variant="body2"
+                    color="textSecondary"
+                    style={{ textTransform: "lowercase", fontSize: "12px" }}
+                  >
+                    Type: <strong>{link.connection_type}</strong>
+                  </Typography>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    color="error"
+                    onClick={() =>
+                      handleDeleteConnection(link.parent_id, link.children_id, link.connection_type)
+                    }
+                    style={{ minWidth: "30px", padding: "4px 6px" }} // Ridotto
+                  >
+                    <Trash2 size={14} /> {/* Icona più piccola */}
+                  </Button>
+                </Stack>
+              </Stack>
+            </a>
+          </li>
+        ))}
+      </ul>
+      
+      ) : (
+        <p>No Connections available for this document...</p>
+      ))}
+  
+      {/* Pulsante per mostrare l'interfaccia di linking */}
+      {!showLinkInterface && (
+        <Button
+          variant="outline"
+          style={{
+            backgroundColor: "black",
+            color: "white",
+          }}
+          className="px-4 py-2 mt-4 text-white bg-blue-500 rounded hover:bg-blue-600"
+          onClick={() => {
+            setShowLinkInterface(true);
+            setShowDocInfo(false);
+            setRefreshLinks((prev) => !prev);
+
+          }}
+        >
+          Link Documents
+        </Button>
+      )}
+  
+      {/* Modal o interfaccia secondaria */}
+      {docToLink && showDocInfo && (
+        <DocumentInfoModal
+         
+          doc={docToLink}
+          showDocInfo={showDocInfo}
+          setShowDocInfo={setShowDocInfo}
+          selectedDocument={selectedDocument}
+        />
+      )}
+  
+      {/* Interfaccia per linkare documenti con pulsante indietro */}
+      {showLinkInterface && (
+          <div className="mt-6 border-t pt-1">
+            {/* Pulsante per tornare alla lista dei link */}
+            <Button
+              variant="outline"
+              style={{
+                backgroundColor: "black",
+                color: "white",
+              }}
+              className="px-4 py-2 mt-4 text-white bg-blue-500 rounded hover:bg-blue-600"
+              onClick={() => {setShowLinkInterface(false);       setRefreshLinks((prev) => !prev);
+              }}
+            >
+              ← Back to Connections
+            </Button>
+
+            {/* Componente per il linking dei documenti */}
+            <div className="mt-6 p-4 bg-white shadow-lg rounded-lg">
+              <DocumentLink initialDocument={selectedDocument} refreshLinks={refreshLinks} setRefreshLinks={setRefreshLinks} />
+            </div>
+          </div>
+        )}
+
+    </>
+  );
+  
 }
