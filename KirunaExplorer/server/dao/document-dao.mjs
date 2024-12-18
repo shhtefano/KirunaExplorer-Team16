@@ -1555,6 +1555,38 @@ async updateAreaName(area_id, new_area_name) {
 
 
 
+
+
+async getAreaNameByDocumentId(document_id) {
+  return new Promise((resolve, reject) => {
+    const query = `
+      SELECT G.area_name
+      FROM Geolocation G
+      INNER JOIN Geolocation_Documents GD ON G.area_id = GD.area_id
+      WHERE GD.document_id = ?;
+    `;
+
+    db.get(query, [document_id], (err, row) => {
+      if (err) {
+        console.error("Error retrieving area name:", err);
+        return reject(new Error("Error retrieving area name."));
+      }
+
+      if (row && row.area_name) {
+        resolve(row.area_name); 
+      } else {
+        reject(new Error("No area name associated with this document_id."));
+      }
+    });
+  });
+}
+
+
+
+
+
+
+
 }
 
 

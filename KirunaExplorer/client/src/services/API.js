@@ -685,6 +685,38 @@ const updateArea = async (body) => {
   }
 };
 
+
+
+
+async function getAreaNameByDocumentId(document_id) {
+  try {
+    const response = await fetch(`${SERVER_URL}/api/get-area-name?document_id=${document_id}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    if (!response.ok) {
+      if (response.status === 404) {
+        return { success: false, message: "Area name not found for the provided document_id." };
+      } else if (response.status === 500) {
+        return { success: false, message: "Internal server error." };
+      }
+      return { success: false, message: `Unknown error: ${response.status}` };
+    }
+    const data = await response.json();
+    return { success: true, area_name: data.area_name };
+  } catch (error) {
+    return { success: false, message: "Network error or server unreachable." };
+  }
+}
+
+
+
+
+
+
+
 const API = {
   logIn,
   logOut,
@@ -716,7 +748,8 @@ const API = {
   getDocumentById,
   deleteLink,
   updateDocument,
-  updateArea
+  updateArea,
+  getAreaNameByDocumentId
 };
 
 export default API;
