@@ -93,7 +93,6 @@ const GeneralMap = ({selectedDocumentId}) => {
   const [showModalLink, setShowModalLink] = useState(false); //modal per popup links
   const [showLinkInterface, setShowLinkInterface] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [selectedDocumentType, setSelectedDocumentType] = useState("All"); // Stato per il tipo di documento
   const ZOOM_LEVEL = 7;
   const WHOLE_AREA_CENTER = { lat: 67.85572, lng: 20.22513 }; // Definisci le coordinate per Kiruna Map
   const WHOLE_AREA_ZOOM = 12; // Definisci un livello di zoom per Kiruna Map
@@ -102,7 +101,6 @@ const GeneralMap = ({selectedDocumentId}) => {
     const fetchAreas = async () => {
       try {
         const areas = await API.getGeoArea();
-        // console.log(areas);
         setSelectedArea(areas[0]);
         setAreas(areas)
       } catch (error) {
@@ -372,32 +370,6 @@ const renderMarkersWithClustering = () => {
   }
 };
 
-  
-  useEffect(() => {
-    if (selectedArea) {
-      if (selectedArea.name === "Point-Based Documents") {
-        renderMarkersWithClustering();
-      } else {
-        renderAreaMarkers();
-      }
-    }
-  }, [selectedDocumentType, filteredDocuments, selectedArea, selectedDocumentId]);
-  
-
-  const handleDocumentTypeChange = (event) => {
-    const selectedType = event.target.value;
-    setSelectedDocumentType(selectedType);
-    console.log(selectedType);
-
-    if (selectedType === "All") {
-      setFilteredDocuments(allDocs.map((doc) => doc.document)); // Mostra tutti i documenti
-    } else {
-      const filtered = filteredMarkers.filter(
-        (doc) => doc.document.document_type === selectedType
-      );
-      setFilteredDocuments(filtered.map((doc) => doc.document));
-    }
-  };
 
   // Funzione per aprire popup dei documenti
   const handleMarkerClick = (document) => {
@@ -496,6 +468,8 @@ const renderMarkersWithClustering = () => {
   };
 
   const changeDocumentPosition = (document) => {
+    console.log(document);
+    
     setSelectedDocument(document);
     setShowEditCoordinatesModal(true);
     setShowModal(false);
@@ -583,6 +557,25 @@ const renderMarkersWithClustering = () => {
     }
   };
 
+  const extractCoordinates = (document) => {
+    if (document.coordinates && document.coordinates.length > 0) {
+      // Formato 1: `coordinates[0].lat` e `coordinates[0].long`
+      return document.coordinates[0];
+    } else if (
+      document.geolocations &&
+      document.geolocations.length > 0 &&
+      document.geolocations[0].coordinates &&
+      document.geolocations[0].coordinates.length > 0
+    ) {
+      // Formato 2: `geolocations[0].coordinates[0].lat` e `geolocations[0].coordinates[0].long`
+      return document.geolocations[0].coordinates[0];
+    } else {
+      // Nessuna coordinata trovata
+      return { lat: null, long: null };
+    }
+  };
+  
+
   const handleAreaChange = (areaId) => {
     var selected = areas.find((area) => area.id === parseInt(areaId, 10));
     console.log("selected"+selected);
@@ -591,7 +584,7 @@ const renderMarkersWithClustering = () => {
       selected = areas.find((area) => area.name === "Point-Based Documents");
     }
     setSelectedArea(selected);
-    setSelectedDocumentType("All");
+    // setSelectedDocumentType("All");
     // Centra la mappa se l'area ha coordinate
     if (selected.latlngs && selected.latlngs.length > 0) {
       // Controlla se `selected.latlngs[0]` è un array (per multipoligoni)
@@ -725,26 +718,6 @@ const renderMarkersWithClustering = () => {
 
           </div>
 
-          {/* Dropdown per selezionare il tipo di documento */}
-          <div style={{ marginTop: '40px', marginBottom: '40px' }}>
-            <Dropdown onSelect={(eventKey) => handleDocumentTypeChange({ target: { value: eventKey } })}>
-              <Dropdown.Toggle variant="outline-dark">
-                {selectedDocumentType !== "All" ? selectedDocumentType.charAt(0).toUpperCase() + selectedDocumentType.slice(1) : "Document Type"}
-              </Dropdown.Toggle>
-              <Dropdown.Menu>
-                <Dropdown.Item eventKey="All">All</Dropdown.Item>
-                <Dropdown.Item eventKey="Design">Design</Dropdown.Item>
-                <Dropdown.Item eventKey="Informative">Informative</Dropdown.Item>
-                <Dropdown.Item eventKey="Technical">Technical</Dropdown.Item>
-                <Dropdown.Item eventKey="Prescriptive">Prescriptive</Dropdown.Item>
-                <Dropdown.Item eventKey="Material Effects">Material Effects</Dropdown.Item>
-                <Dropdown.Item eventKey="Agreement">Agreement</Dropdown.Item>
-                <Dropdown.Item eventKey="Conflict">Conflict</Dropdown.Item>
-                <Dropdown.Item eventKey="Consultation">Consultation</Dropdown.Item>
-              </Dropdown.Menu>
-            </Dropdown>
-          </div>
-
         </div>
 
 
@@ -789,17 +762,6 @@ const renderMarkersWithClustering = () => {
                   <h2><strong>{doc.document_title}</strong></h2>
                   <p className="mt-1"><strong>Type:</strong> {doc.document_type}</p>
                   <p className="mt-1"><strong>Date:</strong> {doc.issuance_date}</p>
-                  {/* <p className="mt-1"><strong>Area:</strong> {doc.area_name === "Point-Based Documents" ? "Point-Based Documents" : doc.area_name}</p> */}
-                  {/* Mostra le coordinate */}
-                  {/* {doc.coordinates && doc.coordinates.length > 0 && doc.area_name === "Point-Based Documents" && (
-                    <p className="mt-1">
-                      {doc.coordinates.map((coord, index) => (
-                        <span className="" key={index}>
-                          <strong>LAT:</strong> {coord.lat.toFixed(6)}  <strong> <br/>LONG:</strong> {coord.long.toFixed(6)}
-                        </span>
-                      ))}
-                    </p>
-                  )} */}
                 </div>
 
                 {/* OPEN DOCUMENT AND CHANGE POSITION BUTTON*/}
@@ -886,10 +848,12 @@ const renderMarkersWithClustering = () => {
 
       {/* Modal per visualizzare i link del documento */}
       {selectedDocument && showModalLink && (
-        <DocumentLinksModal
-          selectedDocument={selectedDocument}
-          showModalLink={showModalLink}
-          setShowModalLink={setShowModalLink} />
+        <div className="text-center">
+          <DocumentLinksModal
+            selectedDocument={selectedDocument}
+            showModalLink={showModalLink}
+            setShowModalLink={setShowModalLink} />
+          </div>
 
       )}
 
@@ -994,7 +958,7 @@ const renderMarkersWithClustering = () => {
                     <Form.Control
                       className="text-center"
                       type="number"
-                      value={selectedDocument.coordinates[0]?.lat || ""}
+                      value={extractCoordinates(selectedDocument).lat || ""}
                       onChange={(e) => {
                         const newLat = parseFloat(e.target.value);
                         setSelectedDocument((prevDoc) => ({
@@ -1012,7 +976,7 @@ const renderMarkersWithClustering = () => {
                     <Form.Control
                       className="text-center"
                       type="number"
-                      value={selectedDocument.coordinates[0]?.long || ""}
+                      value={extractCoordinates(selectedDocument).long || ""}
                       onChange={(e) => {
                         const newLng = parseFloat(e.target.value);
                         setSelectedDocument((prevDoc) => ({

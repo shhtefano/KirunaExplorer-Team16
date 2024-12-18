@@ -863,7 +863,7 @@ export function Links({ showLinkInterface, setShowLinkInterface, selectedDocumen
               href={link.url}
               target="_blank"
               rel="noopener noreferrer"
-              style={{ textDecoration: "none", width: "100%" }}
+              style={{ textDecoration: "none", width: "70%" }}
             >
               <Stack
                 direction="row"
@@ -940,7 +940,7 @@ export function Links({ showLinkInterface, setShowLinkInterface, selectedDocumen
       </ul>
       
       ) : (
-        <p>No Connections available for this document.</p>
+        <p>No Connections available for this document...</p>
       ))}
   
       {/* Pulsante per mostrare l'interfaccia di linking */}

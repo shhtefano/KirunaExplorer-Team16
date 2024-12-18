@@ -38,11 +38,18 @@ export default function DocumentLinksModal({ selectedDocument, showModalLink, se
   return (
     <>
       {selectedDocument && showModalLink && (
+        <div style={{display: "flex", alignContent: "center", justifyContent: "center", alignItems: "center", }}>
         <Modal
-          className="custom-modal"
-          dialogClassName="custom-modal-width"
+          // className="custom-modal text-center"
+          // dialogClassName="custom-modal-width"
           show={showModalLink}
           onHide={() => setShowModalLink(false)}
+          style={{
+            textAlign: "center",
+            margin: "auto",
+            maxWidth: "90%", // Imposta una larghezza massima per evitare sovrapposizioni
+          }}          scrollable 
+          overflow="auto !important"
         >
           <Modal.Header closeButton>
             <Modal.Title>
@@ -115,6 +122,8 @@ export default function DocumentLinksModal({ selectedDocument, showModalLink, se
             </Button>
           </Modal.Footer>
         </Modal>
+
+        </div>
       )}
     </>
   );
@@ -150,8 +159,11 @@ export function DocumentInfoModal({doc, showDocInfo, setShowDocInfo, selectedDoc
   return (
     <Modal
 
-    style={{ paddingTop: "330px", marginLeft: "10px"}}  // Aggiungi padding superiore
-
+    style={{
+      paddingTop: "20px", // Riduci il padding superiore per un aspetto migliore
+      margin: "auto",
+      maxWidth: "80%", // Imposta una larghezza massima
+    }}    scrollable
    show={showDocInfo}
       onHide={() => setShowDocInfo(false)}
     >
