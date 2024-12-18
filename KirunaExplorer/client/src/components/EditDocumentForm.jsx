@@ -335,7 +335,7 @@ const EditDocumentForm = (props) => {
   }, []);
 
   return (
-    <div>
+    <div style={{display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
 
       <Card className="min-w-[280px] max-w-[800px] max-h-[100vh]">
         <CardContent>
@@ -435,6 +435,7 @@ const EditDocumentForm = (props) => {
                 )}
               />
 
+              {/* Stakeholder */}
               {/* Stakeholder */}
               {/* <FormField
                 control={form.control}
