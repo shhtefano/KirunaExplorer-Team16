@@ -21,8 +21,9 @@ This guide explains how to pull the Docker image from the repository and build t
 ###Option 2: Cloning the Repository and Building with Docker Compose
    
 1. **Clone the repository: First, clone the repository to your local machine by running:**  
-   git clone https://github.com/shhtefano/KirunaExplorer-Team16/
-   cd KirunaExplorer-Team16
+   >git clone https://github.com/shhtefano/KirunaExplorer-Team16/
+   
+   >cd KirunaExplorer-Team16
    
 2. **Build and start the application with Docker Compose: Once you have cloned the repository, use the following command to build and start the application with Docker Compose:**  
    >docker-compose up --build
