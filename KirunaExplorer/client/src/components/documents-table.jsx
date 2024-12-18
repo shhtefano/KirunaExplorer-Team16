@@ -748,36 +748,32 @@ export default function DocumentsTable() {
       {/* Modal per modificare il documento */}
       {showEditModal && (
         <div
-          className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 text-center"
-          style={{ transition: "opacity 0.3s ease-in-out" }}
+        className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 overflow-y-auto"
+        style={{ transition: "opacity 0.3s ease-in-out", padding: "20px" }}
         >
-          <div className="bg-white p-6 rounded-lg shadow-lg max-w-5xl w-full text-center">
-            <div style={{marginBottom: "20px", display: "flex", flexDirection: "row", justifyContent: "center", alignItems: "center"}}>
-
+        <div
+          className="bg-white p-6 rounded-lg shadow-lg max-w-5xl w-full"
+          style={{maxHeight: "90vh", overflowY: "auto", maxWidth: "800px", width: "100%", 
+          }}
+        >
+          <div style={{marginBottom: "20px", display: "flex",flexDirection: "row",justifyContent: "space-between",alignItems: "center",}}>
             <h2 className="text-xl font-bold text-center">
               Edit Document: {documentToEdit?.document_title}
             </h2>
-            
             <Button
               variant="outline"
-              style={{backgroundColor:"red", marginLeft:"30px"}}
+              style={{backgroundColor: "red", marginLeft: "30px",}}
               onClick={closeEditModal}
             >
-              <p style={{color:"white"}}>
-              X 
-
-              </p>
+              <p style={{ color: "white" }}>X</p>
             </Button>
-
-              </div>
-
-            <EditDocumentForm
-              documentTitle={documentToEdit?.document_title || ""}
-              onClose={closeEditModal} // Funzione per chiudere il modal
-            />
-            
           </div>
+          <EditDocumentForm
+            documentTitle={documentToEdit?.document_title || ""}
+            onClose={closeEditModal} 
+          />
         </div>
+      </div>
       )}
 
       <div className="mt-4 flex justify-center items-center">
