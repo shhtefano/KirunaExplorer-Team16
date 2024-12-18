@@ -543,7 +543,7 @@ export const DocumentInfo = ({ document }) => {
         border: "1px solid #ddd",
         boxShadow: "0 0 10px rgba(0, 0, 0, 0.1)",
         zIndex: 10,
-        maxWidth: "300px",
+        maxWidth: "400px",
         fontSize: "12px",
       }}
     >

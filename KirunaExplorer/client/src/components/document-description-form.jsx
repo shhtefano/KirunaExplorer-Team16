@@ -580,12 +580,12 @@ const DocumentDescriptionForm = () => {
 
                       {/* Display selected stakeholders */}
                       {field.value && field.value.length > 0 && (
-                        <div className="mt-2">
-                          <h4 className="font-semibold">Selected Stakeholders:</h4>
-                          <ul className="space-y-1">
+                        <div className="mt-4">
+                          <p style={{ fontSize: '14px', marginBottom:'10px' }} className="font-semibold">Selected:</p>
+                          <ul className="space-y-4">
                             {field.value.map((selectedStakeholder, index) => (
                               <li key={index} className="flex items-center space-x-2">
-                                <span>{selectedStakeholder}</span>
+                                <span>• {selectedStakeholder}</span>
                                 <Button
                                   type="button"
                                   variant="outline"
