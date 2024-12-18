@@ -75,43 +75,95 @@ export default function Diagram() {
     console.log("Popup position set (page):", { x: mouseX, y: mouseY });
   };
 
+  const parseDateParts = (dateStr) => {
+    if (!dateStr) return { year: -1, month: 1, day: 1 };
+
+    const parts = dateStr.toString().trim().split("/");
+    return {
+      year: parts[0] ? parseInt(parts[0]) : -1,
+      month: parts[1] ? parseInt(parts[1]) : 1,
+      day: parts[2] ? parseInt(parts[2]) : 1,
+    };
+  };
+
+  const compareDates = (date1, date2) => {
+    if (!date1 && !date2) return 0;
+    if (!date1) return 1;
+    if (!date2) return -1;
+
+    const parts1 = parseDateParts(date1);
+    const parts2 = parseDateParts(date2);
+
+    // First compare years
+    if (parts1.year !== parts2.year) {
+      return parts1.year - parts2.year;
+    }
+
+    // If both dates have just the year, consider them equal
+    const hasOnlyYear1 = date1.toString().trim().split("/").length === 1;
+    const hasOnlyYear2 = date2.toString().trim().split("/").length === 1;
+    if (hasOnlyYear1 && hasOnlyYear2) return 0;
+
+    // Year-only dates should come before more specific dates
+    if (hasOnlyYear1) return -1;
+    if (hasOnlyYear2) return 1;
+
+    // Compare months
+    if (parts1.month !== parts2.month) {
+      return parts1.month - parts2.month;
+    }
+
+    // Compare days
+    return parts1.day - parts2.day;
+  };
+
   const transformDocumentsToNodes = (documents) => {
-    const sortedDocs = [...documents].sort((a, b) => {
-      if (!a.issuance_date) return 1;
-      if (!b.issuance_date) return -1;
-      return (a.issuance_date?.toString() || "").localeCompare(
-        b.issuance_date?.toString() || ""
-      );
-    });
+    // First sort the documents
+    const sortedDocs = [...documents].sort((a, b) =>
+      compareDates(a.issuance_date, b.issuance_date)
+    );
 
-    const groupedByDate = sortedDocs.reduce((acc, doc) => {
-      const date = doc.issuance_date || "no_date";
-      if (!acc[date]) acc[date] = [];
-      acc[date].push(doc);
-      return acc;
-    }, {});
-
+    // Instead of using groupedByDate for layout, use the sorted order directly
     const nodes = [];
+    let currentDate = null;
     let xPos = 0;
+    let yOffset = 0;
 
-    Object.entries(groupedByDate).forEach(([date, docs]) => {
-      docs.forEach((doc, index) => {
-        const yPos = index * 150;
+    sortedDocs.forEach((doc, index) => {
+      // If this is a new date, reset yOffset and increment xPos
+      if (doc.issuance_date !== currentDate) {
+        currentDate = doc.issuance_date;
+        yOffset = 0;
+        if (index > 0) {
+          xPos += 300; // Space between date groups
+        }
+      }
 
-        nodes.push({
-          id: doc.document_title,
-          type: "node",
-          position: { x: xPos, y: yPos + 100 },
-          data: {
-            label: doc.document_title,
-            id: doc.document_id,
-            type: doc.document_type,
-            date: doc.issuance_date,
-          },
-        });
+      nodes.push({
+        id: doc.document_title,
+        type: "node",
+        position: { x: xPos, y: yOffset + 100 },
+        data: {
+          label: doc.document_title,
+          id: doc.document_id,
+          type: doc.document_type,
+          date: doc.issuance_date,
+        },
       });
-      xPos += 300;
+
+      yOffset += 150; // Vertical spacing between nodes of the same date
     });
+
+    // Debug log to verify node positions
+    console.log(
+      "Node positions:",
+      nodes.map((node) => ({
+        title: node.id,
+        date: node.data.date,
+        x: node.position.x,
+        y: node.position.y,
+      }))
+    );
 
     return nodes;
   };
