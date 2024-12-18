@@ -221,7 +221,7 @@ const FileUpload = ({ selectedDocument }) => {
         onClose={handleCloseToast}
         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
       >
-        <Alert severity={toast.severity} onClose={handleCloseToast}>
+        <Alert severity={toast.severity} onClose={handleCloseToast}  sx={{ width: "70%" }}>
           {toast.message}
         </Alert>
       </Snackbar>

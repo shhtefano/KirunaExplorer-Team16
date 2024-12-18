@@ -125,6 +125,32 @@ router.get("/api/geo/:areaId", async (req, res) => {
   }
 });
 
+router.get("/api/document/title/:document_title/area", async (req, res) => {
+  try {
+    // Estrae il titolo del documento dai parametri della richiesta
+    const { document_title } = req.params;
+
+    // Controlla se il titolo del documento è fornito
+    if (!document_title) {
+      return res.status(400).json({ message: "Titolo del documento mancante." });
+    }
+
+    // Recupera l'area del documento dal database tramite il DAO
+    const documentArea = await documentDAO.getAreaIdByDocumentId(document_title);
+
+    // Controlla se l'area del documento esiste
+    if (!documentArea) {
+      return res.status(404).json({ message: "Area del documento non trovata." });
+    }
+
+    // Risponde con i dettagli dell'area del documento
+    res.status(200).json(documentArea);
+  } catch (error) {
+    console.error("Errore durante il recupero dell'area del documento:", error);
+    res.status(500).send("Si è verificato un errore durante il recupero dell'area del documento.");
+  }
+});
+
 router.get("/api/stakeholder", async (req, res) => {
   try {
     // Recupera tutti i documenti dal database
@@ -369,4 +395,86 @@ router.delete('/api/links', async (req, res) => {
     });
   }
 });
+
+router.put("/api/edit-document", async (req, res) => {
+  try {
+    console.log("Request received with body:", req.body);
+    
+    // Call the function to update the document
+    const updateResult = await documentDAO.updateDocument(req.body);
+    console.log("Update result:", updateResult);
+
+    // If update is successful, send a success response
+    return res.status(200).json({ message: "Document updated successfully." });
+  } catch (error) {
+    console.error("Error during update:", error);
+    // Handle specific errors
+    if (error.message === "A document with the same title already exists.") {
+      return res.status(400).json({ error: "A document with the same title already exists." });
+    } else if (error.message === "Error updating document fields." || error.message === "Document ID not found." || error.message === "Error removing previous stakeholders." || error.message === "Error inserting stakeholders") {
+      return res.status(500).json({ error: "An error occurred while updating the document." });
+    }
+
+    // Generic error handling
+    return res.status(500).json({ error: "Internal server error." });
+  }
+});
+
+
+
+router.put("/api/edit-area", async (req, res) => {
+  try {
+    console.log("Request received with body:", req.body);
+
+    // Verifica che il body contenga sia l'area_id che il nuovo area_name
+    const { area_id, new_area_name } = req.body;
+    if (!area_id || !new_area_name) {
+      return res.status(400).send("area_id and new_area_name are required.");
+    }
+
+    // Esegui l'aggiornamento usando il DAO
+    const updateResult = await documentDAO.updateAreaName(area_id, new_area_name);
+
+    if (updateResult) {
+      return res.status(200).json({ message: "Area name updated successfully." });
+    }
+
+  } catch (error) {
+    console.error("Error during the update:", error);
+    if (error.message === "The area name is already in use. Please choose a different name.") {
+      return res.status(409).json({ error: error.message });
+    }
+    res.status(500).send("An error occurred during the area name update.");
+  }
+});
+
+
+
+router.get("/api/get-area-name", async (req, res) => {
+  try {
+    const { document_id } = req.query;
+    if (!document_id) {
+      return res.status(400).send("document_id is required.");
+    }
+    const areaName = await documentDAO.getAreaNameByDocumentId(document_id);
+
+    if (areaName) {
+      return res.status(200).json({ area_name: areaName });
+    }
+
+  } catch (error) {
+    console.error("Error retrieving area name:", error);
+    if (error.message === "No area name associated with this document_id.") {
+      return res.status(404).json({ error: error.message });
+    }
+    res.status(500).send("An error occurred while retrieving the area name.");
+  }
+});
+
+
+
+
+
+
+
 export default router;

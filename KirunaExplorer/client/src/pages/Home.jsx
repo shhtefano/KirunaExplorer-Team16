@@ -60,14 +60,16 @@ const HomePage = () => {
           backgroundRepeat: "no-repeat",
         }}
       >
-        <div className="absolute inset-0 bg-black/10" />
+        <div className="absolute inset-0 bg-black/15" />
       </div>
 
       {/* Content */}
       <div className=" flex flex-col w-full h-full items-center justify-center p-2 space-y-4 text-center">
-        <Card className="min-w-[750px] max-w-1200px] bg-white/90 backdrop-blur-sm">
+        <Card className="min-w-[750px] max-w-1400px] bg-white/60 backdrop-blur-sm">
           <CardHeader>
-            <CardTitle><h3>Kiruna Explorer</h3></CardTitle>
+            <CardTitle>
+              <h3>Kiruna Explorer</h3>
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4 text-left mt-2">
@@ -81,9 +83,9 @@ const HomePage = () => {
                   <Files className="mr-2" />
                   <span>See Docs</span>
                 </Button>
-                <p className="text-sm text-gray-600 w-2/3">
+                <p className="text-sm text-black w-2/3">
                   View all documents in a tabular format, making it easy to
-                  browse and manage.
+                  browse.
                 </p>
               </div>
               <div className="flex items-center justify-between">
@@ -96,7 +98,7 @@ const HomePage = () => {
                   <Map className="mr-2" />
                   <span>See Map</span>
                 </Button>
-                <p className="text-sm text-gray-600 w-2/3">
+                <p className="text-sm text-black w-2/3">
                   Explore the documents visually on an interactive map.
                 </p>
               </div>
@@ -115,7 +117,7 @@ const HomePage = () => {
                       <FileText className="mr-2" />
                       <span>Add Doc</span>
                     </Button>
-                    <p className="text-sm text-gray-600 w-2/3">
+                    <p className="text-sm text-black w-2/3">
                       Upload and add new documents to the system.
                     </p>
                   </div>
@@ -129,7 +131,7 @@ const HomePage = () => {
                       <LandPlot className="mr-2" />
                       <span>Edit Areas</span>
                     </Button>
-                    <p className="text-sm text-gray-600 w-2/3">
+                    <p className="text-sm text-black w-2/3">
                       Modify the areas associated with specific documents.
                     </p>
                   </div>
@@ -138,12 +140,12 @@ const HomePage = () => {
                       style={{ minWidth: "200px" }}
                       variant="outline"
                       className="flex items-center"
-                      onClick={(e) => handleRestrictedAction(e, "/graph")}
+                      onClick={(e) => handleRestrictedAction(e, "/diagram")}
                     >
                       <GanttChart className="mr-2" />
                       <span>See Graph</span>
                     </Button>
-                    <p className="text-sm text-gray-600 w-2/3">
+                    <p className="text-sm text-black w-2/3">
                       Visualize the document timeline and storyline with an
                       intuitive graph.
                     </p>
@@ -160,9 +162,8 @@ const HomePage = () => {
                       <Folder className="mr-2" />
                       <span>See Resources</span>
                     </Button>
-                    <p className="text-sm text-gray-600 w-2/3">
-                      View or upload related files associated with documents for
-                      better context.
+                    <p className="text-sm text-black w-2/3">
+                      View or upload original resources or attachments.
                     </p>
                   </div>
                 </>
@@ -178,7 +179,7 @@ const HomePage = () => {
           )}
           {user && (
             <div style={{ display: "flex", justifyContent: "center" }}>
-              <UserProfileCard user={user} />
+              <UserProfileCard user={user} className="bg-white/60" />
             </div>
           )}
         </div>
@@ -188,12 +189,12 @@ const HomePage = () => {
         open={openSnackbar}
         autoHideDuration={2000}
         onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
       >
         <Alert
           onClose={handleCloseSnackbar}
           severity="error"
-          sx={{ width: "100%" }}
+          sx={{ width: "70%" }}
         >
           {snackbarMsg}
         </Alert>
@@ -202,12 +203,12 @@ const HomePage = () => {
         open={openSnackbar}
         autoHideDuration={2000}
         onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
       >
         <Alert
           onClose={handleCloseSnackbar}
           severity="error"
-          sx={{ width: "100%" }}
+          sx={{ width: "70%" }}
         >
           {snackbarMsg}
         </Alert>

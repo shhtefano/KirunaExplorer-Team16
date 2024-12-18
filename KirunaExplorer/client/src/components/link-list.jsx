@@ -33,15 +33,23 @@ export default function DocumentLinksModal({ selectedDocument, showModalLink, se
     setLinkType(connectionType);
     console.log("doc:", doc, "selectedDocument", selectedDocument);
   };
+ 
 
   return (
     <>
       {selectedDocument && showModalLink && (
+        <div style={{display: "flex", alignContent: "center", justifyContent: "center", alignItems: "center", }}>
         <Modal
-          className="custom-modal"
-          dialogClassName="custom-modal-width"
+          // className="custom-modal text-center"
+          // dialogClassName="custom-modal-width"
           show={showModalLink}
           onHide={() => setShowModalLink(false)}
+          style={{
+            textAlign: "center",
+            margin: "auto",
+            maxWidth: "90%", // Imposta una larghezza massima per evitare sovrapposizioni
+          }}          scrollable 
+          overflow="auto !important"
         >
           <Modal.Header closeButton>
             <Modal.Title>
@@ -50,58 +58,62 @@ export default function DocumentLinksModal({ selectedDocument, showModalLink, se
           </Modal.Header>
           <Modal.Body className="custom-modal-body">
             {links.length > 0 ? (
-              <ul style={{ padding: 0, listStyle: "none" }}>
-                {links.map((link, index) => (
-                  <li key={index} style={{ marginBottom: "0.5rem" }}>
-                    <a href={link.url} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none" }}>
-                      <Stack direction="row" spacing={1} alignItems="center">
-                        <button
-                          onClick={() => handleClickDoc(link.parent_id, link.connection_type)}
-                          style={{
-                            background: "none",
-                            border: "1px solid #ccc",
-                            padding: "6px 12px",
-                            borderRadius: "10px",
-                            color: "#333",
-                            fontSize: "14px",
-                            cursor: "pointer",
-                            textTransform: "lowercase", // Aggiungi questa linea
-                          }}
-                        >
-                          {link.parent_id}
-                        </button>
-                        <Typography variant="body2" style={{ color: "#555", textTransform: "lowercase" }}>
-                          →
-                        </Typography>
-                        <button
-                          onClick={() => handleClickDoc(link.children_id, link.connection_type)}
-                          style={{
-                            background: "none",
-                            border: "1px solid #ccc",
-                            padding: "6px 12px",
-                            borderRadius: "10px",
-                            color: "#333",
-                            fontSize: "14px",
-                            cursor: "pointer",
-                            textTransform: "lowercase", // Aggiungi questa linea
-                          }}
-                        >
-                          {link.children_id}
-                        </button>
-                        <Typography variant="body2" color="textSecondary" style={{ textTransform: "lowercase" }}>
-                          Type: <strong>{link.connection_type}</strong>
-                        </Typography>
-                      </Stack>
-                    </a>
-                  </li>
-                ))}
-              </ul>
+             // Modifica la parte in cui vengono visualizzati i link
+                <ul style={{ padding: 0, listStyle: "none" }}>
+                  {links.map((link, index) => (
+                    <li key={index} style={{ marginBottom: "0.5rem", display: "flex", alignItems: "center" }}>
+                      <a href={link.url} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none", flex: 1 }}>
+                        <Stack direction="row" spacing={1} alignItems="center">
+                          <button
+                            onClick={() => handleClickDoc(link.parent_id, link.connection_type)}
+                            style={{
+                              background: "none",
+                              border: "1px solid #ccc",
+                              padding: "6px 12px",
+                              borderRadius: "10px",
+                              color: "#333",
+                              fontSize: "14px",
+                              cursor: "pointer",
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            {link.parent_id}
+                          </button>
+                          <Typography variant="body2" style={{ color: "#555", textTransform: "lowercase" }}>
+                            → 
+                          </Typography>
+                          <button
+                            onClick={() => handleClickDoc(link.children_id, link.connection_type)}
+                            style={{
+                              background: "none",
+                              border: "1px solid #ccc",
+                              padding: "6px 12px",
+                              borderRadius: "10px",
+                              color: "#333",
+                              fontSize: "14px",
+                              cursor: "pointer",
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            {link.children_id}
+                          </button>
+                          <Typography variant="body2" color="textSecondary" style={{ textTransform: "lowercase" }}>
+                            Type: <strong>{link.connection_type}</strong>
+                          </Typography>
+                        </Stack>
+                      </a>
+
+                      {/* Bottone per rimuovere il link */}
+                      
+                    </li>
+                  ))}
+                </ul>
             ) : (
-              <p>No links available for this document.</p>
+              <p>No connections available for this document.</p>
             )}
 
             {doc && showDocInfo && 
-            <DocumentInfoModal doc={doc} showDocInfo={showDocInfo} setShowDocInfo={setShowDocInfo} linkType={linkType} selectedDocument={selectedDocument}/>}
+            <DocumentInfoModal doc={doc} showDocInfo={showDocInfo} setShowDocInfo={setShowDocInfo} selectedDocument={selectedDocument}/>}
           </Modal.Body>
           <Modal.Footer>
           <Button variant="dark" 
@@ -110,12 +122,14 @@ export default function DocumentLinksModal({ selectedDocument, showModalLink, se
             </Button>
           </Modal.Footer>
         </Modal>
+
+        </div>
       )}
     </>
   );
 }
 
-export function DocumentInfoModal({ doc, showDocInfo, setShowDocInfo, linkType , selectedDocument}) {
+export function DocumentInfoModal({doc, showDocInfo, setShowDocInfo, selectedDocument}) {
   const [documentDetails, setDocumentDetails] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -140,31 +154,16 @@ export function DocumentInfoModal({ doc, showDocInfo, setShowDocInfo, linkType ,
 
     fetchDocumentDetails();
   }, [doc]);
-  // Funzione per rimuovere il link associato al documento
-  // Funzione per rimuovere il link associato al documento
-const removeLink = async () => {
-  try {
-    // Chiamata API per rimuovere il link
-    const response = await API.deleteLink(doc, selectedDocument.document_title, linkType); // Passa i parametri corretti
-    if (response.success) {
-      console.log(`Document link removed: ${doc}`);
-      setShowDocInfo(false); // Chiudi il modal dopo la rimozione
-      alert("Link removed successfully!");
-    } else {
-      console.error("Error removing document link:", response.message);
-      setError(response.message || "Unable to remove document link.");
-    }
-  } catch (err) {
-    console.error("Error removing document link:", err);
-    setError("Unable to remove document link.");
-  }
-};
+
 
   return (
     <Modal
 
-    style={{ paddingTop: "330px", marginLeft: "10px"}}  // Aggiungi padding superiore
-
+    style={{
+      paddingTop: "20px", // Riduci il padding superiore per un aspetto migliore
+      margin: "auto",
+      maxWidth: "80%", // Imposta una larghezza massima
+    }}    scrollable
    show={showDocInfo}
       onHide={() => setShowDocInfo(false)}
     >
@@ -189,16 +188,8 @@ const removeLink = async () => {
           !loading && <p>No details available for this document.</p>
         )}
       </Modal.Body>
-      <li><strong>Link Type: </strong> {linkType}</li>
 
       <Modal.Footer>
-        {/* Bottone per rimuovere il link del documento */}
-        <Button
-          variant="danger"  // Puoi usare "danger" per il colore rosso
-          onClick={removeLink}
-        >
-          Remove Link
-        </Button>
         <Button
           variant="dark"
           onClick={() => setShowDocInfo(false)}

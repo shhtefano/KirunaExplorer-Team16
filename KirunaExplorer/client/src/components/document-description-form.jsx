@@ -51,6 +51,7 @@ import DocumentLinkOnCreation from "./creation-document-link.jsx";
 import Snackbar from "@mui/material/Snackbar";
 import Alert from "@mui/material/Alert";
 import MapIcon from "@mui/icons-material/Map";
+import { Trash2 } from "lucide-react";
 
 
 // const stakeholders = [
@@ -356,9 +357,12 @@ const DocumentDescriptionForm = () => {
           <strong>Add new document</strong>        
           </h1>
           <div className="text-muted-foreground mt-4 mb-4">
+            <i>
+
             Fill out this form to add metadata to a document. Language and pages
-            are not mandatory. Please choose between 'Kiruna Map' OR a single
+            are not mandatory. Please choose between an already existing area OR a single
             point with coordinates.
+              </i>
           </div>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -453,9 +457,8 @@ const DocumentDescriptionForm = () => {
                     )}
                   />
 
-
-              {/* Stakeholder */}
-              <FormField
+                {/* Stakeholder */}
+               {/* <FormField
                 control={form.control}
                 name="stakeholders"
                 rules={stakeholderRules}
@@ -507,7 +510,107 @@ const DocumentDescriptionForm = () => {
                       >
                         <p style={{ textAlign: 'center' }}>Add</p>
                       </Button>
-                    </div>
+                    </div>  */}
+
+
+              {/* Stakeholder */}
+              <FormField
+                control={form.control}
+                name="stakeholders"
+                rules={stakeholderRules}
+                render={({ field }) => {
+                  const [searchQuery, setSearchQuery] = useState('');
+                  const filteredStakeholders = stakeholders.filter((stakeholder) =>
+                    stakeholder.toLowerCase().includes(searchQuery.toLowerCase())
+                  );
+                  return (
+                    <FormItem>
+                      <FormLabel>Stakeholders *</FormLabel>
+                      <div className="flex items-center space-x-4">
+                        <FormControl>
+                          <Select
+                            onValueChange={(selectedValue) => {
+                              if (!field.value.includes(selectedValue)) {
+                                field.onChange([...field.value, selectedValue]);
+                              }
+                            }}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select a Stakeholder" />
+                            </SelectTrigger>
+                            <SelectContent className="max-h-60 overflow-auto">
+                              {/* Search field inside dropdown */}
+                              <div className="p-2">
+                                <Input
+                                  type="text"
+                                  value={searchQuery}
+                                  onChange={(e) => setSearchQuery(e.target.value)}
+                                  placeholder="Search stakeholders"
+                                  className="w-full mb-2"
+                                />
+                              </div>
+                              {/* Filtered dropdown items */}
+                              {filteredStakeholders.map((stakeholder) => (
+                                <SelectItem key={stakeholder} value={stakeholder}>
+                                  {stakeholder}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </FormControl>
+                        <div className="flex space-x-2 items-center">
+                          <Input
+                            type="text"
+                            value={stakeholderInput}
+                            onChange={(e) => setStakeholderInput(e.target.value)}
+                            placeholder="New Stakeholder"
+                            className="w-40"
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => {
+                              handleAddStakeholder(stakeholderInput);
+                            }}
+                          >
+                            Add
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Display selected stakeholders */}
+                      {field.value && field.value.length > 0 && (
+                        <div className="mt-2">
+                          <h4 className="font-semibold">Selected Stakeholders:</h4>
+                          <ul className="space-y-1">
+                            {field.value.map((selectedStakeholder, index) => (
+                              <li key={index} className="flex items-center space-x-2">
+                                <span>{selectedStakeholder}</span>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="small"
+                                  onClick={() => {
+                                    field.onChange(field.value.filter((item) => item !== selectedStakeholder));
+                                  }}
+                                >
+                                  <Trash2 />
+                                </Button>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      <FormMessage />
+                    </FormItem>
+                  );
+                }}
+              />
+
+              
+
+
 
               {/* Scale */}
               <FormField

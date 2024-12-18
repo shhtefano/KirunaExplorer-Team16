@@ -1,0 +1,18 @@
+/* Aggiungi questo CSS nel tuo file di stile */
+.custom-modal .modal-dialog {
+    max-width: 90%;  /* Aumenta la larghezza (ad esempio 90% della larghezza del contenitore) */
+    width: 90%;      /* Puoi regolare questo valore come preferisci */
+  }
+  
+  .custom-modal .modal-content {
+    height: auto;    /* Assicurati che il contenuto possa adattarsi senza limitazioni di altezza */
+  }
+  .custom-modal-wide {
+    max-width: 900px; /* Aumenta la larghezza */
+    width: 90%; /* Opzione per la larghezza responsiva */
+  }
+  
+  .custom-modal-body {
+    word-wrap: break-word; /* Evita di spezzare il testo */
+    overflow-x: auto; /* Scorrimento orizzontale per i contenuti ampi */
+  }
