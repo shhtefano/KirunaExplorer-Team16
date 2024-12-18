@@ -23,10 +23,20 @@ import API from "../services/API";
 import { Node } from "../components/nodes/Node";
 import MapPage from "./Map";
 import Legend from "@/components/nodes/Legend";
-import { Card, CardHeader, CardTitle, CardContent } from "../components/ui/card";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+} from "../components/ui/card";
 import { Button } from "../components/ui/button";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "../components/ui/select";
-
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "../components/ui/select";
 
 const nodeTypes = {
   node: Node,
@@ -38,12 +48,15 @@ export default function Diagram() {
   const [loading, setLoading] = useState(true);
   const [selectedDocumentId, setSelectedDocumentId] = useState(null);
   const [showLinkPopup, setShowLinkPopup] = useState(false);
-  const [showDeletePopup, setShowDeletePopup] = useState(false); 
-  const [edgeToDelete, setEdgeToDelete] = useState(null);       
-  const [newLinkData, setNewLinkData] = useState({ source: null, target: null, type: "" });
+  const [showDeletePopup, setShowDeletePopup] = useState(false);
+  const [edgeToDelete, setEdgeToDelete] = useState(null);
+  const [newLinkData, setNewLinkData] = useState({
+    source: null,
+    target: null,
+    type: "",
+  });
   const [linkError, setLinkError] = useState("");
-  const [isEdgeDeleted, setIsEdgeDeleted] = useState(false); 
-
+  const [isEdgeDeleted, setIsEdgeDeleted] = useState(false);
 
   const [hoveredDocument, setHoveredDocument] = useState(null);
   const [hoveredEdge, setHoveredEdge] = useState(null); // Added state for hovered edge
@@ -53,17 +66,14 @@ export default function Diagram() {
   const handleEdgeMouseEnter = (event, edge) => {
     const mouseX = event.pageX;
     const mouseY = event.pageY;
-  
+
     console.log("Mouse X (page):", mouseX, "Mouse Y (page):", mouseY);
-  
+
     setHoveredEdge(edge);
     setPopupPosition({ x: mouseX, y: mouseY });
-  
+
     console.log("Popup position set (page):", { x: mouseX, y: mouseY });
   };
-  
-  
-
 
   const transformDocumentsToNodes = (documents) => {
     const sortedDocs = [...documents].sort((a, b) => {
@@ -157,14 +167,19 @@ export default function Diagram() {
         const allConnections = [];
 
         for (const doc of documents) {
-          const response = await API.getConnectionsByDocumentTitle(doc.document_title);
+          const response = await API.getConnectionsByDocumentTitle(
+            doc.document_title
+          );
           if (response.success && response.data) {
             allConnections.push(...response.data);
           }
         }
 
         const documentEdges = transformConnectionsToEdges(allConnections);
-        const resolvedNodes = adjustNodePositionsForLinks(documentNodes, documentEdges);
+        const resolvedNodes = adjustNodePositionsForLinks(
+          documentNodes,
+          documentEdges
+        );
 
         setNodes(resolvedNodes);
         setEdges(documentEdges);
@@ -181,13 +196,18 @@ export default function Diagram() {
   const onConnect = useCallback(
     (connection) => {
       const existingEdge = edges.find(
-        (edge) => edge.source === connection.source && edge.target === connection.target
+        (edge) =>
+          edge.source === connection.source && edge.target === connection.target
       );
 
       if (existingEdge) {
         setEdges((edges) => addEdge(connection, edges));
       } else {
-        setNewLinkData({ source: connection.source, target: connection.target, type: "" });
+        setNewLinkData({
+          source: connection.source,
+          target: connection.target,
+          type: "",
+        });
         setShowLinkPopup(true);
       }
     },
@@ -195,19 +215,22 @@ export default function Diagram() {
   );
 
   const onEdgeClick = (event, edge) => {
-    setEdgeToDelete(edge);     
-    setShowDeletePopup(true);  
+    setEdgeToDelete(edge);
+    setShowDeletePopup(true);
   };
-  
 
   const handleCreateLink = async () => {
     if (!newLinkData.type) {
       setLinkError("Please select a link type.");
       return;
     }
-  
-    const response = await API.linkDocuments(newLinkData.source, newLinkData.target, newLinkData.type);
-    
+
+    const response = await API.linkDocuments(
+      newLinkData.source,
+      newLinkData.target,
+      newLinkData.type
+    );
+
     if (response.success) {
       const newEdge = {
         id: `${newLinkData.source}-${newLinkData.target}-${newLinkData.type}`,
@@ -218,7 +241,7 @@ export default function Diagram() {
         style: { stroke: "#333", strokeWidth: 2 },
         labelStyle: { fill: "#333", fontSize: 12 },
       };
-  
+
       setEdges((edges) => [...edges, newEdge]);
       setShowLinkPopup(false);
       setNewLinkData({ source: null, target: null, type: "" });
@@ -231,22 +254,23 @@ export default function Diagram() {
   const handleDeleteEdge = async () => {
     if (edgeToDelete && !isEdgeDeleted) {
       const { source, target, label } = edgeToDelete;
-  
-      setIsEdgeDeleted(true); 
-  
+
+      setIsEdgeDeleted(true);
+
       try {
-       
         const response = await API.deleteConnection(source, target, label);
-  
+
         if (response.success) {
           console.log("Cancellazione avvenuta correttamente");
-  
-          
+
           setEdges((eds) => eds.filter((e) => e.id !== edgeToDelete.id));
-          setEdgeToDelete(null); 
-          setShowDeletePopup(false); 
+          setEdgeToDelete(null);
+          setShowDeletePopup(false);
         } else {
-          console.error("Errore nella cancellazione dell'edge:", response.message);
+          console.error(
+            "Errore nella cancellazione dell'edge:",
+            response.message
+          );
         }
       } catch (error) {
         console.error("Errore nella chiamata API:", error);
@@ -255,11 +279,6 @@ export default function Diagram() {
       }
     }
   };
-  
-  
-
-  
-  
 
   const handleNodeClick = (event, node) => {
     setSelectedDocumentId(node.data.id);
@@ -269,7 +288,7 @@ export default function Diagram() {
     try {
       const documentId = node.data.label;
       const response = await API.getDocumentById(documentId);
-  
+
       if (response.success && response.data) {
         const fullDocument = response.data;
         setHoveredDocument(fullDocument);
@@ -288,12 +307,12 @@ export default function Diagram() {
   }
 
   return (
-    <ResizablePanelGroup direction="vertical">
-      <ResizablePanel>
+    <ResizablePanelGroup direction="vertical" data-testid="diagram-panel-group">
+      <ResizablePanel data-testid="map-panel">
         <MapPage selectedDocumentId={selectedDocumentId} />
       </ResizablePanel>
-      <ResizableHandle withHandle={true} />
-      <ResizablePanel>
+      <ResizableHandle withHandle={true} data-testid="resize-handle" />
+      <ResizablePanel data-testid="diagram-panel">
         <ReactFlow
           nodes={nodes}
           nodeTypes={nodeTypes}
@@ -306,7 +325,7 @@ export default function Diagram() {
           onNodeMouseLeave={handleNodeMouseLeave}
           fitView
           direction="LR"
-          onEdgeClick={onEdgeClick} 
+          onEdgeClick={onEdgeClick}
         >
           <ViewportPortal>
             <div
@@ -356,8 +375,6 @@ export default function Diagram() {
           {/* Usa il componente DocumentInfo per visualizzare i dettagli del documento hoverato */}
           <DocumentInfo document={hoveredDocument} />
 
-      
-
           <Legend />
           <Background />
           <MiniMap />
@@ -370,7 +387,10 @@ export default function Diagram() {
       </ResizablePanel>
 
       {showLinkPopup && (
-        <Card className="min-w-[300px] max-w-[400px] mx-auto">
+        <Card
+          className="min-w-[300px] max-w-[400px] mx-auto"
+          data-testid="create-link-popup"
+        >
           <CardHeader>
             <CardTitle>Create Link</CardTitle>
           </CardHeader>
@@ -380,26 +400,42 @@ export default function Diagram() {
                 Select the type of link to create between the selected nodes.
               </p>
               <Select
-                onValueChange={(value) => setNewLinkData({ ...newLinkData, type: value })}
+                onValueChange={(value) =>
+                  setNewLinkData({ ...newLinkData, type: value })
+                }
                 value={newLinkData.type}
+                data-testid="link-type-selector"
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select link type" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Reference">Reference</SelectItem>
-                  <SelectItem value="Collateral Consequence">Collateral Consequence</SelectItem>
+                  <SelectItem value="Collateral Consequence">
+                    Collateral Consequence
+                  </SelectItem>
                   <SelectItem value="Projection">Projection</SelectItem>
-                  <SelectItem value="Material Effects">Material Effects</SelectItem>
-                  <SelectItem value="Direct Consequence">Direct Consequence</SelectItem>
+                  <SelectItem value="Material Effects">
+                    Material Effects
+                  </SelectItem>
+                  <SelectItem value="Direct Consequence">
+                    Direct Consequence
+                  </SelectItem>
                 </SelectContent>
               </Select>
               {linkError && <p className="text-red-500 text-sm">{linkError}</p>}
               <div className="flex space-x-2">
-                <Button onClick={handleCreateLink} disabled={!newLinkData.type}>
+                <Button
+                  onClick={handleCreateLink}
+                  disabled={!newLinkData.type}
+                  data-testid="create-link-button"
+                >
                   Create Link
                 </Button>
-                <Button variant="outline" onClick={() => setShowLinkPopup(false)}>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowLinkPopup(false)}
+                >
                   Cancel
                 </Button>
               </div>
@@ -407,24 +443,34 @@ export default function Diagram() {
           </CardContent>
         </Card>
       )}
-        {showDeletePopup && (
-  <Card className="min-w-[300px] max-w-[400px] mx-auto">
-    <CardHeader>
-      <CardTitle>Delete Link</CardTitle>
-    </CardHeader>
-    <CardContent>
-      <p>Are you sure you want to delete this link?</p>
-      <div className="flex space-x-2 mt-4">
-        <Button onClick={handleDeleteEdge} variant="destructive">
-          Delete
-        </Button>
-        <Button variant="outline" onClick={() => setShowDeletePopup(false)}>
-          Cancel
-        </Button>
-      </div>
-    </CardContent>
-  </Card>
-)}
+      {showDeletePopup && (
+        <Card
+          className="min-w-[300px] max-w-[400px] mx-auto"
+          data-testid="delete-link-popup"
+        >
+          <CardHeader>
+            <CardTitle>Delete Link</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p>Are you sure you want to delete this link?</p>
+            <div className="flex space-x-2 mt-4">
+              <Button
+                onClick={handleDeleteEdge}
+                variant="destructive"
+                data-testid="delete-link-button"
+              >
+                Delete
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => setShowDeletePopup(false)}
+              >
+                Cancel
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </ResizablePanelGroup>
   );
 }
@@ -456,7 +502,10 @@ export const DocumentInfo = ({ document }) => {
         <strong>Document Type:</strong> {document.document_type}
       </p>
       <p style={{ marginBottom: "10px" }}>
-        <strong>Stakeholders:</strong> {document.stakeholders.length > 0 ? document.stakeholders.join(', ') : 'N/A'}
+        <strong>Stakeholders:</strong>{" "}
+        {document.stakeholders.length > 0
+          ? document.stakeholders.join(", ")
+          : "N/A"}
       </p>
       <p style={{ marginBottom: "10px" }}>
         <strong>Date:</strong> {document.issuance_date}
@@ -480,4 +529,3 @@ export const DocumentInfo = ({ document }) => {
     </div>
   );
 };
-
