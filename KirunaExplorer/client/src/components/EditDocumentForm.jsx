@@ -334,10 +334,10 @@ const EditDocumentForm = (props) => {
   }, []);
 
   return (
-    <div>
+    <div style={{display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
 
-      <Card className="min-w-[280px] max-w-[800px] max-h-[77vh]">
-        <CardContent>
+      <Card className="d-flex min-w-[280px] max-w-[1200px] max-h-[77vh] text-center">
+        <CardContent className="text-center">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-7 mt-4">
               {/* Document Title */}
@@ -435,43 +435,49 @@ const EditDocumentForm = (props) => {
               />
 
               {/* Stakeholder */}
-              <FormField
-                control={form.control}
-                name="stakeholders"
-                rules={stakeholderRules}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Stakeholders *</FormLabel>
-                    <FormControl>
-                      <div className="space-y-2 flex flex-wrap">
-                        {stakeholders.map((stakeholder) => (
-                          <div key={stakeholder} className="flex items-center w-1/3 md:w-1/4 lg:w-1/5">
-                            <input
-                              type="checkbox"
-                              id={stakeholder}
-                              value={stakeholder}
-                              checked={field.value.includes(stakeholder)} // Verifica se è selezionato
-                              onChange={(e) => {
-                                const isChecked = e.target.checked;
-                                let updatedStakeholders = [...field.value];
-                                if (isChecked) {
-                                  updatedStakeholders.push(stakeholder); // Aggiungi
-                                } else {
-                                  updatedStakeholders = updatedStakeholders.filter(item => item !== stakeholder); // Rimuovi
-                                }
-                                field.onChange(updatedStakeholders); // Aggiorna il valore del form
-                              }}
-                              className="mr-2"
-                            />
-                            <label htmlFor={stakeholder}>{stakeholder}</label>
-                          </div>
-                        ))}
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+              {/* Stakeholder */}
+<FormField
+  control={form.control}
+  name="stakeholders"
+  rules={stakeholderRules}
+  render={({ field }) => (
+    <FormItem>
+      <FormLabel>Stakeholders *</FormLabel>
+      <FormControl>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          {stakeholders.map((stakeholder) => (
+            <div key={stakeholder} className="flex items-center">
+              <input
+                type="checkbox"
+                id={stakeholder}
+                value={stakeholder}
+                checked={field.value.includes(stakeholder)} // Verifica se è selezionato
+                onChange={(e) => {
+                  const isChecked = e.target.checked;
+                  let updatedStakeholders = [...field.value];
+                  if (isChecked) {
+                    updatedStakeholders.push(stakeholder); // Aggiungi
+                  } else {
+                    updatedStakeholders = updatedStakeholders.filter(
+                      (item) => item !== stakeholder
+                    ); // Rimuovi
+                  }
+                  field.onChange(updatedStakeholders); // Aggiorna il valore del form
+                }}
+                className="mr-2"
               />
+              <label htmlFor={stakeholder} className="text-sm">
+                {stakeholder}
+              </label>
+            </div>
+          ))}
+        </div>
+      </FormControl>
+      <FormMessage />
+    </FormItem>
+  )}
+/>
+
               <div className="flex space-x-2 items-center">
                 <Input
                   type="text"
