@@ -104,15 +104,6 @@ For example, the central square now takes its final
 shape, as well as the large school complex just north
 of it, which appears for the first time.');
 
-INSERT INTO Documents (document_title, scale, issuance_date, language, pages, document_type, document_description) VALUES
-('Kiruna Church closes (102)', 'blueprints/effects', '02/06/2024', '', NULL, 'Material Effects', 'On June 2, the Kiruna Church was closed to begin
-the necessary preparations for its relocation,
-following a solemn ceremony. The relocation is
-scheduled for the summer of 2025 and will take two
-days. Both the new site and the route for the move
-have already been determined. A significant period
-will pass between the relocation and the reopening
-of the church, voted "Swedens most beautiful building constructed before 1950."');
 
 
 -- Associazioni documenti e stakeholder
@@ -120,7 +111,7 @@ INSERT INTO Document_Stakeholder (stakeholder_id, document_id) VALUES (1, 1);
 INSERT INTO Document_Stakeholder (stakeholder_id, document_id) VALUES (2, 2);
 INSERT INTO Document_Stakeholder (stakeholder_id, document_id) VALUES (3, 3);
 INSERT INTO Document_Stakeholder (stakeholder_id, document_id) VALUES (2, 4); -- Adjusted development plan
-INSERT INTO Document_Stakeholder (stakeholder_id, document_id) VALUES (2, 5); -- Kiruna church closes
+
 
 -- Adjusted development plan (47)
 INSERT INTO Document_Stakeholder (stakeholder_id, document_id) VALUES (3, 4);
@@ -169,8 +160,7 @@ INSERT INTO Geolocation (area_id, long, lat, n_order, sub_area_id, area_name)
 SELECT 2, long, lat, n_order, NULL, 'Adjusted development plan'
 FROM coordinates;
 
--- Kiruna church closes
-INSERT INTO Geolocation (area_id, long, lat, n_order, sub_area_id, area_name) VALUES (4, 20.2329325675964, 67.8520127683563, 0, NULL, 'Point-Based Documents');
+
 
 -- Kiruna Map
 INSERT INTO Geolocation_Documents(area_id, document_id) VALUES(1, 1);
