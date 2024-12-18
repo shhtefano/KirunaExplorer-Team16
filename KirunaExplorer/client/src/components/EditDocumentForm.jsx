@@ -52,6 +52,7 @@ import Snackbar from "@mui/material/Snackbar";
 import Alert from "@mui/material/Alert";
 import MapIcon from "@mui/icons-material/Map";
 import { RestorePageOutlined } from "@mui/icons-material";
+import { Trash2 } from "lucide-react";
 
 
 // const stakeholders = [
@@ -336,7 +337,7 @@ const EditDocumentForm = (props) => {
   return (
     <div>
 
-      <Card className="min-w-[280px] max-w-[800px] max-h-[77vh]">
+      <Card className="min-w-[280px] max-w-[800px] max-h-[100vh]">
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-7 mt-4">
@@ -435,7 +436,7 @@ const EditDocumentForm = (props) => {
               />
 
               {/* Stakeholder */}
-              <FormField
+              {/* <FormField
                 control={form.control}
                 name="stakeholders"
                 rules={stakeholderRules}
@@ -487,7 +488,105 @@ const EditDocumentForm = (props) => {
                 >
                   <p style={{ textAlign: 'center' }}>Add</p>
                 </Button>
-              </div>
+              </div> */}
+
+
+              {/* Stakeholder */}
+              <FormField
+                control={form.control}
+                name="stakeholders"
+                rules={stakeholderRules}
+                render={({ field }) => {
+                  const [searchQuery, setSearchQuery] = useState('');
+                  const filteredStakeholders = stakeholders.filter((stakeholder) =>
+                    stakeholder.toLowerCase().includes(searchQuery.toLowerCase())
+                  );
+                  return (
+                    <FormItem>
+                      <FormLabel>Stakeholders *</FormLabel>
+                      <div className="flex items-center space-x-4">
+                        <FormControl>
+                          <Select
+                            onValueChange={(selectedValue) => {
+                              if (!field.value.includes(selectedValue)) {
+                                field.onChange([...field.value, selectedValue]);
+                              }
+                            }}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select a Stakeholder" />
+                            </SelectTrigger>
+                            <SelectContent className="max-h-60 overflow-auto">
+                        
+                              <div className="p-2">
+                                <Input
+                                  type="text"
+                                  value={searchQuery}
+                                  onChange={(e) => setSearchQuery(e.target.value)}
+                                  placeholder="Search stakeholders"
+                                  className="w-full mb-2"
+                                />
+                              </div>
+                          
+                              {filteredStakeholders.map((stakeholder) => (
+                                <SelectItem key={stakeholder} value={stakeholder}>
+                                  {stakeholder}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </FormControl>
+                        <div className="flex space-x-2 items-center">
+                          <Input
+                            type="text"
+                            value={stakeholderInput}
+                            onChange={(e) => setStakeholderInput(e.target.value)}
+                            placeholder="New Stakeholder"
+                            className="w-40"
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => {
+                              handleAddStakeholder(stakeholderInput);
+                            }}
+                          >
+                            Add
+                          </Button>
+                        </div>
+                      </div>
+
+                      {field.value && field.value.length > 0 && (
+                        <div className="mt-2">
+                          <h4 className="font-semibold">Selected Stakeholders:</h4>
+                          <ul className="space-y-1">
+                            {field.value.map((selectedStakeholder, index) => (
+                              <li key={index} className="flex items-center space-x-2">
+                                <span>{selectedStakeholder}</span>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="small"
+                                  onClick={() => {
+                                    field.onChange(field.value.filter((item) => item !== selectedStakeholder));
+                                  }}
+                                >
+                                  <Trash2 />
+                                </Button>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      <FormMessage />
+                    </FormItem>
+                  );
+                }}
+              />
+
+            
+            
 
 
               <div className="d-flex space-x-8">
@@ -582,12 +681,6 @@ const EditDocumentForm = (props) => {
               </div>
 
 
-              <div className="d-flex space-x-8">
-
-              
-              </div>
-
-
               <div className="flex items-center justify-center">
 
                 <div className="flex flex-col gap-y-2 items-start" >
@@ -603,7 +696,7 @@ const EditDocumentForm = (props) => {
                 </div>
 
               </div>
-              <div>
+              {/* <div>
                 {temporaryLinks.length > 0 && (
                   <div >
                     <h3 className="text-sm font-semibold">
@@ -619,7 +712,7 @@ const EditDocumentForm = (props) => {
                   </div>
                 )}
 
-              </div>
+              </div> */}
             </form>
           </Form>
         </CardContent>
