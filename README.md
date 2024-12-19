@@ -18,7 +18,7 @@ This guide explains how to pull the Docker image from the repository and build t
    >docker images
 4. **Run the images:**  
    >docker run -d --name kirunaexplorer-client -p 5173:5173 shhtefano/kirunaexplorer-team16:client-latest ; docker run -d --name kirunaexplorer-server -p 3001:3001 shhtefano/kirunaexplorer-team16:server-latest
-Note: If Docker shows an error, you may need to remove all previous containers using the command
+5. If Docker shows an error, you may need to remove all previous containers using the command
    >docker rm $(docker ps -aq)
 
 ## Option 2: Cloning the Repository and Building with Docker Compose
