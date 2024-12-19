@@ -143,7 +143,7 @@ const HomePage = () => {
                       onClick={(e) => handleRestrictedAction(e, "/diagram")}
                     >
                       <GanttChart className="mr-2" />
-                      <span>See Graph</span>
+                      <span>See Diagram</span>
                     </Button>
                     <p className="text-sm text-black w-2/3">
                       Visualize the document timeline and storyline with an
