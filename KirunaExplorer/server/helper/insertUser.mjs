@@ -29,7 +29,7 @@ const insertUser = async (username, role, password) => {
   });
 };
 
-// Inserisci qui i dati dell'utente che vuoi aggiungere
+// Inserisci qui i dati dell'utente da aggiungere
 const username = "resident";
 const role = "resident";
 const password = "resident";
